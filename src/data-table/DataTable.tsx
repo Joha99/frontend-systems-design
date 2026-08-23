@@ -20,6 +20,8 @@ import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 
 import styles from "./DataTable.module.css";
 
+const ROWS_PER_PAGE = 10 as const;
+
 interface User {
   id: number;
   firstName: string;
@@ -39,6 +41,7 @@ export const DataTable = () => {
   const [sortedColumn, setSortedColumn] = useState<Column | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
   const [filterValue, setFilterValue] = useState<string | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   useEffect(() => {
     fetch("https://dummyjson.com/users?limit=30")
@@ -89,6 +92,8 @@ export const DataTable = () => {
     return sortedUsers;
   }, [sortedColumn, sortOrder, users, filterValue]);
 
+  const totalPages = Math.ceil(computedRows.length / ROWS_PER_PAGE);
+
   const onColumnClick = (selectedColumn: Column) => {
     setSortedColumn(selectedColumn);
 
@@ -100,6 +105,7 @@ export const DataTable = () => {
   };
 
   const onFilter = (event: ChangeEvent<HTMLInputElement>) => {
+    setCurrentPage(1);
     setFilterValue(event.currentTarget.value);
   };
 
@@ -109,7 +115,7 @@ export const DataTable = () => {
     <div>
       <p>2. Build a data table with sorting and filtering.</p>
       {isTableRendered && (
-        <>
+        <div className={styles.container}>
           <input
             type="text"
             placeholder="Search for users"
@@ -138,21 +144,43 @@ export const DataTable = () => {
               </tr>
             </thead>
             <tbody>
-              {computedRows.map((user) => {
-                return (
-                  <tr key={user.id}>
-                    <td>
-                      {user.firstName} {user.lastName}
-                    </td>
-                    <td>{user.age}</td>
-                    <td>{user.email}</td>
-                    <td>{user.company.name}</td>
-                  </tr>
-                );
-              })}
+              {computedRows
+                .slice(
+                  (currentPage - 1) * ROWS_PER_PAGE,
+                  (currentPage - 1) * ROWS_PER_PAGE + ROWS_PER_PAGE,
+                )
+                .map((user) => {
+                  return (
+                    <tr key={user.id}>
+                      <td>
+                        {user.firstName} {user.lastName}
+                      </td>
+                      <td>{user.age}</td>
+                      <td>{user.email}</td>
+                      <td>{user.company.name}</td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
-        </>
+          <div className={styles.paginationButtons}>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (pageNumber) => {
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => setCurrentPage(pageNumber)}
+                    className={
+                      pageNumber === currentPage ? styles.selected : undefined
+                    }
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              },
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

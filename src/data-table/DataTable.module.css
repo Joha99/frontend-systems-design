@@ -1,3 +1,10 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+}
+
 .columnHeaderText {
   text-transform: capitalize;
 }
@@ -5,4 +12,14 @@
 .columnHeaderButton {
   display: flex;
   gap: 6px;
+}
+
+.paginationButtons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.selected {
+  background-color: rgb(202, 238, 244);
 }
