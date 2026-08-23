@@ -70,7 +70,7 @@ export const Typeahead = () => {
   const showDropdown = matchedItems.length > 0 && !isItemSelected;
 
   return (
-    <span>
+    <div>
       <p>
         1. Build a search component that fetches suggestions from an API as the
         user types.
@@ -103,6 +103,6 @@ export const Typeahead = () => {
           </ul>
         </div>
       )}
-    </span>
+    </div>
   );
 };

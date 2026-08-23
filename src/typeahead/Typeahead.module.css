@@ -8,6 +8,7 @@
 }
 
 .dropdown {
+  background-color: white;
   border: 1px solid #ccc;
   border-radius: 10px;
   margin-top: 5px;
@@ -15,6 +16,7 @@
   position-anchor: --typeahead-anchor;
   position-area: bottom;
   width: anchor-size(width);
+  overflow: clip;
 }
 
 .list {
