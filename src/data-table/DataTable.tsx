@@ -16,7 +16,7 @@
  * - Make sort and filter work together (filter first, then sort the filtered results).
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 
 import styles from "./DataTable.module.css";
 
@@ -36,9 +36,9 @@ const columnHeaders: Array<Column> = ["name", "age", "email", "company"];
 
 export const DataTable = () => {
   const [users, setUsers] = useState<Array<User>>([]);
-
   const [sortedColumn, setSortedColumn] = useState<Column | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
+  const [filterValue, setFilterValue] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     fetch("https://dummyjson.com/users?limit=30")
@@ -48,13 +48,30 @@ export const DataTable = () => {
       });
   }, []);
 
-  const sortedUsers = useMemo(() => {
+  const computedRows = useMemo(() => {
+    // add filter logic
+    const usersCopy = [...users];
+
+    const filteredUsers = !filterValue
+      ? usersCopy
+      : usersCopy.filter((user: User) => {
+          const lowerCaseFilterValue = filterValue.toLowerCase();
+
+          return (
+            user.firstName.toLowerCase().includes(lowerCaseFilterValue) ||
+            user.lastName.toLowerCase().includes(lowerCaseFilterValue) ||
+            user.email.toLowerCase().includes(lowerCaseFilterValue) ||
+            user.company.name.toLowerCase().includes(lowerCaseFilterValue) ||
+            String(user.age).includes(lowerCaseFilterValue)
+          );
+        });
+
     if (!sortedColumn || !sortOrder) {
-      return users;
+      return filteredUsers;
     }
 
-    // derive the new sorted rows from the original data rather than storing a copy in another state
-    const sortedArray = [...users].sort((a: User, b: User) => {
+    // derive the new sorted rows from the filtered data
+    const sortedUsers = filteredUsers.sort((a: User, b: User) => {
       const first = sortOrder === "asc" ? a : b;
       const second = sortOrder === "asc" ? b : a;
 
@@ -69,8 +86,8 @@ export const DataTable = () => {
       }
     });
 
-    return sortedArray;
-  }, [sortedColumn, sortOrder, users]);
+    return sortedUsers;
+  }, [sortedColumn, sortOrder, users, filterValue]);
 
   const onColumnClick = (selectedColumn: Column) => {
     setSortedColumn(selectedColumn);
@@ -82,46 +99,60 @@ export const DataTable = () => {
     }
   };
 
+  const onFilter = (event: ChangeEvent<HTMLInputElement>) => {
+    setFilterValue(event.currentTarget.value);
+  };
+
   const isTableRendered = users.length > 0;
 
   return (
     <div>
       <p>2. Build a data table with sorting and filtering.</p>
       {isTableRendered && (
-        <table>
-          <thead>
-            <tr>
-              {columnHeaders.map((header) => {
+        <>
+          <input
+            type="text"
+            placeholder="Search for users"
+            value={filterValue}
+            onChange={onFilter}
+          />
+          <table>
+            <thead>
+              <tr>
+                {columnHeaders.map((header) => {
+                  return (
+                    <th key={header}>
+                      <button
+                        onClick={() => onColumnClick(header)}
+                        className={styles.columnHeaderButton}
+                      >
+                        <span className={styles.columnHeaderText}>
+                          {header}
+                        </span>
+                        {sortedColumn === header &&
+                          (sortOrder === "asc" ? "🔼" : "🔽")}
+                      </button>
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {computedRows.map((user) => {
                 return (
-                  <th key={header}>
-                    <button
-                      onClick={() => onColumnClick(header)}
-                      className={styles.columnHeaderButton}
-                    >
-                      <span className={styles.columnHeaderText}>{header}</span>
-                      {sortedColumn === header &&
-                        (sortOrder === "asc" ? "🔼" : "🔽")}
-                    </button>
-                  </th>
+                  <tr key={user.id}>
+                    <td>
+                      {user.firstName} {user.lastName}
+                    </td>
+                    <td>{user.age}</td>
+                    <td>{user.email}</td>
+                    <td>{user.company.name}</td>
+                  </tr>
                 );
               })}
-            </tr>
-          </thead>
-          <tbody>
-            {sortedUsers.map((user) => {
-              return (
-                <tr key={user.id}>
-                  <td>
-                    {user.firstName} {user.lastName}
-                  </td>
-                  <td>{user.age}</td>
-                  <td>{user.email}</td>
-                  <td>{user.company.name}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </>
       )}
     </div>
   );
