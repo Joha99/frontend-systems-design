@@ -1,12 +1,8 @@
 .container {
+  align-items: stretch;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   gap: 20px;
-}
-
-.columnHeaderText {
-  text-transform: capitalize;
 }
 
 .columnHeaderButton {
@@ -14,10 +10,19 @@
   gap: 6px;
 }
 
+.columnHeaderText {
+  text-transform: capitalize;
+}
+
+.emptyState {
+  color: #888;
+  text-align: center;
+}
+
 .paginationButtons {
   display: flex;
-  justify-content: center;
   gap: 10px;
+  justify-content: center;
 }
 
 .selected {

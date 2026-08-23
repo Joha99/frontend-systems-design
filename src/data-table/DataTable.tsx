@@ -20,7 +20,8 @@ import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 
 import styles from "./DataTable.module.css";
 
-const ROWS_PER_PAGE = 10 as const;
+const ROWS_PER_PAGE = 10;
+const USERS_URL = "https://dummyjson.com/users?limit=30";
 
 interface User {
   id: number;
@@ -37,44 +38,38 @@ type SortOrder = "asc" | "desc";
 const columnHeaders: Array<Column> = ["name", "age", "email", "company"];
 
 export const DataTable = () => {
-  const [users, setUsers] = useState<Array<User>>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [sortedColumn, setSortedColumn] = useState<Column | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
-  const [filterValue, setFilterValue] = useState<string | undefined>(undefined);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [filterValue, setFilterValue] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    fetch("https://dummyjson.com/users?limit=30")
+    fetch(USERS_URL)
       .then((response) => response.json())
-      .then((data) => {
-        setUsers(data.users);
-      });
+      .then((data) => setUsers(data.users));
   }, []);
 
   const computedRows = useMemo(() => {
-    // add filter logic
-    const usersCopy = [...users];
+    const lowerFilter = filterValue.toLowerCase();
 
-    const filteredUsers = !filterValue
-      ? usersCopy
-      : usersCopy.filter((user: User) => {
-          const lowerCaseFilterValue = filterValue.toLowerCase();
-
+    const filteredUsers = filterValue
+      ? users.filter((user) => {
           return (
-            user.firstName.toLowerCase().includes(lowerCaseFilterValue) ||
-            user.lastName.toLowerCase().includes(lowerCaseFilterValue) ||
-            user.email.toLowerCase().includes(lowerCaseFilterValue) ||
-            user.company.name.toLowerCase().includes(lowerCaseFilterValue) ||
-            String(user.age).includes(lowerCaseFilterValue)
+            user.firstName.toLowerCase().includes(lowerFilter) ||
+            user.lastName.toLowerCase().includes(lowerFilter) ||
+            user.email.toLowerCase().includes(lowerFilter) ||
+            user.company.name.toLowerCase().includes(lowerFilter) ||
+            String(user.age).includes(lowerFilter)
           );
-        });
+        })
+      : [...users];
 
     if (!sortedColumn || !sortOrder) {
       return filteredUsers;
     }
 
-    // derive the new sorted rows from the filtered data
-    const sortedUsers = filteredUsers.sort((a: User, b: User) => {
+    return filteredUsers.sort((a, b) => {
       const first = sortOrder === "asc" ? a : b;
       const second = sortOrder === "asc" ? b : a;
 
@@ -88,11 +83,14 @@ export const DataTable = () => {
         return first.email.localeCompare(second.email);
       }
     });
-
-    return sortedUsers;
   }, [sortedColumn, sortOrder, users, filterValue]);
 
   const totalPages = Math.ceil(computedRows.length / ROWS_PER_PAGE);
+
+  const paginatedRows = computedRows.slice(
+    (currentPage - 1) * ROWS_PER_PAGE,
+    currentPage * ROWS_PER_PAGE,
+  );
 
   const onColumnClick = (selectedColumn: Column) => {
     setSortedColumn(selectedColumn);
@@ -109,12 +107,10 @@ export const DataTable = () => {
     setFilterValue(event.currentTarget.value);
   };
 
-  const isTableRendered = users.length > 0;
-
   return (
     <div>
       <p>2. Build a data table with sorting and filtering.</p>
-      {isTableRendered && (
+      {users.length > 0 && (
         <div className={styles.container}>
           <input
             type="text"
@@ -125,48 +121,40 @@ export const DataTable = () => {
           <table>
             <thead>
               <tr>
-                {columnHeaders.map((header) => {
-                  return (
-                    <th key={header}>
-                      <button
-                        onClick={() => onColumnClick(header)}
-                        className={styles.columnHeaderButton}
-                      >
-                        <span className={styles.columnHeaderText}>
-                          {header}
-                        </span>
-                        {sortedColumn === header &&
-                          (sortOrder === "asc" ? "🔼" : "🔽")}
-                      </button>
-                    </th>
-                  );
-                })}
+                {columnHeaders.map((header) => (
+                  <th key={header}>
+                    <button
+                      onClick={() => onColumnClick(header)}
+                      className={styles.columnHeaderButton}
+                    >
+                      <span className={styles.columnHeaderText}>{header}</span>
+                      {sortedColumn === header &&
+                        (sortOrder === "asc" ? "▲" : "▼")}
+                    </button>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {computedRows
-                .slice(
-                  (currentPage - 1) * ROWS_PER_PAGE,
-                  (currentPage - 1) * ROWS_PER_PAGE + ROWS_PER_PAGE,
-                )
-                .map((user) => {
-                  return (
-                    <tr key={user.id}>
-                      <td>
-                        {user.firstName} {user.lastName}
-                      </td>
-                      <td>{user.age}</td>
-                      <td>{user.email}</td>
-                      <td>{user.company.name}</td>
-                    </tr>
-                  );
-                })}
+              {paginatedRows.map((user) => (
+                <tr key={user.id}>
+                  <td>
+                    {user.firstName} {user.lastName}
+                  </td>
+                  <td>{user.age}</td>
+                  <td>{user.email}</td>
+                  <td>{user.company.name}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
-          <div className={styles.paginationButtons}>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-              (pageNumber) => {
-                return (
+          {computedRows.length === 0 && (
+            <p className={styles.emptyState}>No results found</p>
+          )}
+          {totalPages > 1 && (
+            <div className={styles.paginationButtons}>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (pageNumber) => (
                   <button
                     key={pageNumber}
                     onClick={() => setCurrentPage(pageNumber)}
@@ -176,10 +164,10 @@ export const DataTable = () => {
                   >
                     {pageNumber}
                   </button>
-                );
-              },
-            )}
-          </div>
+                ),
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
