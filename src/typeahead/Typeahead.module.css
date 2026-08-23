@@ -1,0 +1,42 @@
+.input {
+  anchor-name: --typeahead-anchor;
+  border: 1px solid #ccc;
+  border-radius: 10000px;
+  height: 16px;
+  padding-block: 12px;
+  padding-inline: 8px;
+}
+
+.dropdown {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-top: 5px;
+  position: absolute;
+  position-anchor: --typeahead-anchor;
+  position-area: bottom;
+  width: anchor-size(width);
+}
+
+.list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+
+  button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding-block: 8px;
+    padding-inline: 12px;
+    text-align: start;
+    width: 100%;
+  }
+
+  button:hover {
+    background-color: #f5f5f5;
+  }
+
+  li:not(:last-child) {
+    border-bottom: 1px solid #eee;
+  }
+}
