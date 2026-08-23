@@ -16,7 +16,7 @@
  * - Make sort and filter work together (filter first, then sort the filtered results).
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import styles from "./DataTable.module.css";
 
@@ -29,8 +29,16 @@ interface User {
   company: { name: string };
 }
 
+type Column = "name" | "age" | "email" | "company";
+type SortOrder = "asc" | "desc";
+
+const columnHeaders: Array<Column> = ["name", "age", "email", "company"];
+
 export const DataTable = () => {
   const [users, setUsers] = useState<Array<User>>([]);
+
+  const [sortedColumn, setSortedColumn] = useState<Column | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   useEffect(() => {
     fetch("https://dummyjson.com/users?limit=30")
@@ -39,6 +47,40 @@ export const DataTable = () => {
         setUsers(data.users);
       });
   }, []);
+
+  const sortedUsers = useMemo(() => {
+    if (!sortedColumn || !sortOrder) {
+      return users;
+    }
+
+    // derive the new sorted rows from the original data rather than storing a copy in another state
+    const sortedArray = [...users].sort((a: User, b: User) => {
+      const first = sortOrder === "asc" ? a : b;
+      const second = sortOrder === "asc" ? b : a;
+
+      if (sortedColumn === "age") {
+        return first.age - second.age;
+      } else if (sortedColumn === "name") {
+        return first.firstName.localeCompare(second.firstName);
+      } else if (sortedColumn === "company") {
+        return first.company.name.localeCompare(second.company.name);
+      } else {
+        return first.email.localeCompare(second.email);
+      }
+    });
+
+    return sortedArray;
+  }, [sortedColumn, sortOrder, users]);
+
+  const onColumnClick = (selectedColumn: Column) => {
+    setSortedColumn(selectedColumn);
+
+    if (!sortedColumn || sortedColumn !== selectedColumn) {
+      setSortOrder("asc");
+    } else {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    }
+  };
 
   const isTableRendered = users.length > 0;
 
@@ -49,14 +91,24 @@ export const DataTable = () => {
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Age</th>
-              <th>Email</th>
-              <th>Company</th>
+              {columnHeaders.map((header) => {
+                return (
+                  <th key={header}>
+                    <button
+                      onClick={() => onColumnClick(header)}
+                      className={styles.columnHeaderButton}
+                    >
+                      <span className={styles.columnHeaderText}>{header}</span>
+                      {sortedColumn === header &&
+                        (sortOrder === "asc" ? "🔼" : "🔽")}
+                    </button>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => {
+            {sortedUsers.map((user) => {
               return (
                 <tr key={user.id}>
                   <td>
