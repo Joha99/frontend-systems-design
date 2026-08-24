@@ -1,5 +1,6 @@
 import styles from "./App.module.css";
 import { ContactForm } from "./contact-form/ContactForm";
+import { CrudList } from "./crud-list/CrudList";
 import { DataTable } from "./data-table/DataTable";
 import { Typeahead } from "./typeahead/Typeahead";
 
@@ -9,6 +10,7 @@ function App() {
       <Typeahead />
       <DataTable />
       <ContactForm />
+      <CrudList />
     </div>
   );
 }
