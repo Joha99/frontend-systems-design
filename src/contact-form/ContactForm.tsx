@@ -20,7 +20,11 @@
  * - Add a Reset button that clears all fields and validation errors.
  */
 
-import { useState, type FormEventHandler, type SubmitEventHandler } from "react";
+import {
+  useState,
+  type FormEventHandler,
+  type SubmitEventHandler,
+} from "react";
 
 import styles from "./ContactForm.module.css";
 
@@ -185,8 +189,6 @@ export const ContactForm = () => {
               </div>
             );
           })}
-
-          {/* Submit & reset buttons  */}
           <div>
             <button
               type="submit"
