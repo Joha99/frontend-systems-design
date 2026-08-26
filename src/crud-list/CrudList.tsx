@@ -24,160 +24,162 @@
  */
 
 import { useEffect, useState } from "react";
+
 import styles from "./CrudList.module.css";
 
 const API_BASE_URL = "https://dummyjson.com/todos";
 
 interface Todo {
   id: number;
-  todo: "string";
+  todo: string;
   completed: boolean;
   userId: number;
 }
 
-type TodoMap = Record<Todo["id"], Todo>;
-
 type FetchStatus = "loading" | "success" | "error";
+type TodoAction = "toggle" | "delete";
+type TodoMap = Record<Todo["id"], Todo>;
+type ActionStatusMap = Record<
+  Todo["id"],
+  { action: TodoAction; status: FetchStatus }
+>;
 
 export const CrudList = () => {
   const [fetchStatus, setFetchStatus] = useState<FetchStatus | undefined>(
     undefined,
   );
   const [todoMap, setTodoMap] = useState<TodoMap>({});
-  const [newTodo, setNewTodo] = useState<string>("");
+  const [newTodo, setNewTodo] = useState("");
+  const [actionStatus, setActionStatus] = useState<ActionStatusMap>({});
 
-  // Fetch items once on mount
   useEffect(() => {
-    console.log("Fetching todo list");
     setFetchStatus("loading");
-
     fetch(`${API_BASE_URL}?limit=10`)
       .then((response) => response.json())
       .then((json) => {
         const todos: Todo[] = json.todos;
         const newTodoMap: TodoMap = {};
-
         for (const todo of todos) {
           newTodoMap[todo.id] = todo;
         }
-
-        console.log("Successfully fetched todo list", todos);
         setFetchStatus("success");
         setTodoMap(newTodoMap);
       })
-      .catch((error) => {
-        console.error("Error with fetching todo list", error);
+      .catch(() => {
         setFetchStatus("error");
       });
   }, []);
 
   const onTodoToggle = (id: Todo["id"]) => {
     const currentTodoItem = todoMap[id];
-
+    setActionStatus((prev) => ({
+      ...prev,
+      [id]: { action: "toggle", status: "loading" },
+    }));
     fetch(`${API_BASE_URL}/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: !currentTodoItem.completed }),
     })
       .then((response) => response.json())
-      .then((newTodoObject) => {
-        setTodoMap({ ...todoMap, [id]: newTodoObject });
+      .then((updatedTodo) => {
+        setTodoMap((prev) => ({ ...prev, [id]: updatedTodo }));
+        setActionStatus((prev) => ({
+          ...prev,
+          [id]: { action: "toggle", status: "success" },
+        }));
       })
-      .catch((error) => {
-        console.error("onTodoToggle error", error);
+      .catch(() => {
+        setActionStatus((prev) => ({
+          ...prev,
+          [id]: { action: "toggle", status: "error" },
+        }));
       });
   };
 
   const onTodoDelete = (id: Todo["id"]) => {
+    setActionStatus((prev) => ({
+      ...prev,
+      [id]: { action: "delete", status: "loading" },
+    }));
     fetch(`${API_BASE_URL}/${id}`, {
       method: "DELETE",
     })
       .then((response) => response.json())
-      .then((deletedTodoObject) => {
-        const newTodoMap: TodoMap = { ...todoMap };
-        delete newTodoMap[deletedTodoObject[id]];
-        setTodoMap(newTodoMap);
+      .then(() => {
+        setTodoMap((prev) => {
+          const newTodoMap: TodoMap = { ...prev };
+          delete newTodoMap[id];
+          return newTodoMap;
+        });
+        setActionStatus((prev) => ({
+          ...prev,
+          [id]: { action: "delete", status: "success" },
+        }));
       })
-      .catch((error) => {
-        console.error("onTodoDelete error", error);
+      .catch(() => {
+        setActionStatus((prev) => ({
+          ...prev,
+          [id]: { action: "delete", status: "error" },
+        }));
       });
   };
 
   const onTodoAdd = () => {
-    console.log("onTodoAdd newTodo", newTodo);
-
-    const newTodoObject = {
-      todo: newTodo,
-      completed: false,
-      userId: Object.values(todoMap)[0].userId,
-    };
+    if (!newTodo.trim()) return;
 
     fetch(`${API_BASE_URL}/add`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newTodoObject),
+      body: JSON.stringify({ todo: newTodo, completed: false, userId: 1 }),
     })
       .then((response) => response.json())
-      .then((newTodoObject) => {
-        const newTodoMap = { ...todoMap, [newTodoObject.id]: newTodoObject };
-        setTodoMap(newTodoMap);
+      .then((createdTodo) => {
+        setTodoMap((prev) => ({ ...prev, [createdTodo.id]: createdTodo }));
         setNewTodo("");
       })
-      .catch((error) => {
-        console.error("onTodoAdd error", error);
-      });
+      .catch(() => {});
   };
 
   const todoList = Object.values(todoMap);
 
-  // TODO: while item is being updated/deleted, disable the checkbox & delete button
   return (
     <div>
       <p>4. Build a CRUD todo list with full API integration.</p>
-      {/* Status message for initial fetch & user actions */}
       {fetchStatus === "success" ? (
         <>
-          {/* List of todos */}
-          <ul className={styles.list}>
-            {todoList.map(({ id, todo, completed }) => {
-              return (
+          {todoList.length > 0 ? (
+            <ul className={styles.list}>
+              {todoList.map(({ id, todo, completed }) => (
                 <li key={id} className={styles["list-item"]}>
-                  {/* onChange, toggle the completed state */}
                   <input
                     type="checkbox"
                     checked={completed}
-                    onChange={() => {
-                      onTodoToggle(id);
-                    }}
+                    disabled={actionStatus[id]?.status === "loading"}
+                    onChange={() => onTodoToggle(id)}
                   />
                   <span>{todo}</span>
-                  {/* onClick, remove the item */}
                   <button
                     className={styles.delete}
-                    onClick={() => {
-                      onTodoDelete(id);
-                    }}
+                    disabled={actionStatus[id]?.status === "loading"}
+                    onClick={() => onTodoDelete(id)}
                   >
                     x
                   </button>
                 </li>
-              );
-            })}
-          </ul>
-          {/* Inputs for adding new todo items */}
+              ))}
+            </ul>
+          ) : (
+            <p className={styles["empty-state"]}>No todos yet.</p>
+          )}
           <div className={styles["add-todo-controls"]}>
             <input
               type="text"
               placeholder="New todo item description"
-              onChange={(event) => {
-                setNewTodo(event.currentTarget.value);
-              }}
+              value={newTodo}
+              onChange={(event) => setNewTodo(event.currentTarget.value)}
             />
-            <button
-              onClick={() => {
-                onTodoAdd();
-              }}
-            >
+            <button disabled={!newTodo.trim()} onClick={onTodoAdd}>
               +
             </button>
           </div>
