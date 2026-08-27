@@ -1,0 +1,9 @@
+.invalid-input {
+  border: 2px solid red;
+}
+
+.navigation {
+  align-items: center;
+  column-gap: 10px;
+  display: flex;
+}
