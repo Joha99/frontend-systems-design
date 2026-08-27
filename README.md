@@ -63,7 +63,7 @@ Build a dynamic board component (tic-tac-toe / sudoku style) that accepts custom
 
 **Skills tested:** rendering logic (looping/mapping), Array.from, CSS Grid, dynamic grid generation, cell state toggling
 
-### 12. File Explorer — *(to be created)*
+### 12. File Explorer — `src/file-explorer/`
 Recursive file tree with expand/collapse folders from nested data.
 
 **Skills tested:** recursive components, tree data structures, local toggle state per node, conditional rendering
