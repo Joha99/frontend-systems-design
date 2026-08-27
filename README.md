@@ -54,6 +54,30 @@ Reusable modal with compound component API and full accessibility.
 
 **Skills tested:** compound components (React context), React portals (createPortal), focus trapping, keyboard handling (Escape), aria attributes, body scroll lock, returning focus on close
 
+---
+
+## Retell AI Prep (from recruiter)
+
+### 11. Dynamic Grid Board — `src/grid-board/`
+Build a dynamic board component (tic-tac-toe / sudoku style) that accepts custom rows and columns.
+
+**Skills tested:** rendering logic (looping/mapping), Array.from, CSS Grid, dynamic grid generation, cell state toggling
+
+### 12. File Explorer — *(to be created)*
+Recursive file tree with expand/collapse folders from nested data.
+
+**Skills tested:** recursive components, tree data structures, local toggle state per node, conditional rendering
+
+### 13. User Matrix — *(to be created)*
+Fetch users, get GitHub repo counts, display in a 3x3 grid with random placement.
+
+**Skills tested:** chained API calls, Promise handling, random placement logic, grid rendering
+
+### 14. Dropdown Multi-Select with Chips — *(to be created)*
+Filterable dropdown with chip selection, disabled options, and click-outside-to-close.
+
+**Skills tested:** useRef, click-outside detection (document event listener), chip UI pattern, disabled option handling, case-insensitive filtering
+
 ## Setup
 
 ```bash
