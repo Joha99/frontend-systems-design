@@ -1,0 +1,32 @@
+.explorer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  width: 400px;
+}
+
+.leaf {
+  padding-left: 24px;
+}
+
+.name {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.nestedChildren {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 20px;
+}
+
+.parent {
+  display: flex;
+  flex-direction: column;
+}
