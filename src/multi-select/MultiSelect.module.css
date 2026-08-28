@@ -1,0 +1,97 @@
+.chip {
+  align-items: center;
+  background-color: rgb(180, 180, 252);
+  border-radius: 30px;
+  display: flex;
+  font-size: 0.9rem;
+  gap: 4px;
+  padding-block: 2px;
+  padding-inline: 10px;
+}
+
+.chipInput {
+  align-items: center;
+  anchor-name: --input;
+  background-color: white;
+  block-size: fit-content;
+  border: 1px solid #ccc;
+  border-radius: 30px;
+  color: #4e4e4e;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 400px;
+  padding-block: 3px;
+  padding-inline: 12px;
+}
+
+.container {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+}
+
+.dropdown {
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  min-width: 400px;
+  position: absolute;
+  position-anchor: --input;
+  position-area: bottom span-all;
+  top: 10px;
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    list-style-type: none;
+    margin: 0;
+    padding: 10px;
+  }
+
+  li {
+    display: flex;
+  }
+}
+
+.emptyState {
+  color: #888;
+  padding-top: 8px;
+}
+
+.input {
+  block-size: 20px;
+  border: none;
+  flex-grow: 1;
+  outline: none;
+}
+
+.optionButton {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  inline-size: 100%;
+  text-align: left;
+}
+
+.optionButton:hover {
+  background-color: #f5f5f5;
+}
+
+.optionDisabled {
+  background-color: transparent;
+  border: none;
+  color: #aaa;
+  cursor: not-allowed;
+  inline-size: 100%;
+  text-align: left;
+}
+
+.removeButton {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
