@@ -1,6 +1,7 @@
 import styles from "./App.module.css";
 import { Chat } from "./chat/Chat";
 import { ContactForm } from "./contact-form/ContactForm";
+import { Kanban } from "./kanban/Kanban";
 import { CrudList } from "./crud-list/CrudList";
 import { DataTable } from "./data-table/DataTable";
 import { FileExplorer } from "./file-explorer/FileExplorer";
@@ -27,6 +28,7 @@ function App() {
       <InfiniteScroll /> */}
       {/* <UserMatrix /> */}
       {/* <Chat /> */}
+      <Kanban />
     </div>
   );
 }

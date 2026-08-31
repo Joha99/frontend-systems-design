@@ -11,29 +11,20 @@
  * Requirements:
  * 1. On mount, fetch todos and render them as cards in the appropriate columns.
  * 2. Users can drag a card from one column to another.
- * 3. Users can reorder cards within a column via drag.
- * 4. On drop, send a PUT request to update the todo's status.
- * 5. Show loading state during initial fetch.
- * 6. Show the count of cards in each column header.
+ * 3. On drop, update local state to move the card to the new column.
+ * 4. Show loading state during initial fetch.
+ * 5. Show the count of cards in each column header.
+ * 6. Clicking a card selects it (highlighted border). Clicking outside any card deselects it.
+ *    Use useRef + document event listener for outside click detection.
  *
  * Implementation notes:
  * - Use the HTML Drag and Drop API (no libraries).
- * - Use onDragStart, onDragOver, onDrop, and onDragEnd events.
- * - Use dataTransfer to pass the dragged card's id.
- *
- * Stretch:
- * - Optimistic reorder — move the card immediately, roll back on API error.
- * - Add a "New Task" button to each column that creates a task (POST).
- * - Animate cards entering/leaving columns.
- * - Drop indicator — highlight where the card will land.
+ * - Use onDragStart, onDragOver, onDrop events.
+ * - Use dataTransfer to pass the dragged card's id and source column.
  */
 
 import styles from "./Kanban.module.css";
 
 export const Kanban = () => {
-  return (
-    <div>
-      <p>8. Build a drag-and-drop kanban board.</p>
-    </div>
-  );
+  return <div>Kanban</div>;
 };
