@@ -1,0 +1,41 @@
+.container {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 150px);
+  grid-template-rows: repeat(3, 150px);
+}
+
+.cell {
+  align-items: center;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+
+.avatar {
+  border-radius: 50%;
+  height: 50px;
+  width: 50px;
+}
+
+.login {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+}
+
+.repoCount {
+  color: #666;
+  font-size: 0.8rem;
+  margin: 0;
+  padding: 0;
+}

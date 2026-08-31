@@ -68,12 +68,12 @@ Recursive file tree with expand/collapse folders from nested data.
 
 **Skills tested:** recursive components, tree data structures, local toggle state per node, conditional rendering
 
-### 13. User Matrix — *(to be created)*
+### 13. User Matrix — `src/user-matrix/`
 Fetch users, get GitHub repo counts, display in a 3x3 grid with random placement.
 
-**Skills tested:** chained API calls, Promise handling, random placement logic, grid rendering
+**Skills tested:** chained API calls, Promise handling, random placement logic, CSS Grid rendering
 
-### 14. Dropdown Multi-Select with Chips — *(to be created)*
+### 14. Dropdown Multi-Select with Chips — `src/multi-select/`
 Filterable dropdown with chip selection, disabled options, and click-outside-to-close.
 
 **Skills tested:** useRef, click-outside detection (document event listener), chip UI pattern, disabled option handling, case-insensitive filtering

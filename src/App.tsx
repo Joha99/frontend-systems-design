@@ -9,6 +9,7 @@ import { MultiSelect } from "./multi-select/MultiSelect";
 import { MultiStepWizard } from "./multi-step-wizard/MultiStepWizard";
 import { PostBrowser } from "./post-browser/PostBrowser";
 import { Typeahead } from "./typeahead/Typeahead";
+import { UserMatrix } from "./user-matrix/UserMatrix";
 
 function App() {
   return (
@@ -21,8 +22,9 @@ function App() {
       <MultiStepWizard />
       <GridBoard rowCount={4} colCount={5} />
       <FileExplorer />
-      <MultiSelect /> */}
-      <InfiniteScroll />
+      <MultiSelect />
+      <InfiniteScroll /> */}
+      <UserMatrix />
     </div>
   );
 }
