@@ -22,12 +22,126 @@
  * - "User is typing" indicator when the input has focus and text.
  */
 
+import { useEffect, useRef, useState } from "react";
+
 import styles from "./Chat.module.css";
 
+interface User {
+  id: number;
+  username: string;
+  fullName: string;
+}
+
+interface Comment {
+  body: string;
+  id: number;
+  likes: number;
+  postId: number;
+  user: User;
+  timeStamp: string;
+}
+
 export const Chat = () => {
+  const [messages, setMessages] = useState<Comment[]>([]);
+  const [input, setInput] = useState("");
+  const [sendStatus, setSendStatus] = useState<
+    "loading" | "success" | "error"
+  >();
+
+  const scrollEl = useRef<HTMLDivElement>(null);
+  const messagesCount = useRef(0);
+
+  useEffect(() => {
+    fetch("https://dummyjson.com/comments?limit=20")
+      .then((response) => response.json())
+      .then((json) => {
+        const currTime = new Date().toLocaleTimeString();
+        const comments: Comment[] = json.comments.map(
+          (comment: Comment) => ({ ...comment, timeStamp: currTime }),
+        );
+        setMessages(comments);
+        messagesCount.current = json.comments.length;
+      });
+  }, []);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetch(
+        `https://dummyjson.com/comments?limit=5&skip=${messagesCount.current}`,
+      )
+        .then((response) => response.json())
+        .then((json) => {
+          const currTime = new Date().toLocaleTimeString();
+          const comments: Comment[] = json.comments.map(
+            (comment: Comment) => ({ ...comment, timeStamp: currTime }),
+          );
+          setMessages((prev) => [...prev, ...comments]);
+          messagesCount.current += json.comments.length;
+        });
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    if (scrollEl.current) {
+      scrollEl.current.scrollTo(0, scrollEl.current.scrollHeight);
+    }
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    setSendStatus("loading");
+    fetch("https://dummyjson.com/comments/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: input, postId: 1, userId: 1 }),
+    })
+      .then((response) => response.json())
+      .then((newMessage) => {
+        const currTime = new Date().toLocaleTimeString();
+        setMessages((prev) => [
+          ...prev,
+          { ...newMessage, timeStamp: currTime },
+        ]);
+        setInput("");
+        setSendStatus("success");
+      })
+      .catch(() => {
+        setSendStatus("error");
+      });
+  };
+
   return (
     <div>
-      <p>9. Build a real-time chat interface with polling.</p>
+      <h2>Real-Time Chat</h2>
+      <div className={styles.chatContainer}>
+        <div className={styles.scrollableContainer} ref={scrollEl}>
+          {messages.map((message) => (
+            <div className={styles.message} key={message.id}>
+              <div>
+                <h4 className={styles.userName}>{message.user.fullName}</h4>
+                <span>{message.timeStamp}</span>
+              </div>
+              <div>{message.body}</div>
+            </div>
+          ))}
+          {sendStatus === "loading" && <p>Typing...</p>}
+        </div>
+        <div className={styles.chatControls}>
+          <input
+            type="text"
+            value={input}
+            onChange={(event) => setInput(event.currentTarget.value)}
+            placeholder="Enter a message to send"
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={sendStatus === "loading"}
+          >
+            Send
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

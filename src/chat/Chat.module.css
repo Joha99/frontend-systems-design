@@ -1,0 +1,48 @@
+.chatContainer {
+  background-color: #9fb0ff;
+  border: 2px solid #627ffe;
+  border-radius: 10px;
+  font-size: 14px;
+  overflow-y: hidden;
+}
+
+.chatControls {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+
+  input {
+    border: none;
+    border-radius: 10px;
+    flex-grow: 1;
+    height: 20px;
+    padding-inline: 10px;
+  }
+}
+
+.message {
+  background-color: #ffffff;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-block: 12px;
+  padding-inline: 16px;
+
+  &:not(:last-of-type) {
+    margin-block-end: 10px;
+  }
+}
+
+.scrollableContainer {
+  height: 700px;
+  overflow-y: scroll;
+  padding: 6px;
+  width: 400px;
+}
+
+.userName {
+  margin: 0;
+  padding: 0;
+}

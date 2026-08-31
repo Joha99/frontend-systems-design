@@ -1,4 +1,5 @@
 import styles from "./App.module.css";
+import { Chat } from "./chat/Chat";
 import { ContactForm } from "./contact-form/ContactForm";
 import { CrudList } from "./crud-list/CrudList";
 import { DataTable } from "./data-table/DataTable";
@@ -24,7 +25,8 @@ function App() {
       <FileExplorer />
       <MultiSelect />
       <InfiniteScroll /> */}
-      <UserMatrix />
+      {/* <UserMatrix /> */}
+      <Chat />
     </div>
   );
 }
