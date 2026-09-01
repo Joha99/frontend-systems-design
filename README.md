@@ -78,6 +78,11 @@ Filterable dropdown with chip selection, disabled options, and click-outside-to-
 
 **Skills tested:** useRef, click-outside detection (document event listener), chip UI pattern, disabled option handling, case-insensitive filtering
 
+### 15. Interactive Spreadsheet — `src/spreadsheet/`
+Excel-like grid with editable cells, keyboard navigation, and selection.
+
+**Skills tested:** CSS Grid, keyboard event handling (Enter/Tab/Escape/arrows), controlled inputs, click-outside detection, Record-based state, cell coordinate system
+
 ## Setup
 
 ```bash
