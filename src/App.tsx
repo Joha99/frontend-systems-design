@@ -2,7 +2,9 @@ import styles from "./App.module.css";
 import { CharCounter } from "./char-counter/CharCounter";
 import { Chat } from "./chat/Chat";
 import { ContactForm } from "./contact-form/ContactForm";
+import { DebouncedSearch } from "./debounced-search/DebouncedSearch";
 import { Kanban } from "./kanban/Kanban";
+import { NestedComments } from "./nested-comments/NestedComments";
 import { CrudList } from "./crud-list/CrudList";
 import { DataTable } from "./data-table/DataTable";
 import { FileExplorer } from "./file-explorer/FileExplorer";
@@ -32,7 +34,9 @@ function App() {
       {/* <Chat /> */}
       {/* <Kanban /> */}
       {/* <ToggleCounter /> */}
-      <CharCounter />
+      {/* <CharCounter /> */}
+      {/* <DebouncedSearch /> */}
+      <NestedComments />
     </div>
   );
 }

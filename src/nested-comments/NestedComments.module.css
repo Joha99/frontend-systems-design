@@ -1,0 +1,25 @@
+.collection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style-type: none;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  list-style-type: none;
+}
+
+.reply {
+  background-color: transparent;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.title {
+  border-left: 3px solid #ccc;
+  padding-block: 4px;
+  padding-left: 12px;
+}
