@@ -35,6 +35,8 @@ interface Task {
 
 type TaskMap = Record<Task["id"], Task>;
 
+type ColumnId = "todo" | "inProgress" | "done";
+
 export const Kanban = () => {
   const [todoCol, setTodoCol] = useState<TaskMap>({});
   const [inProgressCol, setInProgressCol] = useState<TaskMap>({});
@@ -55,29 +57,46 @@ export const Kanban = () => {
           } else {
             todoItems[todo.id] = todo;
           }
-          setTodoCol(todoItems);
-          setDoneCol(doneItems);
         });
+        setTodoCol(todoItems);
+        setDoneCol(doneItems);
       })
       .catch((error) => {
         console.error(error);
       });
   }, []);
 
-  const addItemToColumn = (item, column) => {};
+  const onDrop = (
+    cardId: Task["id"],
+    sourceColumn: ColumnId,
+    targetColumn: ColumnId,
+  ) => {
+    console.log("onDrop", cardId, sourceColumn, targetColumn);
+    if (sourceColumn === targetColumn) {
+      return;
+    }
 
-  const onDragStart = () => {};
+    const setSourceCol =
+      sourceColumn === "todo"
+        ? setTodoCol
+        : sourceColumn === "inProgress"
+          ? setInProgressCol
+          : setDoneCol;
 
-  const onDragOver = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    console.log("Drag over", event.target.id);
-  };
+    const setTargetCol =
+      targetColumn === "todo"
+        ? setTodoCol
+        : targetColumn === "inProgress"
+          ? setInProgressCol
+          : setDoneCol;
 
-  const onDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const hoveredColumn = event.target.id; 
-
-    if()
+    setSourceCol((prev) => {
+      const { [cardId]: removed, ...rest } = prev;
+      if (removed) {
+        setTargetCol((targetPrev) => ({ ...targetPrev, [cardId]: removed }));
+      }
+      return rest;
+    });
   };
 
   // TODO: handle drag + drop
@@ -89,8 +108,17 @@ export const Kanban = () => {
         <div
           id="todo"
           className={styles.column}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e: DragEvent<HTMLDivElement>) => {
+            e.preventDefault();
+
+            const cardId = parseInt(e.dataTransfer.getData("cardId"));
+            const sourceColumn = e.dataTransfer.getData(
+              "sourceColumn",
+            ) as ColumnId;
+
+            onDrop(cardId, sourceColumn, "todo");
+          }}
         >
           <h3>Todo</h3>
           <ul className={styles.list}>
@@ -99,10 +127,12 @@ export const Kanban = () => {
               return (
                 <li
                   key={todo.id}
+                  id={String(todo.id)}
                   className={styles.item}
                   draggable={true}
-                  onDragStart={() => {
-                    console.log("Dragging item", todo.todo);
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("cardId", String(todo.id));
+                    e.dataTransfer.setData("sourceColumn", "todo");
                   }}
                 >
                   {todo.todo}
@@ -114,8 +144,17 @@ export const Kanban = () => {
         <div
           id="inProgress"
           className={styles.column}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e: DragEvent<HTMLDivElement>) => {
+            e.preventDefault();
+
+            const cardId = parseInt(e.dataTransfer.getData("cardId"));
+            const sourceColumn = e.dataTransfer.getData(
+              "sourceColumn",
+            ) as ColumnId;
+
+            onDrop(cardId, sourceColumn, "inProgress");
+          }}
         >
           <h3>In Progress</h3>
           <ul className={styles.list}>
@@ -123,8 +162,13 @@ export const Kanban = () => {
               return (
                 <li
                   key={inProgress.id}
+                  id={String(inProgress.id)}
                   className={styles.item}
                   draggable={true}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("cardId", String(inProgress.id));
+                    e.dataTransfer.setData("sourceColumn", "inProgress");
+                  }}
                 >
                   {inProgress.todo}
                 </li>
@@ -135,14 +179,32 @@ export const Kanban = () => {
         <div
           id="done"
           className={styles.column}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e: DragEvent<HTMLDivElement>) => {
+            e.preventDefault();
+
+            const cardId = parseInt(e.dataTransfer.getData("cardId"));
+            const sourceColumn = e.dataTransfer.getData(
+              "sourceColumn",
+            ) as ColumnId;
+
+            onDrop(cardId, sourceColumn, "done");
+          }}
         >
           <h3>Done</h3>
           <ul className={styles.list}>
             {Object.values(doneCol).map((done) => {
               return (
-                <li key={done.id} className={styles.item} draggable={true}>
+                <li
+                  key={done.id}
+                  id={String(done.id)}
+                  className={styles.item}
+                  draggable={true}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("cardId", String(done.id));
+                    e.dataTransfer.setData("sourceColumn", "done");
+                  }}
+                >
                   {done.todo}
                 </li>
               );
