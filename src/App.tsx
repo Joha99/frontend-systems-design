@@ -1,4 +1,5 @@
 import styles from "./App.module.css";
+import { CharCounter } from "./char-counter/CharCounter";
 import { Chat } from "./chat/Chat";
 import { ContactForm } from "./contact-form/ContactForm";
 import { Kanban } from "./kanban/Kanban";
@@ -10,6 +11,7 @@ import { InfiniteScroll } from "./infinite-scroll/InfiniteScroll";
 import { MultiSelect } from "./multi-select/MultiSelect";
 import { MultiStepWizard } from "./multi-step-wizard/MultiStepWizard";
 import { PostBrowser } from "./post-browser/PostBrowser";
+import { ToggleCounter } from "./toggle-counter/ToggleCounter";
 import { Typeahead } from "./typeahead/Typeahead";
 import { UserMatrix } from "./user-matrix/UserMatrix";
 
@@ -28,7 +30,9 @@ function App() {
       <InfiniteScroll /> */}
       {/* <UserMatrix /> */}
       {/* <Chat /> */}
-      <Kanban />
+      {/* <Kanban /> */}
+      {/* <ToggleCounter /> */}
+      <CharCounter />
     </div>
   );
 }
