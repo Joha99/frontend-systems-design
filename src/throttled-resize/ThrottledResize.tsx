@@ -23,8 +23,62 @@
  * Time target: 12 minutes.
  */
 
-import styles from "./ThrottledResize.module.css";
+import { useEffect, useState } from "react";
+import "./ThrottledResize.css";
+
+const COOL_DOWN_PERIOD = 1000;
 
 export const ThrottledResize = () => {
-  return <div>Throttled Resize</div>;
+  const [width, setWidth] = useState<number>(window.innerWidth);
+  const [height, setHeight] = useState<number>(window.innerHeight);
+
+  const [numStateUpdates, setNumStateUpdates] = useState<number>(0);
+  const [numRawResizeEventsFired, setNumRawResizeEventsFired] =
+    useState<number>(0);
+
+  useEffect(() => {
+    let timeoutId: number;
+
+    const onWindowResize = () => {
+      setNumRawResizeEventsFired((prev) => prev + 1);
+
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setWidth(window.innerWidth);
+        setHeight(window.innerHeight);
+        setNumStateUpdates((prev) => prev + 1);
+      }, COOL_DOWN_PERIOD);
+    };
+
+    window.addEventListener("resize", onWindowResize);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", onWindowResize);
+    };
+  }, []);
+
+  return (
+    <div>
+      <h2>Throttled Resize</h2>
+      <div className="label">
+        <span>
+          Window size: {width} by {height}
+        </span>
+        {width !== undefined && height !== undefined && (
+          <div
+            style={{
+              aspectRatio: `${width} / ${height}`,
+              width: "300px",
+              backgroundColor: "yellow",
+            }}
+          >
+            visual box
+          </div>
+        )}
+      </div>
+      <div className="label">Number of resizes: {numRawResizeEventsFired}</div>
+      <div className="label">Number of state updates: {numStateUpdates}</div>
+    </div>
+  );
 };
