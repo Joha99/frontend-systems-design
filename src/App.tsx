@@ -14,6 +14,7 @@ import { MultiSelect } from "./multi-select/MultiSelect";
 import { MultiStepWizard } from "./multi-step-wizard/MultiStepWizard";
 import { PostBrowser } from "./post-browser/PostBrowser";
 import { ToggleCounter } from "./toggle-counter/ToggleCounter";
+import { ThrottledResize } from "./throttled-resize/ThrottledResize";
 import { Typeahead } from "./typeahead/Typeahead";
 import { UserMatrix } from "./user-matrix/UserMatrix";
 
@@ -36,7 +37,8 @@ function App() {
       {/* <ToggleCounter /> */}
       {/* <CharCounter /> */}
       {/* <DebouncedSearch /> */}
-      <NestedComments />
+      {/* <NestedComments /> */}
+      <ThrottledResize />
     </div>
   );
 }

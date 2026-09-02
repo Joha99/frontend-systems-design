@@ -14,15 +14,19 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅ | CRUD Todo List | `src/crud-list/` | Intermediate | all HTTP methods, local state sync, per-item loading/error |
 | ✅ | Modify Existing Code | _(provided at problem time)_ | Intermediate | debugging, reading unfamiliar code, adding features |
 | | Tooltip with Outside Click | `src/tooltip-hover/` | Intermediate | useRef, click-outside detection, Escape key, toggle state |
-| | Debounced Search | `src/debounced-search/` | Intermediate | AbortController, debounce, fetch cleanup, AbortError filtering |
+| ✅ | Debounced Search | `src/debounced-search/` | Intermediate | AbortController, debounce, fetch cleanup, AbortError filtering |
 | | Lazy Image Gallery | `src/lazy-images/` | Intermediate | IntersectionObserver, unobserve, lazy loading, Set tracking |
 | ✅ | Multi-Step Form Wizard | `src/multi-step-wizard/` | Intermediate | multi-step navigation, shared state, step validation, form submission |
-| | Nested Comments | `src/nested-comments/` | Intermediate | recursive components, tree structures, adding to nested state |
+| ✅ | Nested Comments | `src/nested-comments/` | Intermediate | recursive components, tree structures, adding to nested state |
+| | Throttled Resize Tracker | `src/throttled-resize/` | Intermediate | throttle pattern, window events, useRef for timestamps, cleanup |
+| | Shopping Cart (useReducer) | `src/shopping-cart/` | Intermediate | useReducer, action dispatching, computed totals, complex state |
 | ✅ | Real-Time Chat | `src/chat/` | Hard | setInterval in useEffect, auto-scroll, polling, useRef |
 | ✅ | Infinite Scroll Feed | `src/infinite-scroll/` | Hard | IntersectionObserver, offset pagination, useRef, observer cleanup |
 | | Drag-and-Drop Kanban | `src/kanban/` | Hard | HTML Drag and Drop API, dataTransfer, complex state management |
 | | Accessible Modal | `src/modal/` | Hard | compound components, portals, focus trapping, aria attributes |
 | | Interactive Spreadsheet | `src/spreadsheet/` | Hard | CSS Grid, keyboard navigation, controlled inputs, cell coordinates |
+| | Flash Message (useLayoutEffect) | `src/flash-message/` | Hard | useLayoutEffect, DOM measurement, toast stacking, auto-dismiss |
+| | Global Store (Redux pattern) | `src/global-store/` | Hard | useReducer + Context, shared state, dispatch, provider pattern |
 
 ---
 
