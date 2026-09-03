@@ -19,7 +19,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅ | Multi-Step Form Wizard | `src/multi-step-wizard/` | Intermediate | multi-step navigation, shared state, step validation, form submission |
 | ✅ | Nested Comments | `src/nested-comments/` | Intermediate | recursive components, tree structures, adding to nested state |
 | ✅ | Throttled Resize Tracker | `src/throttled-resize/` | Intermediate | throttle/debounce pattern, window events, cleanup |
-| | Shopping Cart (useReducer) | `src/shopping-cart/` | Intermediate | useReducer, action dispatching, computed totals, complex state |
+| ✅ | Shopping Cart (useReducer) | `src/shopping-cart/` | Intermediate | useReducer, action dispatching, computed totals, complex state |
 | ✅ | Real-Time Chat | `src/chat/` | Hard | setInterval in useEffect, auto-scroll, polling, useRef |
 | ✅ | Infinite Scroll Feed | `src/infinite-scroll/` | Hard | IntersectionObserver, offset pagination, useRef, observer cleanup |
 | | Drag-and-Drop Kanban | `src/kanban/` | Hard | HTML Drag and Drop API, dataTransfer, complex state management |

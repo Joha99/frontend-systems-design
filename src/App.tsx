@@ -13,6 +13,7 @@ import { InfiniteScroll } from "./infinite-scroll/InfiniteScroll";
 import { MultiSelect } from "./multi-select/MultiSelect";
 import { MultiStepWizard } from "./multi-step-wizard/MultiStepWizard";
 import { PostBrowser } from "./post-browser/PostBrowser";
+import { ShoppingCart } from "./shopping-cart/ShoppingCart";
 import { ToggleCounter } from "./toggle-counter/ToggleCounter";
 import { ThrottledResize } from "./throttled-resize/ThrottledResize";
 import { Typeahead } from "./typeahead/Typeahead";
@@ -38,7 +39,8 @@ function App() {
       {/* <CharCounter /> */}
       {/* <DebouncedSearch /> */}
       {/* <NestedComments /> */}
-      <ThrottledResize />
+      {/* <ThrottledResize /> */}
+      <ShoppingCart />
     </div>
   );
 }
