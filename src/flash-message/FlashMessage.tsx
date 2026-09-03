@@ -22,7 +22,7 @@
  * Time target: 15 minutes.
  */
 
-import styles from "./FlashMessage.module.css";
+import "./FlashMessage.css";
 
 export const FlashMessage = () => {
   return <div>Flash Message</div>;

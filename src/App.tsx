@@ -8,6 +8,7 @@ import { NestedComments } from "./nested-comments/NestedComments";
 import { CrudList } from "./crud-list/CrudList";
 import { DataTable } from "./data-table/DataTable";
 import { FileExplorer } from "./file-explorer/FileExplorer";
+import { FlashMessage } from "./flash-message/FlashMessage";
 import { GridBoard } from "./grid-board/GridBoard";
 import { InfiniteScroll } from "./infinite-scroll/InfiniteScroll";
 import { LazyImages } from "./lazy-images/LazyImages";
@@ -45,7 +46,8 @@ function App() {
       {/* <TooltipHover /> */}
       {/* <LazyImages /> */}
       {/* <CharCounter /> */}
-      <Kanban />
+      {/* <Kanban /> */}
+      <FlashMessage />
     </div>
   );
 }
