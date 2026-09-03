@@ -39,6 +39,20 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅ | User Matrix | `src/user-matrix/` | chained API calls, Promise.all, random placement, CSS Grid |
 | ✅ | Dropdown Multi-Select with Chips | `src/multi-select/` | useRef, click-outside detection, chip UI, filtering |
 
+## CSS / Animation / Visual
+
+| Status | Problem | Path | Difficulty | Key Skills |
+|--------|---------|------|------------|------------|
+| | Animated Accordion | `src/accordion/` | Easy | CSS transitions, max-height animation, overflow hidden |
+| | Responsive Nav Bar | `src/nav-bar/` | Easy | flexbox, media queries, hamburger menu, mobile breakpoint |
+| | Skeleton Loading Screen | `src/skeleton-loader/` | Easy | CSS keyframes, pulse animation, placeholder layout |
+| | Animated Tab Switcher | `src/animated-tabs/` | Intermediate | Framer Motion, AnimatePresence, layout animations, exit animations |
+| | Reorderable List | `src/reorderable-list/` | Intermediate | Framer Motion Reorder, drag constraints, layout animation |
+| | Card Flip Gallery | `src/card-flip/` | Intermediate | CSS perspective, transform rotateY, backface-visibility, transition |
+| | Staggered Grid Reveal | `src/staggered-grid/` | Intermediate | Framer Motion staggerChildren, variants, CSS Grid, viewport entry |
+| | Animated Page Transitions | `src/page-transitions/` | Hard | Framer Motion AnimatePresence, route-like transitions, shared layout |
+| | Draggable Dock / Toolbar | `src/draggable-dock/` | Hard | Framer Motion drag, spring physics, snap-to-edge, constraints |
+
 ## Setup
 
 ```bash
