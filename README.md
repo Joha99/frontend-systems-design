@@ -22,7 +22,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅ | Shopping Cart (useReducer) | `src/shopping-cart/` | Intermediate | useReducer, action dispatching, computed totals, complex state |
 | ✅ | Real-Time Chat | `src/chat/` | Hard | setInterval in useEffect, auto-scroll, polling, useRef |
 | ✅ | Infinite Scroll Feed | `src/infinite-scroll/` | Hard | IntersectionObserver, offset pagination, useRef, observer cleanup |
-| | Drag-and-Drop Kanban | `src/kanban/` | Hard | HTML Drag and Drop API, dataTransfer, complex state management |
+| ✅ | Drag-and-Drop Kanban | `src/kanban/` | Hard | HTML Drag and Drop API, dataTransfer, complex state management |
 | | Accessible Modal | `src/modal/` | Hard | compound components, portals, focus trapping, aria attributes |
 | | Interactive Spreadsheet | `src/spreadsheet/` | Hard | CSS Grid, keyboard navigation, controlled inputs, cell coordinates |
 | | Flash Message (useLayoutEffect) | `src/flash-message/` | Hard | useLayoutEffect, DOM measurement, toast stacking, auto-dismiss |
