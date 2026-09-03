@@ -13,7 +13,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅ | Typeahead / Autocomplete | `src/typeahead/` | Intermediate | debouncing, fetch API, AbortController, useEffect cleanup |
 | ✅ | CRUD Todo List | `src/crud-list/` | Intermediate | all HTTP methods, local state sync, per-item loading/error |
 | ✅ | Modify Existing Code | _(provided at problem time)_ | Intermediate | debugging, reading unfamiliar code, adding features |
-| | Tooltip with Outside Click | `src/tooltip-hover/` | Intermediate | useRef, click-outside detection, Escape key, toggle state |
+| ✅ | Tooltip with Outside Click | `src/tooltip-hover/` | Intermediate | useRef, click-outside detection, Escape key, toggle state |
 | ✅ | Debounced Search | `src/debounced-search/` | Intermediate | AbortController, debounce, fetch cleanup, AbortError filtering |
 | | Lazy Image Gallery | `src/lazy-images/` | Intermediate | IntersectionObserver, unobserve, lazy loading, Set tracking |
 | ✅ | Multi-Step Form Wizard | `src/multi-step-wizard/` | Intermediate | multi-step navigation, shared state, step validation, form submission |

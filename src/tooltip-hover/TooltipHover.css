@@ -1,0 +1,28 @@
+.buttons {
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  block-size: 500px;
+  justify-content: space-around;
+}
+
+.anchor {
+  border-radius: 100px;
+  background-color: #83cfff;
+  border: none;
+  padding: 8px 16px;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.tooltip {
+  position: absolute;
+  position-area: top span-all;
+  border: 2px solid #cccccc;
+  margin-bottom: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  min-width: 150px;
+}

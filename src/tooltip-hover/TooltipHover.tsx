@@ -13,17 +13,85 @@
  * 5. Pressing Escape closes the open tooltip.
  * 6. Each tooltip shows different content based on the button.
  *
- * Buttons and tooltip content:
- * - "Profile" → "View and edit your profile settings"
- * - "Messages" → "You have 3 unread messages"
- * - "Settings" → "App preferences and configuration"
- * - "Help" → "Documentation and support resources"
- *
  * Time target: 10 minutes.
  */
 
-import styles from "./TooltipHover.module.css";
+import { useEffect, useRef, useState } from "react";
+import "./TooltipHover.css";
+
+interface ButtonConfig {
+  id: number;
+  label: string;
+  tooltip: string;
+}
+
+const BUTTONS: ButtonConfig[] = [
+  { id: 1, label: "Profile", tooltip: "View and edit your profile settings" },
+  { id: 2, label: "Messages", tooltip: "You have 3 unread messages" },
+  { id: 3, label: "Settings", tooltip: "App preferences and configuration" },
+  { id: 4, label: "Help", tooltip: "Documentation and support resources" },
+];
 
 export const TooltipHover = () => {
-  return <div>Tooltip Hover</div>;
+  const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
+  const buttonRefs = useRef<Record<number, HTMLDivElement>>({});
+
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      const clickIsInButton = Object.values(buttonRefs.current).some(
+        (element) => element.contains(e.target as Node),
+      );
+      if (!clickIsInButton) {
+        setActiveTooltip(null);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveTooltip(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  const handleClick = (id: number) => {
+    setActiveTooltip(activeTooltip === id ? null : id);
+  };
+
+  return (
+    <div className="buttons">
+      {BUTTONS.map(({ id, label, tooltip }) => (
+        <div
+          key={id}
+          className="button"
+          ref={(el) => {
+            buttonRefs.current[id] = el;
+          }}
+        >
+          <button
+            className="anchor"
+            style={{ anchorName: `--anchor-${id}` }}
+            onClick={() => handleClick(id)}
+          >
+            {label}
+          </button>
+          {activeTooltip === id && (
+            <div
+              className="tooltip"
+              style={{ positionAnchor: `--anchor-${id}` }}
+            >
+              {tooltip}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 };
