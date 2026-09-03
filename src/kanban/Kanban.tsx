@@ -6,7 +6,7 @@
  * Response: { todos: [{ id, todo, completed, userId }, ...] }
  *
  * Columns: "To Do", "In Progress", "Done"
- * Map initial data: completed=true → "Done", all others → "To Do"
+ * Map initial data: completed=true -> "Done", all others -> "To Do"
  *
  * Requirements:
  * 1. On mount, fetch todos and render them as cards in the appropriate columns.
@@ -21,196 +21,116 @@
  * - Use the HTML Drag and Drop API (no libraries).
  * - Use onDragStart, onDragOver, onDrop events.
  * - Use dataTransfer to pass the dragged card's id and source column.
+ *
+ * Time target: 20 minutes.
  */
 
-import { useEffect, useState, type DragEvent } from "react";
-import styles from "./Kanban.module.css";
+import { useEffect, useState } from "react";
+import "./Kanban.css";
 
-interface Task {
+interface Todo {
   id: number;
   todo: string;
   completed: boolean;
   userId: number;
 }
 
-type TaskMap = Record<Task["id"], Task>;
+type ColumnMap = Record<Todo["id"], Todo>;
 
-type ColumnId = "todo" | "inProgress" | "done";
+type ColumnName = "todo" | "in-progress" | "done";
 
 export const Kanban = () => {
-  const [todoCol, setTodoCol] = useState<TaskMap>({});
-  const [inProgressCol, setInProgressCol] = useState<TaskMap>({});
-  const [doneCol, setDoneCol] = useState<TaskMap>({});
+  const [todoColumn, setTodoColumn] = useState<ColumnMap>({});
+  const [progressColumn, setProgressColumn] = useState<ColumnMap>({});
+  const [doneColumn, setDoneColumn] = useState<ColumnMap>({});
+  const [selected, setSelected] = useState<Todo["id"] | null>(null);
+  const [initialFetchStatus, setInitialFetchStatus] = useState<
+    "loading" | "success" | "error"
+  >();
 
-  const [selected, setSelected] = useState(undefined);
-
-  // TODO: initial fetch of data
   useEffect(() => {
+    setInitialFetchStatus("loading");
     fetch("https://dummyjson.com/todos?limit=20")
-      .then((response) => response.json())
-      .then((json) => {
-        const todoItems: TaskMap = {};
-        const doneItems: TaskMap = {};
-        json.todos.forEach((todo: Task) => {
+      .then((res) => res.json())
+      .then((data: { todos: Todo[] }) => {
+        setInitialFetchStatus("success");
+
+        const computedTodoColumn: ColumnMap = {};
+        const computedDoneColumn: ColumnMap = {};
+
+        data.todos.forEach((todo) => {
           if (todo.completed) {
-            doneItems[todo.id] = todo;
+            computedDoneColumn[todo.id] = todo;
           } else {
-            todoItems[todo.id] = todo;
+            computedTodoColumn[todo.id] = todo;
           }
         });
-        setTodoCol(todoItems);
-        setDoneCol(doneItems);
+
+        setTodoColumn(computedTodoColumn);
+        setDoneColumn(computedDoneColumn);
       })
-      .catch((error) => {
-        console.error(error);
+      .catch(() => {
+        setInitialFetchStatus("error");
       });
   }, []);
 
-  const onDrop = (
-    cardId: Task["id"],
-    sourceColumn: ColumnId,
-    targetColumn: ColumnId,
-  ) => {
-    console.log("onDrop", cardId, sourceColumn, targetColumn);
-    if (sourceColumn === targetColumn) {
-      return;
-    }
+  if (initialFetchStatus === "loading") {
+    return <p>Loading your todo items...</p>;
+  }
 
-    const setSourceCol =
-      sourceColumn === "todo"
-        ? setTodoCol
-        : sourceColumn === "inProgress"
-          ? setInProgressCol
-          : setDoneCol;
+  if (initialFetchStatus === "error") {
+    return <p>There was an error loading your todo items.</p>;
+  }
 
-    const setTargetCol =
-      targetColumn === "todo"
-        ? setTodoCol
-        : targetColumn === "inProgress"
-          ? setInProgressCol
-          : setDoneCol;
-
-    setSourceCol((prev) => {
-      const { [cardId]: removed, ...rest } = prev;
-      if (removed) {
-        setTargetCol((targetPrev) => ({ ...targetPrev, [cardId]: removed }));
-      }
-      return rest;
-    });
-  };
-
-  // TODO: handle drag + drop
   return (
-    <div>
-      <h2>Kanban</h2>
-      <div className={styles.grid}>
-        {/* TODO: implement onDragOver for each column*/}
-        <div
-          id="todo"
-          className={styles.column}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e: DragEvent<HTMLDivElement>) => {
-            e.preventDefault();
-
-            const cardId = parseInt(e.dataTransfer.getData("cardId"));
-            const sourceColumn = e.dataTransfer.getData(
-              "sourceColumn",
-            ) as ColumnId;
-
-            onDrop(cardId, sourceColumn, "todo");
-          }}
-        >
-          <h3>Todo</h3>
-          <ul className={styles.list}>
-            {Object.values(todoCol).map((todo) => {
-              // TODO: implement onDragStart for each item
-              return (
-                <li
-                  key={todo.id}
-                  id={String(todo.id)}
-                  className={styles.item}
-                  draggable={true}
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData("cardId", String(todo.id));
-                    e.dataTransfer.setData("sourceColumn", "todo");
-                  }}
-                >
-                  {todo.todo}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-        <div
-          id="inProgress"
-          className={styles.column}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e: DragEvent<HTMLDivElement>) => {
-            e.preventDefault();
-
-            const cardId = parseInt(e.dataTransfer.getData("cardId"));
-            const sourceColumn = e.dataTransfer.getData(
-              "sourceColumn",
-            ) as ColumnId;
-
-            onDrop(cardId, sourceColumn, "inProgress");
-          }}
-        >
-          <h3>In Progress</h3>
-          <ul className={styles.list}>
-            {Object.values(inProgressCol).map((inProgress) => {
-              return (
-                <li
-                  key={inProgress.id}
-                  id={String(inProgress.id)}
-                  className={styles.item}
-                  draggable={true}
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData("cardId", String(inProgress.id));
-                    e.dataTransfer.setData("sourceColumn", "inProgress");
-                  }}
-                >
-                  {inProgress.todo}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-        <div
-          id="done"
-          className={styles.column}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e: DragEvent<HTMLDivElement>) => {
-            e.preventDefault();
-
-            const cardId = parseInt(e.dataTransfer.getData("cardId"));
-            const sourceColumn = e.dataTransfer.getData(
-              "sourceColumn",
-            ) as ColumnId;
-
-            onDrop(cardId, sourceColumn, "done");
-          }}
-        >
-          <h3>Done</h3>
-          <ul className={styles.list}>
-            {Object.values(doneCol).map((done) => {
-              return (
-                <li
-                  key={done.id}
-                  id={String(done.id)}
-                  className={styles.item}
-                  draggable={true}
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData("cardId", String(done.id));
-                    e.dataTransfer.setData("sourceColumn", "done");
-                  }}
-                >
-                  {done.todo}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+    <div className="grid">
+      <div className="column">
+        <h2>TODO</h2>
+        {Object.values(todoColumn).map(({ id, todo, completed }) => {
+          return (
+            <div key={id} className="item">
+              <div
+                className="indicator"
+                style={{
+                  backgroundColor: "#fd734c",
+                }}
+              />
+              {todo}
+            </div>
+          );
+        })}
+      </div>
+      <div className="column">
+        <h2>IN PROGRESS</h2>
+        {Object.values(progressColumn).map(({ id, todo, completed }) => {
+          return (
+            <div key={id} className="item">
+              <div
+                className="indicator"
+                style={{
+                  backgroundColor: "#edf86c",
+                }}
+              />
+              {todo}
+            </div>
+          );
+        })}
+      </div>
+      <div className="column">
+        <h2>DONE</h2>
+        {Object.values(doneColumn).map(({ id, todo, completed }) => {
+          return (
+            <div key={id} className="item">
+              <div
+                className="indicator"
+                style={{
+                  backgroundColor: "#44c148",
+                }}
+              />
+              {todo}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

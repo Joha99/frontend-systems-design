@@ -36,7 +36,6 @@ function App() {
       {/* <InfiniteScroll />  */}
       {/* <UserMatrix />  */}
       {/* <Chat />  */}
-      {/* <Kanban />  */}
       {/* <ToggleCounter />  */}
       {/* <CharCounter />  */}
       {/* <DebouncedSearch />  */}
@@ -45,7 +44,8 @@ function App() {
       {/* <ShoppingCart /> */}
       {/* <TooltipHover /> */}
       {/* <LazyImages /> */}
-      <CharCounter />
+      {/* <CharCounter /> */}
+      <Kanban />
     </div>
   );
 }
