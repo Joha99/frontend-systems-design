@@ -10,6 +10,7 @@ import { DataTable } from "./data-table/DataTable";
 import { FileExplorer } from "./file-explorer/FileExplorer";
 import { GridBoard } from "./grid-board/GridBoard";
 import { InfiniteScroll } from "./infinite-scroll/InfiniteScroll";
+import { LazyImages } from "./lazy-images/LazyImages";
 import { MultiSelect } from "./multi-select/MultiSelect";
 import { MultiStepWizard } from "./multi-step-wizard/MultiStepWizard";
 import { PostBrowser } from "./post-browser/PostBrowser";
@@ -23,28 +24,28 @@ import { TooltipHover } from "./tooltip-hover/TooltipHover";
 function App() {
   return (
     <div className={styles.app}>
-      {/* 
-        <Typeahead />
-        <DataTable />
-        <ContactForm />
-        <CrudList />
-        <PostBrowser />
-        <MultiStepWizard />
-        <GridBoard rowCount={4} colCount={5} />
-        <FileExplorer />
-        <MultiSelect />
-        <InfiniteScroll /> 
-        <UserMatrix /> 
-        <Chat /> 
-        <Kanban /> 
-        <ToggleCounter /> 
-        <CharCounter /> 
-        <DebouncedSearch /> 
-        <NestedComments /> 
-        <ThrottledResize /> 
-       */}
+      {/* <Typeahead /> */}
+      {/* <DataTable /> */}
+      {/* <ContactForm /> */}
+      {/* <CrudList /> */}
+      {/* <PostBrowser /> */}
+      {/* <MultiStepWizard /> */}
+      {/* <GridBoard rowCount={4} colCount={5} /> */}
+      {/* <FileExplorer /> */}
+      {/* <MultiSelect /> */}
+      {/* <InfiniteScroll />  */}
+      {/* <UserMatrix />  */}
+      {/* <Chat />  */}
+      {/* <Kanban />  */}
+      {/* <ToggleCounter />  */}
+      {/* <CharCounter />  */}
+      {/* <DebouncedSearch />  */}
+      {/* <NestedComments />  */}
+      {/* <ThrottledResize />  */}
       {/* <ShoppingCart /> */}
-      <TooltipHover />
+      {/* <TooltipHover /> */}
+      {/* <LazyImages /> */}
+      <CharCounter />
     </div>
   );
 }

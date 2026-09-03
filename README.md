@@ -15,7 +15,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅ | Modify Existing Code | _(provided at problem time)_ | Intermediate | debugging, reading unfamiliar code, adding features |
 | ✅ | Tooltip with Outside Click | `src/tooltip-hover/` | Intermediate | useRef, click-outside detection, Escape key, toggle state |
 | ✅ | Debounced Search | `src/debounced-search/` | Intermediate | AbortController, debounce, fetch cleanup, AbortError filtering |
-| | Lazy Image Gallery | `src/lazy-images/` | Intermediate | IntersectionObserver, unobserve, lazy loading, Set tracking |
+| ✅ | Lazy Image Gallery | `src/lazy-images/` | Intermediate | IntersectionObserver, unobserve, lazy loading, Set tracking |
 | ✅ | Multi-Step Form Wizard | `src/multi-step-wizard/` | Intermediate | multi-step navigation, shared state, step validation, form submission |
 | ✅ | Nested Comments | `src/nested-comments/` | Intermediate | recursive components, tree structures, adding to nested state |
 | ✅ | Throttled Resize Tracker | `src/throttled-resize/` | Intermediate | throttle/debounce pattern, window events, cleanup |

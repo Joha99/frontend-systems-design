@@ -11,7 +11,7 @@
  * Time target: 5 minutes.
  */
 
-import styles from "./CharCounter.module.css";
+import "./CharCounter.css";
 
 export const CharCounter = () => {
   return <div>Character Counter</div>;

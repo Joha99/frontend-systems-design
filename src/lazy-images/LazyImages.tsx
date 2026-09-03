@@ -12,16 +12,61 @@
  * 5. Once an image has loaded, stop observing that element.
  * 6. Show a "Loading..." text inside placeholders that haven't loaded yet.
  *
- * Hints:
- * - You can use a single observer for all placeholders.
- * - Track which images have loaded in a Set<number>.
- * - observer.unobserve(entry.target) stops watching a single element.
- *
  * Time target: 12 minutes.
  */
 
-import styles from "./LazyImages.module.css";
+import { useEffect, useRef, useState } from "react";
+import "./LazyImages.css";
+
+const IMAGE_COUNT = 20;
 
 export const LazyImages = () => {
-  return <div>Lazy Images</div>;
+  const [loadedIndices, setLoadedIndices] = useState<Set<number>>(new Set());
+  const imageRefs = useRef<Record<number, HTMLDivElement>>({});
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const index = parseInt(entry.target.getAttribute("data-index")!);
+          setLoadedIndices((prev) => new Set([...prev, index]));
+          observer.unobserve(entry.target);
+        }
+      });
+    });
+
+    Object.values(imageRefs.current).forEach((el) => {
+      observer.observe(el);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <div>
+      {Array.from({ length: IMAGE_COUNT }, (_, index) => (
+        <div
+          key={index}
+          data-index={index}
+          className="image"
+          ref={(el) => {
+            if (el) {
+              imageRefs.current[index] = el;
+            }
+          }}
+        >
+          {loadedIndices.has(index) ? (
+            <img
+              src={`https://picsum.photos/seed/${index}/600/400`}
+              alt={`Gallery image ${index + 1}`}
+            />
+          ) : (
+            <p>Loading...</p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 };

@@ -1,0 +1,12 @@
+.image {
+  height: 300px;
+  width: 300px;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+  display: block;
+
+  img {
+    object-fit: contain;
+    height: 100%;
+  }
+}
