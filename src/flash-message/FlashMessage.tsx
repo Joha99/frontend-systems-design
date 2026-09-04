@@ -15,7 +15,14 @@
  * 6. When a toast in the middle is dismissed, the ones below it slide up.
  */
 
-import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import "./FlashMessage.css";
 
 interface Toast {
@@ -34,6 +41,59 @@ const toastColorMap: Record<Toast["type"], CSSProperties["backgroundColor"]> = {
   success: "rgb(196, 251, 200)",
   error: "rgb(255, 207, 207)",
   info: "rgb(189, 245, 254)",
+};
+
+const AutoExpiringToast = ({
+  id,
+  message,
+  type,
+  topOffset,
+  attachRef,
+  onClose,
+}: {
+  id: Toast["id"];
+  message: Toast["message"];
+  type: Toast["type"];
+  topOffset: number;
+  attachRef: (el: HTMLDivElement) => void;
+  onClose: (id: number) => void;
+}) => {
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      onClose(id);
+    }, 3000);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="toastWrapper"
+      style={
+        {
+          "--bg-color": toastColorMap[type],
+          "--top-offset": `${topOffset}px`,
+        } as CSSProperties
+      }
+      ref={(el) => {
+        if (el) {
+          attachRef(el);
+        }
+      }}
+    >
+      <div className="toast">
+        <p className="toastMessage">
+          <span>{`[ID: ${id}]`}</span>
+          <span>{message}</span>
+        </p>
+        <button className="closeButton" onClick={() => onClose(id)}>
+          Ⓧ
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export const FlashMessage = () => {
@@ -68,22 +128,21 @@ export const FlashMessage = () => {
 
     setToasts((prev) => ({
       ...prev,
-      [newToast.id]: {
-        id: newToast.id,
-        message: `New ${type} toast`,
-        type: type,
-      },
+      [newToast.id]: newToast,
     }));
 
     nextId.current = nextId.current + 1;
   };
 
-  const removeToast = (id: Toast["id"]) => {
+  const removeToast = useCallback((id: Toast["id"]) => {
     setToasts((prev) => {
       const { [id]: removedToast, ...rest } = prev;
       return rest;
     });
-  };
+
+    const { [id]: __, ...rest } = toastRefs.current;
+    toastRefs.current = rest;
+  }, []);
 
   const toastsArray = Object.values(toasts);
 
@@ -96,31 +155,19 @@ export const FlashMessage = () => {
       </div>
       {toastsArray.map(({ id, message, type }) => {
         return (
-          <div
+          <AutoExpiringToast
             key={id}
-            className="toastWrapper"
-            style={
-              {
-                "--bg-color": toastColorMap[type],
-                "--top-offset": `${toastStyles[id]}px`,
-              } as CSSProperties
-            }
-            ref={(el) => {
+            id={id}
+            message={message}
+            type={type}
+            topOffset={toastStyles[id]}
+            onClose={removeToast}
+            attachRef={(el) => {
               if (el) {
                 toastRefs.current[id] = el;
               }
             }}
-          >
-            <div className="toast">
-              <p className="toastMessage">
-                <span>{`[ID: ${id}]`}</span>
-                <span>{message}</span>
-              </p>
-              <button className="closeButton" onClick={() => removeToast(id)}>
-                Ⓧ
-              </button>
-            </div>
-          </div>
+          />
         );
       })}
     </div>
