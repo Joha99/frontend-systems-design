@@ -13,13 +13,6 @@
  *    correct position. useLayoutEffect prevents this flicker.
  * 5. Each toast has a manual "X" close button.
  * 6. When a toast in the middle is dismissed, the ones below it slide up.
- *
- * Hints:
- * - useLayoutEffect runs synchronously after DOM mutations but before the browser paints.
- * - useEffect runs after paint, so measuring + repositioning there causes a visible jump.
- * - Use useRef to store refs for each toast element, and measure with getBoundingClientRect().
- *
- * Time target: 15 minutes.
  */
 
 import "./FlashMessage.css";
