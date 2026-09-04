@@ -9,6 +9,7 @@ import { CrudList } from "./crud-list/CrudList";
 import { DataTable } from "./data-table/DataTable";
 import { FileExplorer } from "./file-explorer/FileExplorer";
 import { FlashMessage } from "./flash-message/FlashMessage";
+import { PaginatedTable } from "./paginated-table/PaginatedTable";
 import { GridBoard } from "./grid-board/GridBoard";
 import { InfiniteScroll } from "./infinite-scroll/InfiniteScroll";
 import { LazyImages } from "./lazy-images/LazyImages";
@@ -47,7 +48,8 @@ function App() {
       {/* <LazyImages /> */}
       {/* <CharCounter /> */}
       {/* <Kanban /> */}
-      <FlashMessage />
+      {/* <FlashMessage /> */}
+      <PaginatedTable />
     </div>
   );
 }
