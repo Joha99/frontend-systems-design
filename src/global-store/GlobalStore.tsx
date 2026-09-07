@@ -26,13 +26,6 @@
  * - visibleItems = notifications.slice((page - 1) * pageSize, page * pageSize)
  * - Edge case: current page > totalPages after deletion -> clamp to last page
  * - Edge case: adding pushes to a new page -> navigate there
- *
- * Hints:
- * - Create the context, reducer, and provider in this file.
- * - Use useContext in each child component to access state and dispatch.
- * - This is the exact pattern Redux uses under the hood.
- *
- * Time target: 25 minutes.
  */
 
 import "./GlobalStore.css";

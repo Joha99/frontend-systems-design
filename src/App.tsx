@@ -11,6 +11,7 @@ import { DataTable } from "./data-table/DataTable";
 import { FileExplorer } from "./file-explorer/FileExplorer";
 import { FlashMessage } from "./flash-message/FlashMessage";
 import { PaginatedTable } from "./paginated-table/PaginatedTable";
+import { GlobalStore } from "./global-store/GlobalStore";
 import { GridBoard } from "./grid-board/GridBoard";
 import { InfiniteScroll } from "./infinite-scroll/InfiniteScroll";
 import { LazyImages } from "./lazy-images/LazyImages";
@@ -51,7 +52,8 @@ function App() {
       {/* <Kanban /> */}
       {/* <FlashMessage /> */}
       {/* <PaginatedTable /> */}
-      <Calendar />
+      {/* <Calendar /> */}
+      <GlobalStore />
     </div>
   );
 }

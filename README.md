@@ -31,6 +31,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅ | Calendar Month View | `src/calendar/` | Hard | date math, grid layout, week numbers, month navigation |
 | | Social Media Feed | `src/virtual-feed/` | Hard | IntersectionObserver (multiple), infinite scroll, read tracking, new post banner |
 | | Image Carousel | `src/image-carousel/` | Hard | IntersectionObserver, lazy loading, autoplay, scroll-snap, slide detection |
+| | Searchable Dropdown | `src/searchable-dropdown/` | Hard | binary search, range index, virtual scroll, keyboard nav, outside click |
 
 ---
 
