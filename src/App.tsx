@@ -1,4 +1,5 @@
 import styles from "./App.module.css";
+import { Calendar } from "./calendar/Calendar";
 import { CharCounter } from "./char-counter/CharCounter";
 import { Chat } from "./chat/Chat";
 import { ContactForm } from "./contact-form/ContactForm";
@@ -49,7 +50,8 @@ function App() {
       {/* <CharCounter /> */}
       {/* <Kanban /> */}
       {/* <FlashMessage /> */}
-      <PaginatedTable />
+      {/* <PaginatedTable /> */}
+      <Calendar />
     </div>
   );
 }

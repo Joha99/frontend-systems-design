@@ -29,8 +29,118 @@
  * Time target: 25 minutes.
  */
 
+import { useRef, useState } from "react";
 import "./Calendar.css";
 
+const DAYS_OF_WEEK = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+const EVENTS: Record<number, Record<number, string[]>> = {
+  8: {
+    1: ["Meet Joha for dinner"],
+    5: ["Interview with Company"],
+    10: ["Brunch"],
+  },
+};
+
+const getMonthName = (date: Date) =>
+  new Intl.DateTimeFormat("en-US", { month: "long" }).format(date);
+
+const getFirstDayOfWeek = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+
+const getLastDateOfMonth = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+
+const getLastDayOfMonth = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth() + 1, 0).getDay();
+
+const getLastDateOfPrevMonth = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), 0).getDate();
+
+const datesAreEqual = (a: Date, b: Date) =>
+  a.getDate() === b.getDate() &&
+  a.getMonth() === b.getMonth() &&
+  a.getFullYear() === b.getFullYear();
+
 export const Calendar = () => {
-  return <div>Calendar</div>;
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const today = useRef(new Date());
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const lastDateOfPrevMonth = getLastDateOfPrevMonth(currentDate);
+  const lastDateOfMonth = getLastDateOfMonth(currentDate);
+  const daysToPrepend = getFirstDayOfWeek(currentDate);
+  const daysToAppend = 6 - getLastDayOfMonth(currentDate);
+  const totalCells = daysToPrepend + lastDateOfMonth + daysToAppend;
+
+  const daysInMonthList = Array.from({ length: totalCells }, (_, i) => {
+    if (i < daysToPrepend) {
+      return lastDateOfPrevMonth + i + 1 - daysToPrepend;
+    }
+    if (i + 1 - daysToPrepend > lastDateOfMonth) {
+      return i + 1 - daysToPrepend - lastDateOfMonth;
+    }
+    return i + 1 - daysToPrepend;
+  });
+
+  const isInCurrentMonth = (i: number) =>
+    i >= daysToPrepend && i < daysToPrepend + lastDateOfMonth;
+
+  const navigateMonth = (offset: number) => {
+    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
+  };
+
+  return (
+    <div className="calendarGrid">
+      <div className="month">
+        <button onClick={() => navigateMonth(-1)}>{"<"}</button>
+        <h2>{getMonthName(currentDate)} {year}</h2>
+        <button onClick={() => navigateMonth(1)}>{">"}</button>
+      </div>
+      <div className="daysOfWeek">
+        {DAYS_OF_WEEK.map((day) => (
+          <div key={day} className="header">{day}</div>
+        ))}
+      </div>
+
+      {daysInMonthList.map((date, i) => {
+        const validDate = isInCurrentMonth(i);
+        const thisDate = new Date(year, month, date);
+        const isToday = validDate && datesAreEqual(thisDate, today.current);
+        const isSelected = validDate && selectedDate
+          ? datesAreEqual(thisDate, selectedDate)
+          : false;
+        const events = validDate ? EVENTS?.[month]?.[date] : undefined;
+
+        return (
+          <div
+            key={i}
+            className={`date ${isToday ? "today" : ""} ${isSelected ? "selected" : ""} ${!validDate ? "disabled" : ""}`}
+            onClick={() => {
+              if (validDate) setSelectedDate(thisDate);
+            }}
+          >
+            <span>{date}</span>
+            {events && (
+              <ul className="events">
+                {events.map((event) => (
+                  <li key={event}>{event}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 };

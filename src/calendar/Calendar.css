@@ -1,0 +1,55 @@
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 100px);
+  grid-template-rows: auto auto;
+  grid-auto-rows: 100px;
+}
+
+.month {
+  grid-column: 1 / 8;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+
+  h2 {
+    padding: 0;
+    margin: 0;
+  }
+}
+
+.daysOfWeek {
+  grid-column: 1 / 8;
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+.header {
+  border: 1px solid #ccc;
+}
+
+.date {
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.today {
+  border: 2px solid #55c9ff;
+  background-color: #c1ebff;
+}
+
+.selected {
+  border: 2px solid #ff5353;
+  background-color: #ffb7b7;
+}
+
+.disabled {
+  background-color: #d9d7d7;
+  cursor: not-allowed;
+}
+
+.events {
+  padding: 0;
+  margin: 0;
+  list-style-position: inside;
+}

@@ -28,7 +28,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅ | Flash Message (useLayoutEffect) | `src/flash-message/` | Hard | useLayoutEffect, DOM measurement, toast stacking, auto-dismiss |
 | | Global Store (Redux pattern) | `src/global-store/` | Hard | useReducer + Context, paginated notifications, page clamping |
 | ✅ | Paginated Table | `src/paginated-table/` | Hard | server-side pagination, skip/limit, page window math, sortable columns |
-| | Calendar Month View | `src/calendar/` | Hard | date math, grid layout, week numbers, month navigation |
+| ✅ | Calendar Month View | `src/calendar/` | Hard | date math, grid layout, week numbers, month navigation |
 | | Social Media Feed | `src/virtual-feed/` | Hard | IntersectionObserver (multiple), infinite scroll, read tracking, new post banner |
 | | Image Carousel | `src/image-carousel/` | Hard | IntersectionObserver, lazy loading, autoplay, scroll-snap, slide detection |
 
