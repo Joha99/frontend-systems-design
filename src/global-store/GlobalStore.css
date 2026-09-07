@@ -1,0 +1,60 @@
+.app {
+  display: grid;
+  inline-size: 100%;
+  block-size: 100vh;
+  background-color: #fafafa;
+
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto 1fr;
+
+  grid-template-areas:
+    "header header header header"
+    "userPanel notifications notifications notifications";
+}
+
+.appHeader {
+  grid-area: header;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-content: center;
+  padding-block: 6px;
+
+  h3 {
+    grid-column: 2 / 4;
+    margin: 0;
+    padding: 0;
+    justify-self: center;
+  }
+
+  .themeToggle {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    padding: 6px;
+    grid-column: 4 / 5;
+    height: 32px;
+    width: 32px;
+    justify-self: end;
+  }
+}
+
+.userPanel {
+  grid-area: userPanel;
+  display: flex;
+  flex-direction: column;
+  padding-block: 6px;
+
+  .login,
+  .logout {
+    margin-top: auto;
+  }
+
+  .userName {
+    justify-self: flex-start;
+  }
+}
+
+.notifications {
+  grid-area: notifications;
+  padding-block: 6px;
+}
