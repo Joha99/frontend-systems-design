@@ -24,6 +24,7 @@ import { Typeahead } from "./typeahead/Typeahead";
 import { UserMatrix } from "./user-matrix/UserMatrix";
 import { ShoppingCart } from "./shopping-cart/ShoppingCart";
 import { TooltipHover } from "./tooltip-hover/TooltipHover";
+import { AppWithModal } from "./modal/AppWithModal";
 
 function App() {
   return (
@@ -53,7 +54,8 @@ function App() {
       {/* <FlashMessage /> */}
       {/* <PaginatedTable /> */}
       {/* <Calendar /> */}
-      <GlobalStore />
+      {/* <GlobalStore /> */}
+      <AppWithModal />
     </div>
   );
 }

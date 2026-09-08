@@ -21,17 +21,143 @@
  * - Modal container has role="dialog" and aria-modal="true".
  * - Modal has an aria-labelledby pointing to a heading inside it.
  * - Focus moves to the first focusable element inside the modal on open.
- *
- * Math focus:
- * - Focus trapping: find all focusable elements, mod arithmetic to wrap Tab at boundaries
- * - Pagination offset: skip = (page - 1) * pageSize, "Showing {skip+1}-{skip+items} of {total}"
- * - Deciding when to fetch: do you have data for the requested page already?
- *
- * Time target: 25 minutes.
  */
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PropsWithChildren,
+} from "react";
+import { createPortal } from "react-dom";
 
 import "./Modal.css";
 
-export const Modal = () => {
-  return <div>Modal</div>;
+interface ModalContextState {
+  onOpen: () => void;
+  onClose: () => void;
+  open: boolean;
+}
+
+const ModalContext = createContext<ModalContextState>({
+  onOpen: () => {},
+  onClose: () => {},
+  open: false,
+});
+
+const FOCUSABLE_SELECTOR =
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+const ModalTrigger = () => {
+  const { onOpen, open } = useContext(ModalContext);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open && buttonRef.current) {
+      buttonRef.current.focus();
+    }
+  }, [open]);
+
+  return (
+    <button onClick={onOpen} ref={buttonRef}>
+      Open the modal
+    </button>
+  );
+};
+
+const ModalClose = () => {
+  const { onClose } = useContext(ModalContext);
+
+  return (
+    <button aria-label="Close" className="modal-close" onClick={onClose}>
+      🅧
+    </button>
+  );
+};
+
+const ModalContent = ({ children }: PropsWithChildren) => {
+  const { open, onClose } = useContext(ModalContext);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open || !modalRef.current) return;
+
+    const focusableElements =
+      modalRef.current.querySelectorAll(FOCUSABLE_SELECTOR);
+    const firstFocusable = focusableElements[0] as HTMLElement;
+    const lastFocusable = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Tab" && e.shiftKey && document.activeElement === firstFocusable) {
+        e.preventDefault();
+        lastFocusable.focus();
+      } else if (e.key === "Tab" && !e.shiftKey && document.activeElement === lastFocusable) {
+        e.preventDefault();
+        firstFocusable.focus();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    firstFocusable.focus();
+    modalRef.current.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      modalRef.current?.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div
+      className="overlay"
+      role="dialog"
+      aria-labelledby="header"
+      aria-modal={true}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="modal-root" ref={modalRef}>
+        {children}
+      </div>
+    </div>,
+    document.body,
+  );
+};
+
+const ModalRoot = ({
+  children,
+  defaultOpen = false,
+}: PropsWithChildren<{ defaultOpen?: boolean }>) => {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+
+  const onOpen = useCallback(() => setInternalOpen(true), []);
+  const onClose = useCallback(() => setInternalOpen(false), []);
+
+  const contextValue = useMemo(
+    () => ({ onOpen, onClose, open: internalOpen }),
+    [onOpen, onClose, internalOpen],
+  );
+
+  return (
+    <ModalContext.Provider value={contextValue}>
+      {children}
+    </ModalContext.Provider>
+  );
+};
+
+export const Modal = {
+  Root: ModalRoot,
+  Trigger: ModalTrigger,
+  Content: ModalContent,
+  Close: ModalClose,
 };

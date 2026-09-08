@@ -1,0 +1,31 @@
+.overlay {
+  position: fixed;
+  background-color: rgba(187, 184, 184, 0.2);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-root {
+  border: 1px solid #ccc;
+  background-color: #fff;
+  border-radius: 5px;
+  inline-size: 500px;
+  block-size: 500px;
+
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-close {
+  background-color: transparent;
+  border: none;
+}
