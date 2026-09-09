@@ -25,6 +25,7 @@ import { UserMatrix } from "./user-matrix/UserMatrix";
 import { ShoppingCart } from "./shopping-cart/ShoppingCart";
 import { Spreadsheet } from "./spreadsheet/Spreadsheet";
 import { TooltipHover } from "./tooltip-hover/TooltipHover";
+import { SearchableDropdown } from "./searchable-dropdown/SearchableDropdown";
 import { AppWithModal } from "./modal/AppWithModal";
 
 function App() {
@@ -57,7 +58,8 @@ function App() {
       {/* <Calendar /> */}
       {/* <GlobalStore /> */}
       {/* <AppWithModal /> */}
-      <Spreadsheet />
+      {/* <Spreadsheet /> */}
+      <SearchableDropdown />
     </div>
   );
 }
