@@ -1,0 +1,56 @@
+.wrapper {
+  display: flex;
+  inline-size: 100%;
+  justify-content: center;
+}
+
+.searchableDropdownContainer {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-block-start: 20px;
+}
+
+.anchor {
+}
+
+.dropdown {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  inline-size: 200px;
+  max-block-size: calc(10 * 36px);
+  overflow-y: scroll;
+}
+
+.list {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.listItem {
+  block-size: 36px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  padding: 3px;
+
+  button {
+    background-color: #ebebeb;
+    block-size: 100%;
+    border: none;
+    border-radius: 3px;
+    inline-size: 100%;
+    padding-inline: 8px;
+    text-align: start;
+  }
+}
+
+.label {
+  margin: 0;
+  padding: 3px;
+}
