@@ -23,6 +23,7 @@ import { ThrottledResize } from "./throttled-resize/ThrottledResize";
 import { Typeahead } from "./typeahead/Typeahead";
 import { UserMatrix } from "./user-matrix/UserMatrix";
 import { ShoppingCart } from "./shopping-cart/ShoppingCart";
+import { Spreadsheet } from "./spreadsheet/Spreadsheet";
 import { TooltipHover } from "./tooltip-hover/TooltipHover";
 import { AppWithModal } from "./modal/AppWithModal";
 
@@ -55,7 +56,8 @@ function App() {
       {/* <PaginatedTable /> */}
       {/* <Calendar /> */}
       {/* <GlobalStore /> */}
-      <AppWithModal />
+      {/* <AppWithModal /> */}
+      <Spreadsheet />
     </div>
   );
 }

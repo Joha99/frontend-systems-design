@@ -1,0 +1,71 @@
+.spreadsheet {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.grid-row {
+  display: flex;
+  align-items: center;
+
+  &:not(:last-child) {
+    border-block-end: 1px solid #ccc;
+  }
+
+  & *:not(:last-child) {
+    border-inline-end: 1px solid #ccc;
+  }
+}
+
+.grid-cell {
+  inline-size: 100px;
+  block-size: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.grid-header {
+  display: flex;
+  background-color: #f4f2f2;
+  border-block-end: 1px solid #ccc;
+
+  & *:not(:last-child) {
+    border-inline-end: 1px solid #ccc;
+  }
+}
+
+.grid-row-number {
+  inline-size: 30px;
+  block-size: 100px;
+  background-color: #f4f2f2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid-header-cell {
+  inline-size: 100px;
+  block-size: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid-corner-cell {
+  inline-size: 30px;
+  block-size: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid-selected-cell {
+  background-color: #d4fcff;
+}
+
+.grid-text-area {
+  inline-size: 100%;
+  block-size: 100%;
+}
