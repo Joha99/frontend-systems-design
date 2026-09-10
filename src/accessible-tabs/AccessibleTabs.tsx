@@ -120,8 +120,7 @@ export const AccessibleTabs = () => {
 
     if (id === activeTabId) {
       const nextIndex = (removedIndex + 1) % tabs.length;
-      const nextId = tabs[nextIndex].id;
-      activateTab(nextId === id ? tabs[0].id : nextId);
+      activateTab(tabs[nextIndex].id);
     }
 
     setTabs((prev) => [
@@ -179,6 +178,7 @@ export const AccessibleTabs = () => {
                 </button>
                 <button
                   className={styles.close}
+                  tabIndex={isActive ? 0 : -1}
                   onClick={() => onTabClose(tab.id)}
                   disabled={tabs.length <= 2}
                 >
