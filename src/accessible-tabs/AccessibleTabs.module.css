@@ -1,0 +1,48 @@
+.container {
+  align-items: stretch;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.tabs {
+  align-items: center;
+  background-color: #f7f6f6;
+  border-radius: 5px;
+  display: flex;
+  gap: 3px;
+  list-style-type: none;
+  padding: 4px;
+}
+
+.tab {
+  align-items: center;
+  background-color: white;
+  block-size: 2rem;
+  border: none;
+  border-radius: 5px;
+  display: flex;
+  gap: 3px;
+  padding-inline: 3px;
+
+  button {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+  }
+}
+
+.active {
+  background-color: #c4f0ff;
+}
+
+.close {
+  font-size: 12px;
+}
+
+.panel {
+  min-block-size: 500px;
+  padding: 4px;
+}

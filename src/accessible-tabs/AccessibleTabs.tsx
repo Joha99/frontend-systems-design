@@ -1,50 +1,198 @@
 /**
  * Accessible Tabs (WAI-ARIA Tabs pattern)
  *
- * Build a tabbed interface following the WAI-ARIA Tabs design pattern,
- * where focus management and keyboard interaction follow the spec exactly.
- *
  * Requirements:
- * 1. Render a tab list with 5+ tabs and corresponding tab panels.
- *    Each tab has a label and each panel has rich content (text, links, buttons).
- * 2. Clicking a tab activates it and shows its panel. Only one panel is visible.
- * 3. ARIA attributes:
- *    - Tab list: role="tablist"
- *    - Each tab: role="tab", aria-selected, aria-controls (panel id)
- *    - Each panel: role="tabpanel", aria-labelledby (tab id), tabIndex={0}
- *    - Only the active tab has tabIndex={0}, all others have tabIndex={-1}.
- * 4. Keyboard navigation (roving tabindex pattern):
- *    - When a tab is focused, Arrow Left/Right moves focus to adjacent tabs.
- *    - Home moves focus to the first tab, End to the last tab.
- *    - Focus wraps: Right on the last tab goes to the first, Left on first goes to last.
- *    - The focused tab is activated immediately on arrow key press
- *      (this is "automatic activation" mode per WAI-ARIA).
- *    - Tab key moves focus OUT of the tab list into the active panel's content.
- *      Shift+Tab from the panel returns focus to the active tab.
- * 5. Roving tabIndex: when focus moves to a new tab, update tabIndex={0} on
- *    the new tab and tabIndex={-1} on the old one, then call .focus() on the
- *    new tab element. This ensures the correct tab receives focus when the
- *    user tabs back into the tab list from elsewhere on the page.
- * 6. Dynamic tabs: include an "Add Tab" button and a close button on each tab
- *    (minimum 2 tabs, can't close below that). When a tab is closed:
- *    - If it was the active tab, activate the next tab (or previous if it was last).
- *    - Focus the newly active tab.
- *    - If it was not active, just remove it and keep current selection.
- * 7. Panel content includes focusable elements (links, buttons). Pressing Tab
- *    from the tab list should land on the first focusable element inside the panel.
- *
- * Focus concepts:
- * - Roving tabIndex pattern (tabIndex 0 vs -1)
- * - Focus management on dynamic add/remove
- * - Programmatic .focus() after state changes
- * - Tab key crossing component boundaries (tab list -> panel content)
- * - ARIA roles and the relationship between tabs and panels
- *
- * Time target: 30 minutes.
+ * 1. Tab list with 5 tabs, clicking activates, one panel visible at a time.
+ * 2. ARIA: role="tablist", role="tab" with aria-selected, role="tabpanel" with tabIndex={0}.
+ * 3. Roving tabIndex: active tab has tabIndex={0}, others tabIndex={-1}, .focus() on move.
+ * 4. Arrow Left/Right moves focus and activates (wraps around).
+ * 5. Dynamic: "Add Tab" button and close button (minimum 2 tabs).
+ *    Closing the active tab activates the next (wraps to first if last).
+ * 6. Panel content has at least one focusable element.
  */
 
-import "./AccessibleTabs.css";
+import { useState, type KeyboardEvent, type ReactNode } from "react";
+import styles from "./AccessibleTabs.module.css";
+
+interface Tab {
+  id: number;
+  title: string;
+}
+
+interface Panel {
+  id: number;
+  content: ReactNode;
+}
+
+const defaultTabs: Tab[] = [
+  { id: 0, title: "First tab" },
+  { id: 1, title: "Second tab" },
+  { id: 2, title: "Third tab" },
+  { id: 3, title: "Fourth tab" },
+  { id: 4, title: "Fifth tab" },
+];
+
+const defaultPanels: Record<number, Panel> = {
+  0: {
+    id: 0,
+    content: (
+      <div>
+        <h2>Panel 1</h2>
+        <button>Button</button>
+        <button>Another button</button>
+      </div>
+    ),
+  },
+  1: {
+    id: 1,
+    content: (
+      <div>
+        <h2>Panel 2</h2>
+        <button>Button</button>
+        <button>Another button</button>
+      </div>
+    ),
+  },
+  2: {
+    id: 2,
+    content: (
+      <div>
+        <h2>Panel 3</h2>
+        <button>Button</button>
+        <button>Another button</button>
+      </div>
+    ),
+  },
+  3: {
+    id: 3,
+    content: (
+      <div>
+        <h2>Panel 4</h2>
+        <button>Button</button>
+        <button>Another button</button>
+      </div>
+    ),
+  },
+  4: {
+    id: 4,
+    content: (
+      <div>
+        <h2>Panel 5</h2>
+        <button>Button</button>
+        <button>Another button</button>
+      </div>
+    ),
+  },
+};
+
+let nextTabId = 5;
 
 export const AccessibleTabs = () => {
-  return <div>Accessible Tabs</div>;
+  const [activeTabId, setActiveTabId] = useState(0);
+  const [tabs, setTabs] = useState<Tab[]>(defaultTabs);
+  const [panels, setPanels] = useState<Record<number, Panel>>(defaultPanels);
+
+  const activateTab = (id: number) => {
+    setActiveTabId(id);
+    document.getElementById(String(id))?.focus();
+  };
+
+  const onTabKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let nextIndex;
+
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      nextIndex = (index + 1) % tabs.length;
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      nextIndex = (index - 1 + tabs.length) % tabs.length;
+    }
+
+    if (nextIndex !== undefined) {
+      activateTab(tabs[nextIndex].id);
+    }
+  };
+
+  const onTabClose = (id: number) => {
+    if (tabs.length <= 2) return;
+
+    const removedIndex = tabs.findIndex((tab) => tab.id === id);
+
+    if (id === activeTabId) {
+      const nextIndex = (removedIndex + 1) % tabs.length;
+      const nextId = tabs[nextIndex].id;
+      activateTab(nextId === id ? tabs[0].id : nextId);
+    }
+
+    setTabs((prev) => [
+      ...prev.slice(0, removedIndex),
+      ...prev.slice(removedIndex + 1),
+    ]);
+    setPanels((prev) => {
+      const { [id]: _, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const onAddTab = () => {
+    const id = nextTabId;
+    nextTabId++;
+
+    setTabs((prev) => [...prev, { id, title: `Tab #${id}` }]);
+    setPanels((prev) => ({
+      ...prev,
+      [id]: {
+        id,
+        content: (
+          <div>
+            <h2>Panel for tab #{id}</h2>
+          </div>
+        ),
+      },
+    }));
+    setActiveTabId(id);
+  };
+
+  return (
+    <div>
+      <h2>Accessible Tabs</h2>
+
+      <div className={styles.container}>
+        <ul className={styles.tabs} role="tablist">
+          {tabs.map((tab, index) => {
+            const isActive = activeTabId === tab.id;
+
+            return (
+              <li
+                key={tab.id}
+                className={`${styles.tab} ${isActive ? styles.active : ""}`}
+              >
+                <button
+                  id={String(tab.id)}
+                  role="tab"
+                  aria-selected={isActive}
+                  tabIndex={isActive ? 0 : -1}
+                  onClick={() => setActiveTabId(tab.id)}
+                  onKeyDown={(e) => onTabKeyDown(e, index)}
+                >
+                  {tab.title}
+                </button>
+                <button
+                  className={styles.close}
+                  onClick={() => onTabClose(tab.id)}
+                  disabled={tabs.length <= 2}
+                >
+                  x
+                </button>
+              </li>
+            );
+          })}
+          <button onClick={onAddTab}>Add tab +</button>
+        </ul>
+        <div className={styles.panel} role="tabpanel" tabIndex={0}>
+          {panels[activeTabId].content}
+        </div>
+      </div>
+    </div>
+  );
 };

@@ -26,6 +26,7 @@ import { ShoppingCart } from "./shopping-cart/ShoppingCart";
 import { Spreadsheet } from "./spreadsheet/Spreadsheet";
 import { TooltipHover } from "./tooltip-hover/TooltipHover";
 import { SearchableDropdown } from "./searchable-dropdown/SearchableDropdown";
+import { AccessibleTabs } from "./accessible-tabs/AccessibleTabs";
 import { AppWithModal } from "./modal/AppWithModal";
 
 function App() {
@@ -59,7 +60,8 @@ function App() {
       {/* <GlobalStore /> */}
       {/* <AppWithModal /> */}
       {/* <Spreadsheet /> */}
-      <SearchableDropdown />
+      {/* <SearchableDropdown /> */}
+      <AccessibleTabs />
     </div>
   );
 }
