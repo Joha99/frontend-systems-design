@@ -27,6 +27,8 @@ import { Spreadsheet } from "./spreadsheet/Spreadsheet";
 import { TooltipHover } from "./tooltip-hover/TooltipHover";
 import { SearchableDropdown } from "./searchable-dropdown/SearchableDropdown";
 import { AccessibleTabs } from "./accessible-tabs/AccessibleTabs";
+import { CommandPalette } from "./command-palette/CommandPalette";
+import { VirtualFeed } from "./virtual-feed/VirtualFeed";
 import { AppWithModal } from "./modal/AppWithModal";
 
 function App() {
@@ -61,7 +63,9 @@ function App() {
       {/* <AppWithModal /> */}
       {/* <Spreadsheet /> */}
       {/* <SearchableDropdown /> */}
-      <AccessibleTabs />
+      {/* <AccessibleTabs /> */}
+      {/* <VirtualFeed /> */}
+      <CommandPalette />
     </div>
   );
 }
