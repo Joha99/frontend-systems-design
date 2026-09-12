@@ -62,6 +62,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 |        | Sliding Window Analytics        | `src/sliding-window-chart/`  | Medium       | sliding window sum/avg, monotonic deque for min/max, real-time data stream       |
 |        | Dependency Graph (Topo Sort)    | `src/dependency-graph/`      | Medium/Hard  | adjacency list, Kahn's algorithm (BFS topo sort), cycle detection, in-degree     |
 |        | Priority Task Scheduler         | `src/task-scheduler/`        | Medium/Hard  | min-heap (array-based), bubbleUp/bubbleDown, O(log n) insert/extract, tree viz   |
+|        | Interval Scheduler (Greedy)     | `src/interval-scheduler/`    | Medium       | greedy activity selection, merge overlapping intervals, sort by end time          |
 
 ---
 
