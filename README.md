@@ -41,6 +41,30 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 
 ---
 
+## Algorithm + Frontend
+
+| Status | Problem                         | Path                         | Difficulty   | Key Skills                                                                       |
+| ------ | ------------------------------- | ---------------------------- | ------------ | -------------------------------------------------------------------------------- |
+|        | Tic-Tac-Toe                     | `src/tic-tac-toe/`           | Easy         | 2D array, win detection (8 lines), game state, turn alternation                  |
+|        | Memory Card Game                | `src/memory-game/`           | Easy         | Fisher-Yates shuffle, pair matching, flip state tracking, delayed comparison     |
+|        | Bracket Matcher                 | `src/bracket-matcher/`       | Medium       | stack-based matching, nesting depth, cursor tracking, real-time parsing          |
+|        | Sudoku Validator                | `src/sudoku-validator/`      | Medium       | row/col/box duplicate detection with Sets, 3x3 box math, conflict highlighting  |
+|        | Connect Four                    | `src/connect-four/`          | Medium       | grid traversal, directional win check, gravity drop, game state                  |
+|        | Snake Game                      | `src/snake-game/`            | Medium       | queue/deque, Set for O(1) collision, game loop (setInterval), direction buffering|
+|        | Minesweeper                     | `src/minesweeper/`           | Medium/Hard  | flood fill (BFS/DFS), neighbor counting, grid boundaries, mine relocation        |
+|        | Maze Generator & Solver         | `src/maze-generator/`        | Medium/Hard  | recursive backtracking (DFS), BFS solving, wall representation, animation        |
+|        | Pathfinding Visualizer          | `src/pathfinder/`            | Hard         | BFS/DFS, queue/stack, path reconstruction, animated step-by-step traversal       |
+|        | Word Search Puzzle              | `src/word-search/`           | Hard         | word placement with backtracking, direction vectors, drag selection validation    |
+|        | Two-Pointer Merge               | `src/two-pointer-merge/`     | Easy         | two-pointer merge sorted arrays, two-sum on sorted list, step animation          |
+|        | DP Visualizer (Coin Change)     | `src/dp-calculator/`         | Medium       | bottom-up DP, table filling animation, path reconstruction                       |
+|        | Trie Autocomplete               | `src/trie-autocomplete/`     | Medium       | trie insert/search, DFS word collection, prefix matching, performance comparison |
+|        | LRU Cache Visualizer            | `src/lru-cache/`             | Medium       | Map or doubly linked list + hash map, O(1) get/put/evict, eviction animation     |
+|        | Sliding Window Analytics        | `src/sliding-window-chart/`  | Medium       | sliding window sum/avg, monotonic deque for min/max, real-time data stream       |
+|        | Dependency Graph (Topo Sort)    | `src/dependency-graph/`      | Medium/Hard  | adjacency list, Kahn's algorithm (BFS topo sort), cycle detection, in-degree     |
+|        | Priority Task Scheduler         | `src/task-scheduler/`        | Medium/Hard  | min-heap (array-based), bubbleUp/bubbleDown, O(log n) insert/extract, tree viz   |
+
+---
+
 ## CSS / Animation / Visual
 
 | Status | Problem                   | Path                    | Difficulty   | Key Skills                                                           |

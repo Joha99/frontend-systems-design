@@ -1,0 +1,32 @@
+.grid {
+  column-gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.productList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.product {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

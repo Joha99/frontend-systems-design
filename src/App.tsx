@@ -28,6 +28,7 @@ import { TooltipHover } from "./tooltip-hover/TooltipHover";
 import { SearchableDropdown } from "./searchable-dropdown/SearchableDropdown";
 import { AccessibleTabs } from "./accessible-tabs/AccessibleTabs";
 import { CommandPalette } from "./command-palette/CommandPalette";
+import { CrudDashboard } from "./crud-dashboard/CrudDashboard";
 import { VirtualFeed } from "./virtual-feed/VirtualFeed";
 import { AppWithModal } from "./modal/AppWithModal";
 
@@ -65,7 +66,8 @@ function App() {
       {/* <SearchableDropdown /> */}
       {/* <AccessibleTabs /> */}
       {/* <VirtualFeed /> */}
-      <CommandPalette />
+      {/* <CommandPalette /> */}
+      <CrudDashboard />
     </div>
   );
 }
