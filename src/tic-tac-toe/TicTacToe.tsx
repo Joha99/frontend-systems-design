@@ -29,6 +29,7 @@ import styles from "./TicTacToe.module.css";
 type Player = "X" | "O";
 type Cell = Player | null;
 type Board = Cell[][];
+type WinningCells = [[number, number], [number, number], [number, number]];
 
 const defaultBoard: Board = Array.from({ length: 3 }, (_) => {
   return Array.from({ length: 3 }, (_) => {
@@ -36,21 +37,16 @@ const defaultBoard: Board = Array.from({ length: 3 }, (_) => {
   });
 });
 
-const defaultWinningCells: boolean[][] = Array.from({ length: 3 }, (_) => {
-  return Array.from({ length: 3 }, (_) => {
-    return false;
-  });
-});
-
 export const TicTacToe = () => {
   const [player, setPlayer] = useState<Player>("X");
-  const [winner, setWinner] = useState<Player>();
-
   const [board, setBoard] = useState<Board>(defaultBoard);
-  const [winningCells, setWinningCells] =
-    useState<boolean[][]>(defaultWinningCells);
+  const [winningCells, setWinningCells] = useState<WinningCells>();
 
-  const isDraw =
+  const winner = winningCells
+    ? board[winningCells[0][0]][winningCells[0][1]]
+    : undefined;
+
+  const isDraw: boolean =
     !board.some((row) => {
       return row.includes(null);
     }) && !winner;
@@ -59,10 +55,8 @@ export const TicTacToe = () => {
     row: number,
     column: number,
     newBoard: Board,
-  ): boolean => {
-    const linesToCheck: Array<
-      [[number, number], [number, number], [number, number]]
-    > = [
+  ): { hasWin: boolean; winningCells?: WinningCells } => {
+    const linesToCheck: Array<WinningCells> = [
       [
         [row, 0],
         [row, 1],
@@ -85,38 +79,36 @@ export const TicTacToe = () => {
       ],
     ];
 
+    let currWinningCells: WinningCells | undefined;
+
     const hasWin = linesToCheck.some((line) => {
-      const lineHasWin = !line.some(([row_i, col_i]) => {
-        return newBoard[row_i][col_i] !== player;
+      // every coordinate in the line must be the current player
+      const lineHasWin = line.every(([row_i, col_i]) => {
+        return newBoard[row_i][col_i] === player;
       });
 
       if (lineHasWin) {
-        setWinner(player);
-        setWinningCells((prev) => {
-          const newWinningCells = [...prev.map((row) => [...row])];
-          line.forEach(([row_i, col_i]) => {
-            newWinningCells[row_i][col_i] = true;
-          });
-          return newWinningCells;
-        });
+        currWinningCells = [...line];
       }
 
       return lineHasWin;
     });
 
-    return hasWin;
+    return {
+      hasWin,
+      winningCells: currWinningCells,
+    };
   };
 
   const onCellClick = (row: number, column: number) => {
-    const currentPlayer = player;
-
     const newBoard = [...board.map((row) => [...row])];
-    newBoard[row][column] = currentPlayer;
+    newBoard[row][column] = player;
+    const { hasWin, winningCells } = checkForWin(row, column, newBoard);
 
-    const isWon = checkForWin(row, column, newBoard);
-
-    if (!isWon) {
-      setPlayer(currentPlayer === "X" ? "O" : "X");
+    if (!hasWin) {
+      setPlayer(player === "X" ? "O" : "X");
+    } else {
+      setWinningCells(winningCells);
     }
 
     setBoard(newBoard);
@@ -136,7 +128,12 @@ export const TicTacToe = () => {
         {board.map((row, row_i) => {
           return row.map((col, col_i) => {
             const currentCell = col ?? "";
-            const isInWinningCell = winningCells[row_i][col_i] === true;
+            const isInWinningCell =
+              winningCells &&
+              winningCells.some(
+                (coordinate) =>
+                  coordinate[0] === row_i && coordinate[1] === col_i,
+              );
 
             return (
               <button

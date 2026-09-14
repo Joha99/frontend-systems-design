@@ -38,6 +38,9 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 |        | Virtualized Data Table          | `src/virtual-table/`         | Hard         | virtualization with table layout, sortable columns, inline editing, keyboard nav |
 |        | CRUD Dashboard                  | `src/crud-dashboard/`        | Hard         | optimistic updates, rollback, per-item loading, form validation, infinite scroll |
 |        | Debounced Multi-Filter Panel    | `src/debounced-filters/`     | Hard         | multiple debounce timers, AbortController, server + client filtering, cleanup    |
+|        | Image Search Gallery 🚗        | `src/image-search/`          | Medium       | search + submit, mock API fetch, image grid, pagination controls, loading state |
+|        | Context Paginated List 🚗      | `src/context-paginator/`     | Medium       | React Context provider, multi-component consumers, API pagination, no prop drill|
+|        | Semantic HTML Audit 🚗         | `src/semantic-audit/`        | Easy         | replace div soup with semantic HTML5 tags, string parsing, scoring              |
 
 ---
 
@@ -55,6 +58,9 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 |        | Maze Generator & Solver         | `src/maze-generator/`        | Medium/Hard  | recursive backtracking (DFS), BFS solving, wall representation, animation        |
 |        | Pathfinding Visualizer          | `src/pathfinder/`            | Hard         | BFS/DFS, queue/stack, path reconstruction, animated step-by-step traversal       |
 |        | Word Search Puzzle              | `src/word-search/`           | Hard         | word placement with backtracking, direction vectors, drag selection validation    |
+|        | Peak Element Finder 🚗         | `src/peak-finder/`           | Easy         | linear scan vs binary search for peak, bar chart visualization, step animation   |
+|        | Card Deck Simulator 🚗         | `src/card-deck/`             | Easy/Medium  | deque push/pop both ends, Fisher-Yates shuffle, card dealing, hand display       |
+|        | Functional Toolkit 🚗          | `src/functional-toolkit/`    | Medium       | implement map/filter/reduce/compose/pipe from scratch, pipeline visualization    |
 |        | Two-Pointer Merge               | `src/two-pointer-merge/`     | Easy         | two-pointer merge sorted arrays, two-sum on sorted list, step animation          |
 |        | DP Visualizer (Coin Change)     | `src/dp-calculator/`         | Medium       | bottom-up DP, table filling animation, path reconstruction                       |
 |        | Trie Autocomplete               | `src/trie-autocomplete/`     | Medium       | trie insert/search, DFS word collection, prefix matching, performance comparison |
