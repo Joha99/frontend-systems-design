@@ -30,6 +30,8 @@ import { AccessibleTabs } from "./accessible-tabs/AccessibleTabs";
 import { CommandPalette } from "./command-palette/CommandPalette";
 import { CrudDashboard } from "./crud-dashboard/CrudDashboard";
 import { TicTacToe } from "./tic-tac-toe/TicTacToe";
+import { MemoryGame } from "./memory-game/MemoryGame";
+import { ConnectFour } from "./connect-four/ConnectFour";
 import { VirtualFeed } from "./virtual-feed/VirtualFeed";
 import { AppWithModal } from "./modal/AppWithModal";
 
@@ -69,7 +71,9 @@ function App() {
       {/* <VirtualFeed /> */}
       {/* <CommandPalette /> */}
       {/* <CrudDashboard /> */}
-      <TicTacToe />
+      {/* <TicTacToe /> */}
+      {/* <MemoryGame /> */}
+      <ConnectFour />
     </div>
   );
 }
