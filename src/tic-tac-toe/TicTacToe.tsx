@@ -23,10 +23,134 @@
  * Time target: 15 minutes.
  */
 
+import { useState } from "react";
 import styles from "./TicTacToe.module.css";
 
-export const TicTacToe = () => {
-  // TODO: implement
+type Player = "X" | "O";
+type Cell = Player | null;
+type Board = Cell[][];
 
-  return <div>Tic-Tac-Toe</div>;
+const defaultBoard: Board = Array.from({ length: 3 }, (_) => {
+  return Array.from({ length: 3 }, (_) => {
+    return null;
+  });
+});
+
+const defaultWinningCells: boolean[][] = Array.from({ length: 3 }, (_) => {
+  return Array.from({ length: 3 }, (_) => {
+    return false;
+  });
+});
+
+export const TicTacToe = () => {
+  const [player, setPlayer] = useState<Player>("X");
+  const [winner, setWinner] = useState<Player>();
+
+  const [board, setBoard] = useState<Board>(defaultBoard);
+  const [winningCells, setWinningCells] =
+    useState<boolean[][]>(defaultWinningCells);
+
+  const isDraw =
+    !board.some((row) => {
+      return row.includes(null);
+    }) && !winner;
+
+  const checkForWin = (
+    row: number,
+    column: number,
+    newBoard: Board,
+  ): boolean => {
+    const linesToCheck: Array<
+      [[number, number], [number, number], [number, number]]
+    > = [
+      [
+        [row, 0],
+        [row, 1],
+        [row, 2],
+      ],
+      [
+        [0, column],
+        [1, column],
+        [2, column],
+      ],
+      [
+        [0, 0],
+        [1, 1],
+        [2, 2],
+      ],
+      [
+        [0, 2],
+        [1, 1],
+        [2, 0],
+      ],
+    ];
+
+    const hasWin = linesToCheck.some((line) => {
+      const lineHasWin = !line.some(([row_i, col_i]) => {
+        return newBoard[row_i][col_i] !== player;
+      });
+
+      if (lineHasWin) {
+        setWinner(player);
+        setWinningCells((prev) => {
+          const newWinningCells = [...prev.map((row) => [...row])];
+          line.forEach(([row_i, col_i]) => {
+            newWinningCells[row_i][col_i] = true;
+          });
+          return newWinningCells;
+        });
+      }
+
+      return lineHasWin;
+    });
+
+    return hasWin;
+  };
+
+  const onCellClick = (row: number, column: number) => {
+    const currentPlayer = player;
+
+    const newBoard = [...board.map((row) => [...row])];
+    newBoard[row][column] = currentPlayer;
+
+    const isWon = checkForWin(row, column, newBoard);
+
+    if (!isWon) {
+      setPlayer(currentPlayer === "X" ? "O" : "X");
+    }
+
+    setBoard(newBoard);
+  };
+
+  return (
+    <div>
+      {isDraw ? (
+        <p>Game ended with a draw!</p>
+      ) : winner ? (
+        <p>Player {winner} has won! </p>
+      ) : (
+        <p>Player {player} is up!</p>
+      )}
+
+      <div className={styles.board}>
+        {board.map((row, row_i) => {
+          return row.map((col, col_i) => {
+            const currentCell = col ?? "";
+            const isInWinningCell = winningCells[row_i][col_i] === true;
+
+            return (
+              <button
+                key={`${row_i}x${col_i}`}
+                className={`${styles.cell} ${isInWinningCell ? styles.winningCell : ""}`}
+                onClick={() => onCellClick(row_i, col_i)}
+                disabled={col !== null || winner !== undefined || isDraw}
+              >
+                {currentCell}
+              </button>
+            );
+          });
+        })}
+      </div>
+    </div>
+  );
 };

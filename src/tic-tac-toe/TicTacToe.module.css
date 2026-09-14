@@ -1,0 +1,14 @@
+.cell {
+  height: 50px;
+  width: 50px;
+  border-radius: 3px;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.winningCell {
+  background-color: greenyellow;
+}
