@@ -34,6 +34,8 @@ import { MemoryGame } from "./memory-game/MemoryGame";
 import { ConnectFour } from "./connect-four/ConnectFour";
 import { VirtualFeed } from "./virtual-feed/VirtualFeed";
 import { AppWithModal } from "./modal/AppWithModal";
+import { ImageSearch } from "./image-search/ImageSearch";
+import { SlidingWindowPractice } from "./sliding-window-practice/SlidingWindowPractice";
 
 function App() {
   return (
@@ -73,7 +75,9 @@ function App() {
       {/* <CrudDashboard /> */}
       {/* <TicTacToe /> */}
       {/* <MemoryGame /> */}
-      <ConnectFour />
+      {/* <ConnectFour /> */}
+      {/* <SlidingWindowPractice /> */}
+      <ImageSearch />
     </div>
   );
 }

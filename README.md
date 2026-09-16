@@ -52,7 +52,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅     | Memory Card Game             | `src/memory-game/`          | Easy        | Fisher-Yates shuffle, pair matching, flip state tracking, delayed comparison      |
 |        | Bracket Matcher              | `src/bracket-matcher/`      | Medium      | stack-based matching, nesting depth, cursor tracking, real-time parsing           |
 |        | Sudoku Validator             | `src/sudoku-validator/`     | Medium      | row/col/box duplicate detection with Sets, 3x3 box math, conflict highlighting    |
-|        | Connect Four                 | `src/connect-four/`         | Medium      | grid traversal, directional win check, gravity drop, game state                   |
+| ✅     | Connect Four                 | `src/connect-four/`         | Medium      | grid traversal, directional win check, gravity drop, game state                   |
 |        | Snake Game                   | `src/snake-game/`           | Medium      | queue/deque, Set for O(1) collision, game loop (setInterval), direction buffering |
 |        | Minesweeper                  | `src/minesweeper/`          | Medium/Hard | flood fill (BFS/DFS), neighbor counting, grid boundaries, mine relocation         |
 |        | Maze Generator & Solver      | `src/maze-generator/`       | Medium/Hard | recursive backtracking (DFS), BFS solving, wall representation, animation         |

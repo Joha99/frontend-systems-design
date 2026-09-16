@@ -1,0 +1,21 @@
+.block {
+  border: 1px solid black;
+  width: 100px;
+  height: 100px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.window {
+  background-color: yellow;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(7, 100px);
+  grid-auto-rows: 100px;
+  gap: 5px;
+}

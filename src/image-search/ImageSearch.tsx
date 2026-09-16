@@ -31,11 +31,6 @@
  *     return { images, total };
  *   };
  *
- * Algorithm focus:
- * - Pagination math: total pages = Math.ceil(total / PAGE_SIZE).
- * - Resetting page to 1 on new search.
- * - Preventing fetch while one is in-flight (or using AbortController).
- *
  * Time target: 25 minutes.
  */
 
