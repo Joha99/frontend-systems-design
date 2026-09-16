@@ -77,7 +77,8 @@ function App() {
       {/* <MemoryGame /> */}
       {/* <ConnectFour /> */}
       {/* <SlidingWindowPractice /> */}
-      <ImageSearch />
+      {/* <ImageSearch /> */}
+      <VirtualFeed />
     </div>
   );
 }
