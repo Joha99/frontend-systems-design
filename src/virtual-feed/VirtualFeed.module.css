@@ -1,0 +1,91 @@
+.container {
+  border: 1px solid black;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.scrollContainer {
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.card {
+  inline-size: 600px;
+  border-radius: 10px;
+  border: 1px solid #cccccc;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  padding: 10px;
+  gap: 10px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.content {
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+}
+
+.tag {
+  font-size: 12px;
+  border-radius: 10px;
+  background-color: #80d9ff;
+  padding-inline: 6px;
+}
+
+.image {
+  border-radius: 50%;
+  border: 1px solid #cccccc;
+  height: 100px;
+  width: 100px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 90%;
+    height: 90%;
+    object-fit: cover;
+  }
+}
+
+.body {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+}
+
+.footer {
+  margin-top: auto;
+  align-self: end;
+  font-size: 12px;
+}
+
+.sentinel {
+  background-color: red;
+  height: 10px;
+}
+
+.topButton {
+  background-color: #ff8686;
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+}
+
+.read {
+  color: #9f9f9f;
+}
