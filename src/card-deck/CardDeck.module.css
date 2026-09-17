@@ -1,0 +1,53 @@
+.wrapper {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  padding: 50px;
+  width: 100%;
+}
+
+.table {
+  display: flex;
+  margin-top: 50px;
+  width: 100%;
+}
+
+.deckArea {
+  flex-grow: 1;
+  position: relative;
+  width: auto;
+}
+
+.cardBase {
+  background-color: #3ebc4b;
+  border: 1px solid #154319;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  justify-content: space-between;
+  padding: 10px;
+  width: 150px;
+
+  h3 {
+    align-self: flex-end;
+  }
+}
+
+.card {
+  composes: cardBase;
+  left: 40%;
+  position: absolute;
+}
+
+.drawn {
+  composes: cardBase;
+}
+
+.top {
+  transform: rotate(-15deg) translateX(-150px);
+}
+
+.bottom {
+  transform: rotate(15deg) translateX(150px);
+}

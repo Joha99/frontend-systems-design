@@ -12,6 +12,10 @@ body {
     "Open Sans",
     "Helvetica Neue",
     sans-serif;
+
+  * {
+    box-sizing: border-box;
+  }
 }
 
 h1,
