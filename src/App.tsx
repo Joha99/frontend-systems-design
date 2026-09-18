@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { TreeSelect } from "./tree-select/TreeSelect";
+import { ContextPaginator } from "./context-paginator/ContextPaginator";
 
 function App() {
   return (
     <div className={styles.app}>
-      <TreeSelect />
+      <ContextPaginator />
     </div>
   );
 }
