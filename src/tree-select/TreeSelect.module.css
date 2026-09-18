@@ -1,0 +1,62 @@
+.anchor {
+  anchor-name: --anchor;
+}
+
+.dropdown {
+  position-anchor: --anchor;
+  position-area: bottom;
+  inline-size: 250px;
+  border: 1px solid #ccc;
+  position: absolute;
+  inset-block-start: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 6px;
+  gap: 3px;
+  border-radius: 5px;
+}
+
+.file {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 3px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #ebebeb;
+  }
+}
+
+.nestedFiles {
+  padding-left: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  border-left: 1.5px solid #ccc;
+}
+
+.folder {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+}
+
+.folderHeader {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.folderToggle {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
