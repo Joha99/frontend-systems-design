@@ -33,10 +33,13 @@ import { TicTacToe } from "./tic-tac-toe/TicTacToe";
 import { MemoryGame } from "./memory-game/MemoryGame";
 import { CardDeck } from "./card-deck/CardDeck";
 import { ConnectFour } from "./connect-four/ConnectFour";
+import { ContextPaginator } from "./context-paginator/ContextPaginator";
+import { PeakFinder } from "./peak-finder/PeakFinder";
 import { VirtualFeed } from "./virtual-feed/VirtualFeed";
 import { AppWithModal } from "./modal/AppWithModal";
 import { ImageSearch } from "./image-search/ImageSearch";
 import { SlidingWindowPractice } from "./sliding-window-practice/SlidingWindowPractice";
+import { TreeSelect } from "./tree-select/TreeSelect";
 
 function App() {
   return (
@@ -80,7 +83,7 @@ function App() {
       {/* <SlidingWindowPractice /> */}
       {/* <ImageSearch /> */}
       {/* <VirtualFeed /> */}
-      <CardDeck />
+      <TreeSelect />
     </div>
   );
 }
