@@ -39,7 +39,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 |        | CRUD Dashboard                  | `src/crud-dashboard/`        | Hard         | optimistic updates, rollback, per-item loading, form validation, infinite scroll |
 |        | Debounced Multi-Filter Panel    | `src/debounced-filters/`     | Hard         | multiple debounce timers, AbortController, server + client filtering, cleanup    |
 | ✅     | Image Search Gallery 🚗         | `src/image-search/`          | Medium       | search + submit, mock API fetch, image grid, pagination controls, loading state  |
-|        | Context Paginated List 🚗       | `src/context-paginator/`     | Medium       | React Context provider, multi-component consumers, API pagination, no prop drill |
+| ✅     | Context Paginated List 🚗       | `src/context-paginator/`     | Medium       | React Context provider, multi-component consumers, API pagination, no prop drill |
 |        | Semantic HTML Audit 🚗          | `src/semantic-audit/`        | Easy         | replace div soup with semantic HTML5 tags, string parsing, scoring               |
 
 ---
@@ -51,7 +51,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅     | Tic-Tac-Toe                  | `src/tic-tac-toe/`          | Easy        | 2D array, win detection (8 lines), game state, turn alternation                   |
 | ✅     | Memory Card Game             | `src/memory-game/`          | Easy        | Fisher-Yates shuffle, pair matching, flip state tracking, delayed comparison      |
 |        | Bracket Matcher              | `src/bracket-matcher/`      | Medium      | stack-based matching, nesting depth, cursor tracking, real-time parsing           |
-|        | Sudoku Validator             | `src/sudoku-validator/`     | Medium      | row/col/box duplicate detection with Sets, 3x3 box math, conflict highlighting    |
+| ✅     | Sudoku Validator             | `src/sudoku-validator/`     | Medium      | row/col/box duplicate detection with Sets, 3x3 box math, conflict highlighting    |
 | ✅     | Connect Four                 | `src/connect-four/`         | Medium      | grid traversal, directional win check, gravity drop, game state                   |
 |        | Snake Game                   | `src/snake-game/`           | Medium      | queue/deque, Set for O(1) collision, game loop (setInterval), direction buffering |
 |        | Minesweeper                  | `src/minesweeper/`          | Medium/Hard | flood fill (BFS/DFS), neighbor counting, grid boundaries, mine relocation         |

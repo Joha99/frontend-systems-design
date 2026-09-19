@@ -1,0 +1,29 @@
+.grid {
+  display: inline-grid;
+  grid-template-columns: repeat(9, 50px);
+  grid-auto-rows: 50px;
+  border: 2px solid #000;
+}
+
+.cell {
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.boldedCol {
+  border-right: 2px solid #000;
+}
+
+.boldedRow {
+  border-bottom: 2px solid #000;
+}
+
+.selected {
+  border: 1px solid blue;
+}
+
+.conflict {
+  border: 2px solid red;
+}

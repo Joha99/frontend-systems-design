@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { ContextPaginator } from "./context-paginator/ContextPaginator";
+import { VirtualTable } from "./virtual-table/VirtualTable";
 
 function App() {
   return (
     <div className={styles.app}>
-      <ContextPaginator />
+      <VirtualTable />
     </div>
   );
 }
