@@ -1,0 +1,31 @@
+.table {
+  border: 1px solid black;
+  inline-size: fit-content;
+}
+
+.body {
+  block-size: calc(40px * 15);
+  inline-size: fit-content;
+  overflow-y: scroll;
+  background-color: #e4e3e3;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 30px 200px 300px 100px 200px;
+  border-block-end: 1px solid black;
+}
+
+.row {
+  block-size: 40px;
+  inline-size: 100%;
+  display: grid;
+  grid-template-columns: 30px 200px 300px 100px 200px;
+  border-block-end: 1px solid black;
+  align-content: center;
+}
+
+.virtualized {
+  box-sizing: border-box;
+  block-size: calc(100 * 40px);
+}
