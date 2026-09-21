@@ -1,0 +1,26 @@
+.board {
+  display: inline-grid;
+  grid-template-columns: repeat(20, 50px);
+  grid-template-rows: repeat(20, 50px);
+}
+
+.gameOver {
+  border: 3px solid #ff1a1a;
+}
+
+.cell {
+  border: 1px solid black;
+  inline-size: 100%;
+  block-size: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.snake {
+  background-color: #99ff9c;
+}
+
+.apple {
+  background-color: #fbacac;
+}

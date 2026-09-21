@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { VirtualTable } from "./virtual-table/VirtualTable";
+import { SnakeGame } from "./snake-game/SnakeGame";
 
 function App() {
   return (
     <div className={styles.app}>
-      <VirtualTable />
+      <SnakeGame />
     </div>
   );
 }
