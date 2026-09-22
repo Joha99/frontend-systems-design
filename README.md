@@ -36,7 +36,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅     | Accessible Tabs                 | `src/accessible-tabs/`       | Hard         | roving tabIndex, ARIA tabs pattern, dynamic add/remove, focus across boundaries  |
 | ✅     | Tree Select                     | `src/tree-select/`           | Hard         | roving tabIndex, tree flattening, expand/collapse focus, type-ahead, ARIA tree   |
 | ✅     | Virtualized Data Table          | `src/virtual-table/`         | Hard         | virtualization with table layout, sortable columns, inline editing, keyboard nav |
-|        | CRUD Dashboard                  | `src/crud-dashboard/`        | Hard         | optimistic updates, rollback, per-item loading, form validation, infinite scroll |
+| ✅     | CRUD Dashboard                  | `src/crud-dashboard/`        | Hard         | optimistic updates, rollback, per-item loading, form validation, infinite scroll |
 |        | Debounced Multi-Filter Panel    | `src/debounced-filters/`     | Hard         | multiple debounce timers, AbortController, server + client filtering, cleanup    |
 | ✅     | Image Search Gallery 🚗         | `src/image-search/`          | Medium       | search + submit, mock API fetch, image grid, pagination controls, loading state  |
 | ✅     | Context Paginated List 🚗       | `src/context-paginator/`     | Medium       | React Context provider, multi-component consumers, API pagination, no prop drill |
