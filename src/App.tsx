@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { SnakeGame } from "./snake-game/SnakeGame";
+import { CrudDashboard } from "./crud-dashboard/CrudDashboard";
 
 function App() {
   return (
     <div className={styles.app}>
-      <SnakeGame />
+      <CrudDashboard />
     </div>
   );
 }

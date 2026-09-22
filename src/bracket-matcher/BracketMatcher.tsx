@@ -15,16 +15,8 @@
  * 4. When the cursor is on a bracket (track cursor position via
  *    onSelect / selectionStart), highlight its matching partner
  *    with a bold outline or background.
- * 5. Show error summary below: "2 unmatched brackets" or "All brackets matched".
- *
- * Algorithm focus:
- * - Stack-based matching: iterate through the string.
- *   Push opening brackets onto the stack (with their index).
- *   On closing bracket, pop from stack and check if it matches.
- *   If stack is empty or bracket types don't match, it's unmatched.
- *   After iteration, anything left on the stack is unmatched.
- * - Nesting depth: track current depth. Opening bracket increments,
- *   closing bracket decrements (after matching).
+ * 5. Show error summary below: "2 unmatched brackets" or
+ *    "All brackets matched".
  *
  * Time target: 20 minutes.
  */
@@ -32,7 +24,9 @@
 import styles from "./BracketMatcher.module.css";
 
 export const BracketMatcher = () => {
-  // TODO: implement
-
-  return <div>Bracket Matcher</div>;
+  return (
+    <div style={{ width: "100%" }}>
+      <h2>Bracket Matcher</h2>
+    </div>
+  );
 };
