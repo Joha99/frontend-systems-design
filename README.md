@@ -54,7 +54,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅     | Sudoku Validator             | `src/sudoku-validator/`     | Medium      | row/col/box duplicate detection with Sets, 3x3 box math, conflict highlighting    |
 | ✅     | Connect Four                 | `src/connect-four/`         | Medium      | grid traversal, directional win check, gravity drop, game state                   |
 | ✅     | Snake Game                   | `src/snake-game/`           | Medium      | queue/deque, Set for O(1) collision, game loop (setInterval), direction buffering |
-|        | Minesweeper                  | `src/minesweeper/`          | Medium/Hard | flood fill (BFS/DFS), neighbor counting, grid boundaries, mine relocation         |
+| ✅     | Minesweeper                  | `src/minesweeper/`          | Medium/Hard | flood fill (BFS/DFS), neighbor counting, grid boundaries, mine relocation         |
 |        | Maze Generator & Solver      | `src/maze-generator/`       | Medium/Hard | recursive backtracking (DFS), BFS solving, wall representation, animation         |
 |        | Pathfinding Visualizer       | `src/pathfinder/`           | Hard        | BFS/DFS, queue/stack, path reconstruction, animated step-by-step traversal        |
 |        | Word Search Puzzle           | `src/word-search/`          | Hard        | word placement with backtracking, direction vectors, drag selection validation    |
