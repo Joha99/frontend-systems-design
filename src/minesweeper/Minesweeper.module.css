@@ -1,0 +1,31 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+}
+
+.cell {
+  width: 50px;
+  height: 50px;
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #dddddd;
+  font-size: 12px;
+}
+
+.flagged {
+  background-color: #24da36;
+}
+
+.revealed {
+  background-color: white;
+}
+
+.gameOver {
+  border: 3px solid red;
+}
+
+.revealedBorder {
+  background-color: #feffd1;
+}
