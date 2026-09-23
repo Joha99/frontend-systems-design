@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { CrudDashboard } from "./crud-dashboard/CrudDashboard";
+import { Minesweeper } from "./minesweeper/Minesweeper";
 
 function App() {
   return (
     <div className={styles.app}>
-      <CrudDashboard />
+      <Minesweeper />
     </div>
   );
 }
