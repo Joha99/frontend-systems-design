@@ -14,37 +14,39 @@
  * 1. Load the outline on mount (show a loading state). Render it as a
  *    nested bulleted list. Each bullet is an editable single-line input.
  *    Bullets with children show a collapse arrow.
- *
  * 2. Store the tree NORMALIZED (a lookup of nodes by id, each node knowing
  *    its parent and its ordered children) instead of the nested API shape.
  *    Every operation below should touch only the nodes involved, not
  *    rebuild the tree.
- *
  * 3. Derive a "visible order" list (depth-first, skipping children of
  *    collapsed nodes). Up/Down navigation walks this list.
- *
  * 4. Keyboard (while focused in a bullet's input):
  *    - ArrowUp / ArrowDown: focus previous / next visible bullet.
+ *
  *    - Enter: create an empty sibling directly after the current bullet
  *      and focus it. (If the current bullet is expanded and has children,
  *      create it as the FIRST child instead.)
+ *
  *    - Tab: indent: make the bullet the last child of its previous
  *      sibling. No-op if there is no previous sibling. Children move with it.
+ *
  *    - Shift+Tab: outdent: make the bullet the next sibling of its parent.
  *      No-op at the top level.
+ *
  *    - Backspace on an EMPTY bullet with no children: delete it and focus
  *      the previous visible bullet (caret at end of its text).
+ *
  *    - Cmd/Ctrl+ArrowUp: collapse. Cmd/Ctrl+ArrowDown: expand.
+ *
  *    - Alt+Shift+ArrowUp / ArrowDown: move the bullet (with its subtree)
  *      above / below its sibling. Stays within the same parent.
+ *
  *    - Cmd/Ctrl+Z: undo. Cmd/Ctrl+Shift+Z: redo.
  *
  * 5. Focus must survive every operation: after indent/outdent/move the
  *    same bullet keeps focus AND the caret stays at the same offset.
- *
  * 6. Undo/redo covers structural operations (create, delete, indent,
  *    outdent, move, collapse). Text edits do not need to be undoable.
- *
  * 7. Autosave: track which node ids changed ("dirty set"). 1s after the last
  *    edit, send ONE saveChanges batch. Show "Saving…", "Saved", or
  *    "Couldn't save · Retry". Edits made while a save is in flight must not
@@ -72,7 +74,13 @@
  * Time target: 90 minutes.
  */
 
-import { useEffect, useState, type ChangeEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from "react";
 import styles from "./Outliner.module.css";
 import { fetchOutline, type OutlineNode, saveChanges } from "./mockApi";
 
@@ -86,17 +94,33 @@ interface TreeNode {
 
 type TreeNodeMap = Record<OutlineNode["id"], TreeNode>;
 
-const OutlineItem = ({ node, map }: { node: TreeNode; map: TreeNodeMap }) => {
-  const children = map[node.id].children;
+type FetchStatus = "loading" | "success" | "error";
+
+const OutlineItem = ({
+  outline,
+  map,
+  refs,
+}: {
+  outline: TreeNode;
+  map: TreeNodeMap;
+  refs: Record<OutlineNode["id"], HTMLInputElement>;
+}) => {
+  const children = map[outline.id].children;
 
   if (children.length === 0) {
     return (
       <li className={styles["list-item"]}>
+        ({outline.id})
         <input
           type="text"
-          value={node.text}
+          value={outline.text}
           onChange={() => {}}
           className={styles.input}
+          ref={(el) => {
+            if (el) {
+              refs[outline.id] = el;
+            }
+          }}
         />
       </li>
     );
@@ -104,18 +128,30 @@ const OutlineItem = ({ node, map }: { node: TreeNode; map: TreeNodeMap }) => {
 
   return (
     <li className={styles["list-item"]}>
-      {node.collapsed ? "▲" : "▼"}
+      {outline.collapsed ? "▲" : "▼"}({outline.id})
       <input
         type="text"
-        value={node.text}
+        value={outline.text}
         onChange={() => {}}
         className={styles.input}
+        ref={(el) => {
+          if (el) {
+            refs[outline.id] = el;
+          }
+        }}
       />
-      {!node.collapsed && (
+      {!outline.collapsed && (
         <ul className={styles.list}>
-          {node.children.map((childId) => {
-            const childObject = map[childId];
-            return <OutlineItem key={childId} node={childObject} map={map} />;
+          {outline.children.map((childId) => {
+            const childOutline = map[childId];
+            return (
+              <OutlineItem
+                key={childId}
+                outline={childOutline}
+                map={map}
+                refs={refs}
+              />
+            );
           })}
         </ul>
       )}
@@ -125,10 +161,15 @@ const OutlineItem = ({ node, map }: { node: TreeNode; map: TreeNodeMap }) => {
 
 export const Outliner = () => {
   const [normalizedMap, setNormalizedMap] = useState<TreeNodeMap>({});
+  const [fetchStatus, setFetchStatus] = useState<FetchStatus>();
 
-  const [fetchStatus, setFetchStatus] = useState<
-    "loading" | "success" | "error"
-  >();
+  const visibleOutlineRefs = useRef<
+    Record<OutlineNode["id"], HTMLInputElement>
+  >({});
+
+  const visibleOutlines = Object.values(normalizedMap).filter(
+    (outline) => !outline.parent,
+  );
 
   useEffect(() => {
     setFetchStatus("loading");
@@ -164,6 +205,46 @@ export const Outliner = () => {
     }
   };
 
+  const onListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
+    let focusedElementId;
+
+    for (const [id, element] of Object.entries(visibleOutlineRefs.current)) {
+      if (element === e.target) {
+        focusedElementId = id;
+        break;
+      }
+    }
+
+    if (!focusedElementId) return;
+
+    const ids = Object.keys(normalizedMap);
+    const indexFocusedElement = ids.indexOf(focusedElementId);
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+
+      if (indexFocusedElement - 1 >= 0) {
+        const nextFocusedElementId = ids[indexFocusedElement - 1];
+        visibleOutlineRefs.current[nextFocusedElementId].focus();
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+
+      if (indexFocusedElement + 1 <= ids.length - 1) {
+        const nextFocusedElementId = ids[indexFocusedElement + 1];
+        visibleOutlineRefs.current[nextFocusedElementId].focus();
+      }
+    }
+    // else if (e.key === "Tab") {
+    // } else if (e.shiftKey && e.key === "Tab") {
+    // } else if (e.key === "Backspace") {
+    // } else if (e.metaKey && e.key === "ArrowUp") {
+    // } else if (e.altKey && e.shiftKey && e.key === "ArrowUp") {
+    // } else if (e.altKey && e.shiftKey && e.key === "ArrowDown") {
+    // } else if (e.metaKey && e.keyCode === "Z") {
+    // }
+  };
+
   return (
     <div>
       <h2>Outliner</h2>
@@ -173,11 +254,16 @@ export const Outliner = () => {
       )}
       {fetchStatus === "success" && (
         <div className={styles.container}>
-          <ul className={styles.list}>
-            {Object.values(normalizedMap).map((node) => {
-              if (!node.parent) {
+          <ul className={styles.list} onKeyDown={onListKeyDown}>
+            {visibleOutlines.map((outline) => {
+              if (!outline.parent) {
                 return (
-                  <OutlineItem key={node.id} node={node} map={normalizedMap} />
+                  <OutlineItem
+                    key={outline.id}
+                    outline={outline}
+                    map={normalizedMap}
+                    refs={visibleOutlineRefs.current}
+                  />
                 );
               }
             })}
