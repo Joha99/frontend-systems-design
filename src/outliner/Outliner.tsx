@@ -14,12 +14,15 @@
  * 1. Load the outline on mount (show a loading state). Render it as a
  *    nested bulleted list. Each bullet is an editable single-line input.
  *    Bullets with children show a collapse arrow.
+ *
  * 2. Store the tree NORMALIZED (a lookup of nodes by id, each node knowing
  *    its parent and its ordered children) instead of the nested API shape.
  *    Every operation below should touch only the nodes involved, not
  *    rebuild the tree.
+ *
  * 3. Derive a "visible order" list (depth-first, skipping children of
  *    collapsed nodes). Up/Down navigation walks this list.
+ *
  * 4. Keyboard (while focused in a bullet's input):
  *    - ArrowUp / ArrowDown: focus previous / next visible bullet.
  *    - Enter: create an empty sibling directly after the current bullet
@@ -35,10 +38,13 @@
  *    - Alt+Shift+ArrowUp / ArrowDown: move the bullet (with its subtree)
  *      above / below its sibling. Stays within the same parent.
  *    - Cmd/Ctrl+Z: undo. Cmd/Ctrl+Shift+Z: redo.
+ *
  * 5. Focus must survive every operation: after indent/outdent/move the
  *    same bullet keeps focus AND the caret stays at the same offset.
+ *
  * 6. Undo/redo covers structural operations (create, delete, indent,
  *    outdent, move, collapse). Text edits do not need to be undoable.
+ *
  * 7. Autosave: track which node ids changed ("dirty set"). 1s after the last
  *    edit, send ONE saveChanges batch. Show "Saving…", "Saved", or
  *    "Couldn't save · Retry". Edits made while a save is in flight must not
@@ -66,12 +72,118 @@
  * Time target: 90 minutes.
  */
 
+import { useEffect, useState, type ChangeEvent } from "react";
 import styles from "./Outliner.module.css";
-import { fetchOutline, saveChanges } from "./mockApi";
+import { fetchOutline, type OutlineNode, saveChanges } from "./mockApi";
+
+interface TreeNode {
+  id: OutlineNode["id"];
+  text: OutlineNode["text"];
+  collapsed: OutlineNode["collapsed"];
+  children: OutlineNode["id"][];
+  parent?: OutlineNode["id"];
+}
+
+type TreeNodeMap = Record<OutlineNode["id"], TreeNode>;
+
+const OutlineItem = ({ node, map }: { node: TreeNode; map: TreeNodeMap }) => {
+  const children = map[node.id].children;
+
+  if (children.length === 0) {
+    return (
+      <li className={styles["list-item"]}>
+        <input
+          type="text"
+          value={node.text}
+          onChange={() => {}}
+          className={styles.input}
+        />
+      </li>
+    );
+  }
+
+  return (
+    <li className={styles["list-item"]}>
+      {node.collapsed ? "▲" : "▼"}
+      <input
+        type="text"
+        value={node.text}
+        onChange={() => {}}
+        className={styles.input}
+      />
+      {!node.collapsed && (
+        <ul className={styles.list}>
+          {node.children.map((childId) => {
+            const childObject = map[childId];
+            return <OutlineItem key={childId} node={childObject} map={map} />;
+          })}
+        </ul>
+      )}
+    </li>
+  );
+};
 
 export const Outliner = () => {
-  // TODO: implement
-  void [fetchOutline, saveChanges];
+  const [normalizedMap, setNormalizedMap] = useState<TreeNodeMap>({});
 
-  return <div>Outliner</div>;
+  const [fetchStatus, setFetchStatus] = useState<
+    "loading" | "success" | "error"
+  >();
+
+  useEffect(() => {
+    setFetchStatus("loading");
+    fetchOutline()
+      .then((res) => {
+        const newMap = {};
+        createNormalizedMap(newMap, res.nodes, undefined);
+        setNormalizedMap(newMap);
+        setFetchStatus("success");
+      })
+      .catch((err) => {
+        console.error(err);
+        setFetchStatus("error");
+      });
+  }, []);
+
+  const createNormalizedMap = (
+    map: TreeNodeMap,
+    outlines: OutlineNode[],
+    parent?: OutlineNode["id"],
+  ) => {
+    for (const outline of outlines) {
+      const { children, ...rest } = outline;
+      const childrenIds = [...children].map((child) => child.id);
+
+      map[outline.id] = {
+        ...rest,
+        parent,
+        children: childrenIds,
+      };
+
+      createNormalizedMap(map, outline.children, outline.id);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Outliner</h2>
+      {fetchStatus === "loading" && <p>Loading outlines...</p>}
+      {fetchStatus === "error" && (
+        <p>There was an issue getting your outlines.</p>
+      )}
+      {fetchStatus === "success" && (
+        <div className={styles.container}>
+          <ul className={styles.list}>
+            {Object.values(normalizedMap).map((node) => {
+              if (!node.parent) {
+                return (
+                  <OutlineItem key={node.id} node={node} map={normalizedMap} />
+                );
+              }
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 };

@@ -1,0 +1,19 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.list-item {
+  padding-inline: 6px;
+  padding-block: 6px;
+}
+
+.input {
+  border: none;
+}
+
+.container {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
