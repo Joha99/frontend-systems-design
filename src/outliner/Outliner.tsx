@@ -100,26 +100,30 @@ const OutlineItem = ({
   outline,
   map,
   refs,
+  onInputChange,
 }: {
   outline: TreeNode;
   map: TreeNodeMap;
   refs: Record<OutlineNode["id"], HTMLInputElement>;
+  onInputChange: (id: OutlineNode["id"], newText: string) => void;
 }) => {
   const children = map[outline.id].children;
 
   if (children.length === 0) {
     return (
       <li className={styles["list-item"]}>
-        ({outline.id})
         <input
           type="text"
           value={outline.text}
-          onChange={() => {}}
           className={styles.input}
           ref={(el) => {
             if (el) {
               refs[outline.id] = el;
             }
+          }}
+          onChange={(e) => {
+            const newText = e.currentTarget.value;
+            onInputChange(outline.id, newText);
           }}
         />
       </li>
@@ -132,12 +136,15 @@ const OutlineItem = ({
       <input
         type="text"
         value={outline.text}
-        onChange={() => {}}
         className={styles.input}
         ref={(el) => {
           if (el) {
             refs[outline.id] = el;
           }
+        }}
+        onChange={(e) => {
+          const newText = e.currentTarget.value;
+          onInputChange(outline.id, newText);
         }}
       />
       {!outline.collapsed && (
@@ -150,6 +157,7 @@ const OutlineItem = ({
                 outline={childOutline}
                 map={map}
                 refs={refs}
+                onInputChange={onInputChange}
               />
             );
           })}
@@ -245,6 +253,17 @@ export const Outliner = () => {
     // }
   };
 
+  const onInputChange = (id: OutlineNode["id"], newText: string) => {
+    setNormalizedMap((prev) => {
+      const newMap = { ...prev };
+      newMap[id] = {
+        ...newMap[id],
+        text: newText,
+      };
+      return newMap;
+    });
+  };
+
   return (
     <div>
       <h2>Outliner</h2>
@@ -263,6 +282,7 @@ export const Outliner = () => {
                     outline={outline}
                     map={normalizedMap}
                     refs={visibleOutlineRefs.current}
+                    onInputChange={onInputChange}
                   />
                 );
               }
