@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { Minesweeper } from "./minesweeper/Minesweeper";
+import { Outliner } from "./outliner/Outliner";
 
 function App() {
   return (
     <div className={styles.app}>
-      <Minesweeper />
+      <Outliner />
     </div>
   );
 }

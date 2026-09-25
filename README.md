@@ -44,6 +44,21 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 
 ---
 
+## Advanced Systems Design (data structures + keyboard)
+
+Complex, interview-length problems. Each has a `mockApi.ts` with latency and random failures, and combines building a data structure with keyboard navigation and accessibility. Suggested order is top to bottom.
+
+| Status | Problem                    | Path                        | Difficulty | Key Skills                                                                                          |
+| ------ | -------------------------- | --------------------------- | ---------- | --------------------------------------------------------------------------------------------------- |
+|        | Keyboard-Driven Outliner   | `src/outliner/`             | Hard       | normalized tree, DFS visible order, indent/outdent, focus + caret preservation, undo/redo, autosave |
+|        | Keyboard-Accessible Kanban | `src/keyboard-kanban/`      | Hard       | keyboard drag and drop, aria-live, filtered↔real index mapping, WIP limits, optimistic rollback     |
+|        | @Mention Composer          | `src/mention-composer/`     | Hard       | trie prefix search, MRU ranking, caret positioning, ARIA combobox, atomic mention ranges            |
+|        | Inbox Triage               | `src/inbox-triage/`         | Hard       | shortcut map, cursor vs. selection, range select, undo stack, optimistic updates, cursor pagination |
+|        | Week Calendar              | `src/week-calendar/`        | Very Hard  | overlap clustering + column assignment, roving grid focus, week cache/prefetch, temp ids            |
+|        | Spreadsheet with Formulas  | `src/formula-spreadsheet/`  | Very Hard  | tokenizer + recursive-descent parser, dependency graph, topo sort, cycle detection, batched autosave |
+
+---
+
 ## Algorithm + Frontend
 
 | Status | Problem                      | Path                        | Difficulty  | Key Skills                                                                        |
