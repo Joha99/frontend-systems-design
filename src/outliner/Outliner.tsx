@@ -112,8 +112,10 @@ const OutlineItem = ({
   if (children.length === 0) {
     return (
       <li className={styles["list-item"]}>
+        ({outline.id})
         <input
           type="text"
+          placeholder="Write an outline"
           value={outline.text}
           className={styles.input}
           ref={(el) => {
@@ -136,6 +138,7 @@ const OutlineItem = ({
       <input
         type="text"
         value={outline.text}
+        placeholder="Write an outline"
         className={styles.input}
         ref={(el) => {
           if (el) {
@@ -170,22 +173,26 @@ const OutlineItem = ({
 export const Outliner = () => {
   const [normalizedMap, setNormalizedMap] = useState<TreeNodeMap>({});
   const [fetchStatus, setFetchStatus] = useState<FetchStatus>();
+  const [nextId, setNextId] = useState<number>(11);
+  const [visibleOutlinesArray, setVisibleOutlinesArray] = useState<TreeNode[]>(
+    [],
+  );
+  const [focusedOutlineId, setFocusedOutlineId] = useState<TreeNode["id"]>();
 
   const visibleOutlineRefs = useRef<
     Record<OutlineNode["id"], HTMLInputElement>
   >({});
 
-  const visibleOutlines = Object.values(normalizedMap).filter(
-    (outline) => !outline.parent,
-  );
-
   useEffect(() => {
     setFetchStatus("loading");
     fetchOutline()
       .then((res) => {
-        const newMap = {};
+        const newMap: TreeNodeMap = {};
         createNormalizedMap(newMap, res.nodes, undefined);
+        console.log("normalized", newMap);
+
         setNormalizedMap(newMap);
+        setVisibleOutlinesArray(Object.values(newMap));
         setFetchStatus("success");
       })
       .catch((err) => {
@@ -193,6 +200,12 @@ export const Outliner = () => {
         setFetchStatus("error");
       });
   }, []);
+
+  useEffect(() => {
+    if (focusedOutlineId !== undefined) {
+      visibleOutlineRefs.current[focusedOutlineId].focus();
+    }
+  }, [focusedOutlineId]);
 
   const createNormalizedMap = (
     map: TreeNodeMap,
@@ -216,6 +229,7 @@ export const Outliner = () => {
   const onListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
     let focusedElementId;
 
+    // get the ID for the current focused element
     for (const [id, element] of Object.entries(visibleOutlineRefs.current)) {
       if (element === e.target) {
         focusedElementId = id;
@@ -225,6 +239,7 @@ export const Outliner = () => {
 
     if (!focusedElementId) return;
 
+    // get the index of the outline with a matching index
     const ids = Object.keys(normalizedMap);
     const indexFocusedElement = ids.indexOf(focusedElementId);
 
@@ -233,16 +248,62 @@ export const Outliner = () => {
 
       if (indexFocusedElement - 1 >= 0) {
         const nextFocusedElementId = ids[indexFocusedElement - 1];
-        visibleOutlineRefs.current[nextFocusedElementId].focus();
+        setFocusedOutlineId(nextFocusedElementId);
       }
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
 
       if (indexFocusedElement + 1 <= ids.length - 1) {
         const nextFocusedElementId = ids[indexFocusedElement + 1];
-        visibleOutlineRefs.current[nextFocusedElementId].focus();
+        setFocusedOutlineId(nextFocusedElementId);
       }
+    } else if (e.key === "Enter") {
+      // create an empty sibling after the current bullet point and focus it
+
+      // if current bullet is expaded and has children
+      const focusedOutline = normalizedMap[focusedElementId];
+      const sharedParent: string | undefined = focusedOutline.parent;
+
+      if (focusedOutline.children.length > 0) {
+        // If the current bullet is expanded and has children, create it as the FIRST child instead
+        console.log("[ENTER] current focused element has children");
+      } else {
+        // create an empty sibling directly after the current bullet and focus it
+        console.log("[ENTER] current focused element does not have children");
+        const newId = `n${nextId}`;
+
+        const newOutline: TreeNode = {
+          id: newId,
+          text: "",
+          collapsed: false,
+          parent: sharedParent,
+          children: [],
+        };
+
+        const newNormalizedMap = { ...normalizedMap };
+
+        if (sharedParent) {
+          const insertIndex =
+            newNormalizedMap[sharedParent].children.indexOf(focusedElementId);
+          newNormalizedMap[sharedParent].children.splice(
+            insertIndex + 1,
+            0,
+            newId,
+          );
+        }
+        setNormalizedMap(() => {
+          newNormalizedMap[newId] = newOutline;
+          return newNormalizedMap;
+        });
+
+        const newArray = Object.values(newNormalizedMap);
+        newArray.splice(indexFocusedElement + 1, 0, newOutline);
+        setVisibleOutlinesArray(newArray);
+        setFocusedOutlineId(newId);
+      }
+      setNextId((prev) => prev + 1);
     }
+
     // else if (e.key === "Tab") {
     // } else if (e.shiftKey && e.key === "Tab") {
     // } else if (e.key === "Backspace") {
@@ -274,8 +335,9 @@ export const Outliner = () => {
       {fetchStatus === "success" && (
         <div className={styles.container}>
           <ul className={styles.list} onKeyDown={onListKeyDown}>
-            {visibleOutlines.map((outline) => {
-              if (!outline.parent) {
+            {visibleOutlinesArray
+              .filter((outline) => !outline.parent)
+              .map((outline) => {
                 return (
                   <OutlineItem
                     key={outline.id}
@@ -285,8 +347,7 @@ export const Outliner = () => {
                     onInputChange={onInputChange}
                   />
                 );
-              }
-            })}
+              })}
           </ul>
         </div>
       )}
