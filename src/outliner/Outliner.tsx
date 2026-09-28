@@ -1,8 +1,8 @@
 /**
  * Keyboard-Driven Outliner (Workflowy / Roam style)
  *
- * Build a nested bullet-list editor where every structural edit can be
- * done from the keyboard, with undo/redo and autosave.
+ * Build a nested bullet-list editor you can navigate and extend from the
+ * keyboard, with autosave.
  *
  * API (see ./mockApi.ts; all calls have latency):
  *   fetchOutline()                        → { nodes (NESTED), version }
@@ -22,56 +22,43 @@
  *    collapsed nodes). Up/Down navigation walks this list.
  * 4. Keyboard (while focused in a bullet's input):
  *    - ArrowUp / ArrowDown: focus previous / next visible bullet.
- *
  *    - Enter: create an empty sibling directly after the current bullet
  *      and focus it. (If the current bullet is expanded and has children,
  *      create it as the FIRST child instead.)
- *
- *    - Tab: indent: make the bullet the last child of its previous
- *      sibling. No-op if there is no previous sibling. Children move with it.
- *
- *    - Shift+Tab: outdent: make the bullet the next sibling of its parent.
- *      No-op at the top level.
- *
- *    - Backspace on an EMPTY bullet with no children: delete it and focus
- *      the previous visible bullet (caret at end of its text).
- *
  *    - Cmd/Ctrl+ArrowUp: collapse. Cmd/Ctrl+ArrowDown: expand.
- *
- *    - Alt+Shift+ArrowUp / ArrowDown: move the bullet (with its subtree)
- *      above / below its sibling. Stays within the same parent.
- *
- *    - Cmd/Ctrl+Z: undo. Cmd/Ctrl+Shift+Z: redo.
- *
- * 5. Focus must survive every operation: after indent/outdent/move the
- *    same bullet keeps focus AND the caret stays at the same offset.
- * 6. Undo/redo covers structural operations (create, delete, indent,
- *    outdent, move, collapse). Text edits do not need to be undoable.
- * 7. Autosave: track which node ids changed ("dirty set"). 1s after the last
+ * 5. Focus must be correct after every operation: Enter focuses the new
+ *    bullet, and collapsing/expanding keeps focus on the same bullet.
+ * 6. Autosave: track which node ids changed ("dirty set"). 1s after the last
  *    edit, send ONE saveChanges batch. Show "Saving…", "Saved", or
  *    "Couldn't save · Retry". Edits made while a save is in flight must not
  *    be lost (they go into the next batch), and only one save may be in
  *    flight at a time. A failed batch is merged back into the dirty set.
  *
  * Stretch:
+ * - Tab: indent (become the last child of the previous sibling; children
+ *   move with it). Shift+Tab: outdent (become the next sibling of the
+ *   parent). The same bullet keeps focus and the caret keeps its offset.
+ * - Backspace on an EMPTY bullet with no children deletes it and focuses
+ *   the previous visible bullet (caret at end).
+ * - Alt+Shift+ArrowUp / ArrowDown: move the bullet (with its subtree)
+ *   above / below its sibling.
+ * - Cmd/Ctrl+Z / Cmd/Ctrl+Shift+Z: undo / redo structural operations.
  * - Enter in the middle of text splits the bullet at the caret.
  * - Clicking a bullet dot "zooms" into it: it becomes the root, with a
  *   breadcrumb trail back to the top.
  * - Handle a CONFLICT by refetching and telling the user.
  *
  * Data structure focus:
- * - Normalized tree: O(1) lookup by id, parent pointers for outdent.
+ * - Normalized tree: O(1) lookup by id, parent pointers, ordered child ids.
  * - Flattening a tree into visible order (DFS with pruning).
- * - Undo/redo: two stacks. Decide between storing full snapshots and
- *   storing inverse operations, and be ready to defend the choice.
  * - A dirty set for batched saves.
  *
  * Discussion questions:
- * - What's the complexity of indent/outdent in your model vs. the nested one?
+ * - How would indent/outdent work in your model vs. the nested one?
  * - How would you render a 50,000-bullet outline smoothly?
  * - How would you support two people editing the same outline live?
  *
- * Time target: 90 minutes.
+ * Time target: 60 minutes.
  */
 
 import {
@@ -79,6 +66,7 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type FocusEvent,
   type KeyboardEvent,
 } from "react";
 import styles from "./Outliner.module.css";
@@ -172,12 +160,12 @@ const OutlineItem = ({
 
 export const Outliner = () => {
   const [normalizedMap, setNormalizedMap] = useState<TreeNodeMap>({});
+
   const [fetchStatus, setFetchStatus] = useState<FetchStatus>();
   const [nextId, setNextId] = useState<number>(11);
-  const [visibleOutlinesArray, setVisibleOutlinesArray] = useState<TreeNode[]>(
-    [],
-  );
+
   const [focusedOutlineId, setFocusedOutlineId] = useState<TreeNode["id"]>();
+  const [version, setVersion] = useState<number>();
 
   const visibleOutlineRefs = useRef<
     Record<OutlineNode["id"], HTMLInputElement>
@@ -187,12 +175,23 @@ export const Outliner = () => {
     setFetchStatus("loading");
     fetchOutline()
       .then((res) => {
-        const newMap: TreeNodeMap = {};
-        createNormalizedMap(newMap, res.nodes, undefined);
+        const newMap: TreeNodeMap = {
+          root: {
+            id: "root",
+            text: "",
+            collapsed: false,
+            parent: undefined,
+            children: [],
+          },
+        };
+        for (const outline of res.nodes) {
+          newMap.root.children.push(outline.id);
+        }
+        createNormalizedMap(newMap, res.nodes, "root");
         console.log("normalized", newMap);
 
         setNormalizedMap(newMap);
-        setVisibleOutlinesArray(Object.values(newMap));
+        setVersion(res.version);
         setFetchStatus("success");
       })
       .catch((err) => {
@@ -226,40 +225,69 @@ export const Outliner = () => {
     }
   };
 
+  const getVisibleOrder = (id: TreeNode["id"], list: TreeNode["id"][]) => {
+    list.push(id);
+
+    const node = normalizedMap[id];
+    if (!node.collapsed) {
+      for (const childId of node.children) {
+        getVisibleOrder(childId, list);
+      }
+    }
+  };
+
   const onListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
-    let focusedElementId;
+    let focusedId;
 
     // get the ID for the current focused element
     for (const [id, element] of Object.entries(visibleOutlineRefs.current)) {
       if (element === e.target) {
-        focusedElementId = id;
+        focusedId = id;
         break;
       }
     }
 
-    if (!focusedElementId) return;
+    if (!focusedId) return;
 
     // get the index of the outline with a matching index
-    const ids = Object.keys(normalizedMap);
-    const indexFocusedElement = ids.indexOf(focusedElementId);
+    const visibleOrder: TreeNode["id"][] = [];
+    normalizedMap["root"].children.forEach((childId) => {
+      getVisibleOrder(childId, visibleOrder);
+    });
+    console.log(visibleOrder);
 
-    if (e.key === "ArrowUp") {
+    const focusedIndex = visibleOrder.indexOf(focusedId);
+    const focusedOutline = normalizedMap[focusedId];
+
+    if (e.metaKey && e.key === "ArrowUp") {
+      const newMap = { ...normalizedMap };
+      newMap[focusedId].collapsed = true;
+      setNormalizedMap(newMap);
+
+      // TODO: save changes
+    } else if (e.metaKey && e.key === "ArrowDown") {
+      const newMap = { ...normalizedMap };
+      newMap[focusedId].collapsed = false;
+      setNormalizedMap(newMap);
+
+      // TODO: save changes
+    } else if (e.key === "ArrowUp") {
       e.preventDefault();
 
-      if (indexFocusedElement - 1 >= 0) {
-        const nextFocusedElementId = ids[indexFocusedElement - 1];
+      if (focusedIndex - 1 >= 0) {
+        const nextFocusedElementId = visibleOrder[focusedIndex - 1];
         setFocusedOutlineId(nextFocusedElementId);
       }
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
 
-      if (indexFocusedElement + 1 <= ids.length - 1) {
-        const nextFocusedElementId = ids[indexFocusedElement + 1];
+      if (focusedIndex + 1 <= visibleOrder.length - 1) {
+        const nextFocusedElementId = visibleOrder[focusedIndex + 1];
         setFocusedOutlineId(nextFocusedElementId);
       }
-    } else if (e.key === "Enter") {
+    } else if (e.key === "Enter" && !focusedOutline.collapsed) {
       const newNormalizedMap = { ...normalizedMap };
-      const focusedOutline = newNormalizedMap[focusedElementId];
+      const focusedOutline = newNormalizedMap[focusedId];
 
       const sharedParentId =
         focusedOutline.children.length > 0
@@ -283,7 +311,7 @@ export const Outliner = () => {
       } else {
         if (sharedParentId) {
           const sharedParent = newNormalizedMap[sharedParentId];
-          const insertIndex = sharedParent.children.indexOf(focusedElementId);
+          const insertIndex = sharedParent.children.indexOf(focusedId);
           sharedParent.children.splice(insertIndex + 1, 0, newId);
         }
       }
@@ -294,32 +322,42 @@ export const Outliner = () => {
       });
 
       const newArray = Object.values(newNormalizedMap);
-      newArray.splice(indexFocusedElement + 1, 0, newOutline);
-      setVisibleOutlinesArray(newArray);
+      newArray.splice(focusedIndex + 1, 0, newOutline);
 
       setFocusedOutlineId(newId);
       setNextId((prev) => prev + 1);
-    }
 
-    // else if (e.key === "Tab") {
-    // } else if (e.shiftKey && e.key === "Tab") {
-    // } else if (e.key === "Backspace") {
-    // } else if (e.metaKey && e.key === "ArrowUp") {
-    // } else if (e.altKey && e.shiftKey && e.key === "ArrowUp") {
-    // } else if (e.altKey && e.shiftKey && e.key === "ArrowDown") {
-    // } else if (e.metaKey && e.keyCode === "Z") {
-    // }
+      // TODO: save changes
+    }
   };
 
   const onInputChange = (id: OutlineNode["id"], newText: string) => {
-    setNormalizedMap((prev) => {
-      const newMap = { ...prev };
-      newMap[id] = {
-        ...newMap[id],
-        text: newText,
-      };
-      return newMap;
-    });
+    const newMap = { ...normalizedMap };
+    newMap[id] = {
+      ...newMap[id],
+      text: newText,
+    };
+    setNormalizedMap(newMap);
+
+    // TODO: save changes
+  };
+
+  const onInputFocus = (e) => {
+    console.log(e.target);
+
+    let focusedId;
+
+    // get the ID for the current focused element
+    for (const [id, element] of Object.entries(visibleOutlineRefs.current)) {
+      if (element === e.target) {
+        focusedId = id;
+        break;
+      }
+    }
+
+    if (!focusedId) return;
+
+    setFocusedOutlineId(focusedId);
   };
 
   return (
@@ -331,20 +369,24 @@ export const Outliner = () => {
       )}
       {fetchStatus === "success" && (
         <div className={styles.container}>
-          <ul className={styles.list} onKeyDown={onListKeyDown}>
-            {visibleOutlinesArray
-              .filter((outline) => !outline.parent)
-              .map((outline) => {
-                return (
-                  <OutlineItem
-                    key={outline.id}
-                    outline={outline}
-                    map={normalizedMap}
-                    refs={visibleOutlineRefs.current}
-                    onInputChange={onInputChange}
-                  />
-                );
-              })}
+          <ul
+            className={styles.list}
+            onKeyDown={onListKeyDown}
+            onFocus={onInputFocus}
+          >
+            {normalizedMap["root"].children.map((childId) => {
+              const childOutline = normalizedMap[childId];
+
+              return (
+                <OutlineItem
+                  key={childOutline.id}
+                  outline={childOutline}
+                  map={normalizedMap}
+                  refs={visibleOutlineRefs.current}
+                  onInputChange={onInputChange}
+                />
+              );
+            })}
           </ul>
         </div>
       )}

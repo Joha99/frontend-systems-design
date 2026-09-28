@@ -50,7 +50,7 @@ Complex, interview-length problems. Each has a `mockApi.ts` with latency and ran
 
 | Status | Problem                    | Path                        | Difficulty | Key Skills                                                                                          |
 | ------ | -------------------------- | --------------------------- | ---------- | --------------------------------------------------------------------------------------------------- |
-|        | Keyboard-Driven Outliner   | `src/outliner/`             | Hard       | normalized tree, DFS visible order, indent/outdent, focus + caret preservation, undo/redo, autosave |
+|        | Keyboard-Driven Outliner   | `src/outliner/`             | Hard       | normalized tree, DFS visible order, roving focus by id, insert at index, collapse/expand, autosave  |
 |        | Keyboard-Accessible Kanban | `src/keyboard-kanban/`      | Hard       | keyboard drag and drop, aria-live, filtered↔real index mapping, WIP limits, optimistic rollback     |
 |        | @Mention Composer          | `src/mention-composer/`     | Hard       | trie prefix search, MRU ranking, caret positioning, ARIA combobox, atomic mention ranges            |
 |        | Inbox Triage               | `src/inbox-triage/`         | Hard       | shortcut map, cursor vs. selection, range select, undo stack, optimistic updates, cursor pagination |

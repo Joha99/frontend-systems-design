@@ -22,7 +22,9 @@ export interface SaveResult {
 const FAILURE_RATE = 0.15;
 
 const delay = (min = 300, max = 900) =>
-  new Promise((resolve) => setTimeout(resolve, min + Math.random() * (max - min)));
+  new Promise((resolve) =>
+    setTimeout(resolve, min + Math.random() * (max - min)),
+  );
 
 let version = 1;
 
@@ -46,7 +48,10 @@ const SEED: OutlineNode[] = [
 ];
 
 /** Returns the outline in NESTED form. You should normalize it. */
-export async function fetchOutline(): Promise<{ nodes: OutlineNode[]; version: number }> {
+export async function fetchOutline(): Promise<{
+  nodes: OutlineNode[];
+  version: number;
+}> {
   await delay();
   return { nodes: structuredClone(SEED), version };
 }
@@ -62,7 +67,9 @@ export async function saveChanges(
 ): Promise<SaveResult> {
   await delay();
   if (baseVersion !== version) {
-    throw new Error(`CONFLICT: saved version is ${version}, you sent ${baseVersion}`);
+    throw new Error(
+      `CONFLICT: saved version is ${version}, you sent ${baseVersion}`,
+    );
   }
   if (Math.random() < FAILURE_RATE) {
     throw new Error("Network error while saving. Please retry.");
