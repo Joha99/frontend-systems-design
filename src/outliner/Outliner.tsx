@@ -313,16 +313,22 @@ export const Outliner = () => {
       };
 
       if (focusedOutline.children.length > 0) {
-        focusedOutline.children = [newId, ...focusedOutline.children];
+        newNormalizedMap[focusedId] = {
+          ...newNormalizedMap[focusedId],
+          children: [newId, ...focusedOutline.children],
+        };
       } else {
         if (sharedParentId) {
           const sharedParent = newNormalizedMap[sharedParentId];
           const insertIndex = sharedParent.children.indexOf(focusedId);
-          sharedParent.children = [
-            ...sharedParent.children.slice(0, insertIndex + 1),
-            newId,
-            ...sharedParent.children.slice(insertIndex + 1),
-          ];
+          newNormalizedMap[sharedParentId] = {
+            ...newNormalizedMap[sharedParentId],
+            children: [
+              ...sharedParent.children.slice(0, insertIndex + 1),
+              newId,
+              ...sharedParent.children.slice(insertIndex + 1),
+            ],
+          };
         }
       }
 
