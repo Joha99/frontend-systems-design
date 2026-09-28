@@ -258,49 +258,46 @@ export const Outliner = () => {
         setFocusedOutlineId(nextFocusedElementId);
       }
     } else if (e.key === "Enter") {
-      // create an empty sibling after the current bullet point and focus it
+      const newNormalizedMap = { ...normalizedMap };
+      const focusedOutline = newNormalizedMap[focusedElementId];
 
-      // if current bullet is expaded and has children
-      const focusedOutline = normalizedMap[focusedElementId];
-      const sharedParent: string | undefined = focusedOutline.parent;
+      const sharedParentId =
+        focusedOutline.children.length > 0
+          ? focusedOutline.id
+          : focusedOutline.parent;
+
+      console.log("focused", focusedOutline);
+      console.log("parent id", sharedParentId);
+
+      const newId = `n${nextId}`;
+      const newOutline: TreeNode = {
+        id: newId,
+        text: "",
+        collapsed: false,
+        parent: sharedParentId,
+        children: [],
+      };
 
       if (focusedOutline.children.length > 0) {
-        // If the current bullet is expanded and has children, create it as the FIRST child instead
-        console.log("[ENTER] current focused element has children");
+        focusedOutline.children.splice(0, 0, newId);
       } else {
-        // create an empty sibling directly after the current bullet and focus it
-        console.log("[ENTER] current focused element does not have children");
-        const newId = `n${nextId}`;
-
-        const newOutline: TreeNode = {
-          id: newId,
-          text: "",
-          collapsed: false,
-          parent: sharedParent,
-          children: [],
-        };
-
-        const newNormalizedMap = { ...normalizedMap };
-
-        if (sharedParent) {
-          const insertIndex =
-            newNormalizedMap[sharedParent].children.indexOf(focusedElementId);
-          newNormalizedMap[sharedParent].children.splice(
-            insertIndex + 1,
-            0,
-            newId,
-          );
+        if (sharedParentId) {
+          const sharedParent = newNormalizedMap[sharedParentId];
+          const insertIndex = sharedParent.children.indexOf(focusedElementId);
+          sharedParent.children.splice(insertIndex + 1, 0, newId);
         }
-        setNormalizedMap(() => {
-          newNormalizedMap[newId] = newOutline;
-          return newNormalizedMap;
-        });
-
-        const newArray = Object.values(newNormalizedMap);
-        newArray.splice(indexFocusedElement + 1, 0, newOutline);
-        setVisibleOutlinesArray(newArray);
-        setFocusedOutlineId(newId);
       }
+
+      setNormalizedMap(() => {
+        newNormalizedMap[newId] = newOutline;
+        return newNormalizedMap;
+      });
+
+      const newArray = Object.values(newNormalizedMap);
+      newArray.splice(indexFocusedElement + 1, 0, newOutline);
+      setVisibleOutlinesArray(newArray);
+
+      setFocusedOutlineId(newId);
       setNextId((prev) => prev + 1);
     }
 
