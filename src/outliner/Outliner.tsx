@@ -261,13 +261,19 @@ export const Outliner = () => {
 
     if (e.metaKey && e.key === "ArrowUp") {
       const newMap = { ...normalizedMap };
-      newMap[focusedId].collapsed = true;
+      newMap[focusedId] = {
+        ...newMap[focusedId],
+        collapsed: true,
+      };
       setNormalizedMap(newMap);
 
       // TODO: save changes
     } else if (e.metaKey && e.key === "ArrowDown") {
       const newMap = { ...normalizedMap };
-      newMap[focusedId].collapsed = false;
+      newMap[focusedId] = {
+        ...newMap[focusedId],
+        collapsed: false,
+      };
       setNormalizedMap(newMap);
 
       // TODO: save changes
@@ -307,12 +313,16 @@ export const Outliner = () => {
       };
 
       if (focusedOutline.children.length > 0) {
-        focusedOutline.children.splice(0, 0, newId);
+        focusedOutline.children = [newId, ...focusedOutline.children];
       } else {
         if (sharedParentId) {
           const sharedParent = newNormalizedMap[sharedParentId];
           const insertIndex = sharedParent.children.indexOf(focusedId);
-          sharedParent.children.splice(insertIndex + 1, 0, newId);
+          sharedParent.children = [
+            ...sharedParent.children.slice(0, insertIndex + 1),
+            newId,
+            ...sharedParent.children.slice(insertIndex + 1),
+          ];
         }
       }
 
@@ -320,9 +330,6 @@ export const Outliner = () => {
         newNormalizedMap[newId] = newOutline;
         return newNormalizedMap;
       });
-
-      const newArray = Object.values(newNormalizedMap);
-      newArray.splice(focusedIndex + 1, 0, newOutline);
 
       setFocusedOutlineId(newId);
       setNextId((prev) => prev + 1);
@@ -342,7 +349,7 @@ export const Outliner = () => {
     // TODO: save changes
   };
 
-  const onInputFocus = (e) => {
+  const onInputFocus = (e: FocusEvent) => {
     console.log(e.target);
 
     let focusedId;
