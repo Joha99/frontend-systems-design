@@ -62,12 +62,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import styles from "./Outliner.module.css";
-import {
-  fetchOutline,
-  type NodePatch,
-  type OutlineNode,
-  saveChanges,
-} from "./mockApi";
+import { fetchOutline, type OutlineNode } from "./mockApi";
 
 interface TreeNode {
   id: OutlineNode["id"];
@@ -166,16 +161,10 @@ export const Outliner = () => {
   const [nextId, setNextId] = useState<number>(11);
 
   const [focusedOutlineId, setFocusedOutlineId] = useState<TreeNode["id"]>();
-  const [version, setVersion] = useState<number>();
-
-  const [changedOutlines, setChangedOutlines] = useState<TreeNode["id"][]>([]);
-  const [saveStatus, setSaveStatus] = useState<FetchStatus>();
 
   const visibleOutlineRefs = useRef<
     Record<OutlineNode["id"], HTMLInputElement>
   >({});
-  const timeoutRef = useRef<number>(null);
-  const inFlightBatch = useRef<TreeNode["id"][]>([]);
 
   useEffect(() => {
     setFetchStatus("loading");
@@ -197,7 +186,6 @@ export const Outliner = () => {
         console.log("normalized", newMap);
 
         setNormalizedMap(newMap);
-        setVersion(res.version);
         setFetchStatus("success");
       })
       .catch((err) => {
@@ -211,62 +199,6 @@ export const Outliner = () => {
       visibleOutlineRefs.current[focusedOutlineId].focus();
     }
   }, [focusedOutlineId]);
-
-  useEffect(() => {
-    if (!version || changedOutlines.length === 0) return;
-
-    // if (timeoutRef.current !== null) {
-    //   clearTimeout(timeoutRef.current);
-    // }
-
-    timeoutRef.current = setTimeout(() => {
-      const visibleOrder: TreeNode["id"][] = [];
-      normalizedMap["root"].children.forEach((childId) => {
-        getVisibleOrder(childId, visibleOrder);
-      });
-
-      const savedChangesMap: Record<string, NodePatch | null> =
-        changedOutlines.reduce(
-          (prev, currId) => {
-            const currParent = normalizedMap[currId].parent;
-            const index = Object.keys(normalizedMap).indexOf(currId);
-            prev[currId] = {
-              ...normalizedMap[currId],
-              index,
-              parentId:
-                currParent === "root" || currParent === undefined
-                  ? null
-                  : currParent,
-            };
-            return prev;
-          },
-          {} as Record<string, NodePatch | null>,
-        );
-
-      setSaveStatus("loading");
-      saveChanges(savedChangesMap, version)
-        .then((value) => {
-          console.log(value);
-          setChangedOutlines((prev) => {
-            const newChangedOutlines = [...prev];
-
-            return newChangedOutlines;
-          });
-          setVersion(value.version);
-          setSaveStatus("success");
-        })
-        .catch((err) => {
-          console.error(err);
-          setSaveStatus("error");
-        });
-    }, 1000);
-
-    return () => {
-      if (timeoutRef.current !== null) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [changedOutlines, normalizedMap, version]);
 
   const createNormalizedMap = (
     map: TreeNodeMap,
@@ -296,10 +228,6 @@ export const Outliner = () => {
         getVisibleOrder(childId, list);
       }
     }
-  };
-
-  const changeOutline = (id: TreeNode["id"]) => {
-    setChangedOutlines((prev) => [...prev, id]);
   };
 
   const onListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
@@ -332,7 +260,6 @@ export const Outliner = () => {
         collapsed: true,
       };
       setNormalizedMap(newMap);
-      changeOutline(focusedId);
     } else if (e.metaKey && e.key === "ArrowDown") {
       const newMap = { ...normalizedMap };
       newMap[focusedId] = {
@@ -340,7 +267,6 @@ export const Outliner = () => {
         collapsed: false,
       };
       setNormalizedMap(newMap);
-      changeOutline(focusedId);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
 
@@ -397,7 +323,6 @@ export const Outliner = () => {
       }
 
       newNormalizedMap[newId] = newOutline;
-      changeOutline(newId);
       setNormalizedMap(newNormalizedMap);
       setFocusedOutlineId(newId);
       setNextId((prev) => prev + 1);
@@ -411,7 +336,6 @@ export const Outliner = () => {
       text: newText,
     };
     setNormalizedMap(newMap);
-    changeOutline(id);
   };
 
   const onInputFocus = (e: FocusEvent) => {
@@ -441,9 +365,6 @@ export const Outliner = () => {
       )}
       {fetchStatus === "success" && (
         <>
-          {saveStatus === "loading" && <p>Saving...</p>}
-          {saveStatus === "success" && <p>Saved!</p>}
-          {saveStatus === "error" && <p>There was an issue with saving.</p>}
           <div className={styles.container}>
             <ul
               className={styles.list}
