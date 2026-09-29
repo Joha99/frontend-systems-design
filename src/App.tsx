@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { Outliner } from "./outliner/Outliner";
+import { AutosaveNotes } from "./autosave-notes/AutosaveNotes";
 
 function App() {
   return (
     <div className={styles.app}>
-      <Outliner />
+      <AutosaveNotes />
     </div>
   );
 }

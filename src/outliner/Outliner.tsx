@@ -2,13 +2,10 @@
  * Keyboard-Driven Outliner (Workflowy / Roam style)
  *
  * Build a nested bullet-list editor you can navigate and extend from the
- * keyboard, with autosave.
+ * keyboard.
  *
  * API (see ./mockApi.ts; all calls have latency):
  *   fetchOutline()                        → { nodes (NESTED), version }
- *   saveChanges(changes, baseVersion)     → { savedAt, version }
- *     changes: { [id]: NodePatch | null }   (null = deleted)
- *     Rejects ~15% of the time, and with "CONFLICT" if baseVersion is stale.
  *
  * Requirements:
  * 1. Load the outline on mount (show a loading state). Render it as a
@@ -28,11 +25,6 @@
  *    - Cmd/Ctrl+ArrowUp: collapse. Cmd/Ctrl+ArrowDown: expand.
  * 5. Focus must be correct after every operation: Enter focuses the new
  *    bullet, and collapsing/expanding keeps focus on the same bullet.
- * 6. Autosave: track which node ids changed ("dirty set"). 1s after the last
- *    edit, send ONE saveChanges batch. Show "Saving…", "Saved", or
- *    "Couldn't save · Retry". Edits made while a save is in flight must not
- *    be lost (they go into the next batch), and only one save may be in
- *    flight at a time. A failed batch is merged back into the dirty set.
  *
  * Stretch:
  * - Tab: indent (become the last child of the previous sibling; children
@@ -46,12 +38,12 @@
  * - Enter in the middle of text splits the bullet at the caret.
  * - Clicking a bullet dot "zooms" into it: it becomes the root, with a
  *   breadcrumb trail back to the top.
- * - Handle a CONFLICT by refetching and telling the user.
+ * - Autosave with saveChanges() (see ./mockApi.ts). Practice the pattern
+ *   first in src/autosave-notes/.
  *
  * Data structure focus:
  * - Normalized tree: O(1) lookup by id, parent pointers, ordered child ids.
  * - Flattening a tree into visible order (DFS with pruning).
- * - A dirty set for batched saves.
  *
  * Discussion questions:
  * - How would indent/outdent work in your model vs. the nested one?
@@ -182,6 +174,8 @@ export const Outliner = () => {
   const visibleOutlineRefs = useRef<
     Record<OutlineNode["id"], HTMLInputElement>
   >({});
+  const timeoutRef = useRef<number>(null);
+  const inFlightBatch = useRef<TreeNode["id"][]>([]);
 
   useEffect(() => {
     setFetchStatus("loading");
@@ -219,9 +213,13 @@ export const Outliner = () => {
   }, [focusedOutlineId]);
 
   useEffect(() => {
-    if (!version) return;
+    if (!version || changedOutlines.length === 0) return;
 
-    let timeoutId = setTimeout(() => {
+    // if (timeoutRef.current !== null) {
+    //   clearTimeout(timeoutRef.current);
+    // }
+
+    timeoutRef.current = setTimeout(() => {
       const visibleOrder: TreeNode["id"][] = [];
       normalizedMap["root"].children.forEach((childId) => {
         getVisibleOrder(childId, visibleOrder);
@@ -231,7 +229,7 @@ export const Outliner = () => {
         changedOutlines.reduce(
           (prev, currId) => {
             const currParent = normalizedMap[currId].parent;
-            const index = visibleOrder.indexOf(currId);
+            const index = Object.keys(normalizedMap).indexOf(currId);
             prev[currId] = {
               ...normalizedMap[currId],
               index,
@@ -249,7 +247,11 @@ export const Outliner = () => {
       saveChanges(savedChangesMap, version)
         .then((value) => {
           console.log(value);
-          setChangedOutlines([]);
+          setChangedOutlines((prev) => {
+            const newChangedOutlines = [...prev];
+
+            return newChangedOutlines;
+          });
           setVersion(value.version);
           setSaveStatus("success");
         })
@@ -260,7 +262,9 @@ export const Outliner = () => {
     }, 1000);
 
     return () => {
-      clearTimeout(timeoutId);
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, [changedOutlines, normalizedMap, version]);
 
@@ -397,8 +401,6 @@ export const Outliner = () => {
       setNormalizedMap(newNormalizedMap);
       setFocusedOutlineId(newId);
       setNextId((prev) => prev + 1);
-
-      // TODO: save changes
     }
   };
 
