@@ -70,7 +70,12 @@ import {
   type KeyboardEvent,
 } from "react";
 import styles from "./Outliner.module.css";
-import { fetchOutline, type OutlineNode, saveChanges } from "./mockApi";
+import {
+  fetchOutline,
+  type NodePatch,
+  type OutlineNode,
+  saveChanges,
+} from "./mockApi";
 
 interface TreeNode {
   id: OutlineNode["id"];
@@ -109,6 +114,8 @@ const OutlineItem = ({
           ref={(el) => {
             if (el) {
               refs[outline.id] = el;
+            } else {
+              delete refs[outline.id];
             }
           }}
           onChange={(e) => {
@@ -131,6 +138,8 @@ const OutlineItem = ({
         ref={(el) => {
           if (el) {
             refs[outline.id] = el;
+          } else {
+            delete refs[outline.id];
           }
         }}
         onChange={(e) => {
@@ -166,6 +175,9 @@ export const Outliner = () => {
 
   const [focusedOutlineId, setFocusedOutlineId] = useState<TreeNode["id"]>();
   const [version, setVersion] = useState<number>();
+
+  const [changedOutlines, setChangedOutlines] = useState<TreeNode["id"][]>([]);
+  const [saveStatus, setSaveStatus] = useState<FetchStatus>();
 
   const visibleOutlineRefs = useRef<
     Record<OutlineNode["id"], HTMLInputElement>
@@ -206,6 +218,52 @@ export const Outliner = () => {
     }
   }, [focusedOutlineId]);
 
+  useEffect(() => {
+    if (!version) return;
+
+    let timeoutId = setTimeout(() => {
+      const visibleOrder: TreeNode["id"][] = [];
+      normalizedMap["root"].children.forEach((childId) => {
+        getVisibleOrder(childId, visibleOrder);
+      });
+
+      const savedChangesMap: Record<string, NodePatch | null> =
+        changedOutlines.reduce(
+          (prev, currId) => {
+            const currParent = normalizedMap[currId].parent;
+            const index = visibleOrder.indexOf(currId);
+            prev[currId] = {
+              ...normalizedMap[currId],
+              index,
+              parentId:
+                currParent === "root" || currParent === undefined
+                  ? null
+                  : currParent,
+            };
+            return prev;
+          },
+          {} as Record<string, NodePatch | null>,
+        );
+
+      setSaveStatus("loading");
+      saveChanges(savedChangesMap, version)
+        .then((value) => {
+          console.log(value);
+          setChangedOutlines([]);
+          setVersion(value.version);
+          setSaveStatus("success");
+        })
+        .catch((err) => {
+          console.error(err);
+          setSaveStatus("error");
+        });
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [changedOutlines, normalizedMap, version]);
+
   const createNormalizedMap = (
     map: TreeNodeMap,
     outlines: OutlineNode[],
@@ -234,6 +292,10 @@ export const Outliner = () => {
         getVisibleOrder(childId, list);
       }
     }
+  };
+
+  const changeOutline = (id: TreeNode["id"]) => {
+    setChangedOutlines((prev) => [...prev, id]);
   };
 
   const onListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
@@ -266,8 +328,7 @@ export const Outliner = () => {
         collapsed: true,
       };
       setNormalizedMap(newMap);
-
-      // TODO: save changes
+      changeOutline(focusedId);
     } else if (e.metaKey && e.key === "ArrowDown") {
       const newMap = { ...normalizedMap };
       newMap[focusedId] = {
@@ -275,8 +336,7 @@ export const Outliner = () => {
         collapsed: false,
       };
       setNormalizedMap(newMap);
-
-      // TODO: save changes
+      changeOutline(focusedId);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
 
@@ -332,11 +392,9 @@ export const Outliner = () => {
         }
       }
 
-      setNormalizedMap(() => {
-        newNormalizedMap[newId] = newOutline;
-        return newNormalizedMap;
-      });
-
+      newNormalizedMap[newId] = newOutline;
+      changeOutline(newId);
+      setNormalizedMap(newNormalizedMap);
       setFocusedOutlineId(newId);
       setNextId((prev) => prev + 1);
 
@@ -351,8 +409,7 @@ export const Outliner = () => {
       text: newText,
     };
     setNormalizedMap(newMap);
-
-    // TODO: save changes
+    changeOutline(id);
   };
 
   const onInputFocus = (e: FocusEvent) => {
@@ -381,27 +438,32 @@ export const Outliner = () => {
         <p>There was an issue getting your outlines.</p>
       )}
       {fetchStatus === "success" && (
-        <div className={styles.container}>
-          <ul
-            className={styles.list}
-            onKeyDown={onListKeyDown}
-            onFocus={onInputFocus}
-          >
-            {normalizedMap["root"].children.map((childId) => {
-              const childOutline = normalizedMap[childId];
+        <>
+          {saveStatus === "loading" && <p>Saving...</p>}
+          {saveStatus === "success" && <p>Saved!</p>}
+          {saveStatus === "error" && <p>There was an issue with saving.</p>}
+          <div className={styles.container}>
+            <ul
+              className={styles.list}
+              onKeyDown={onListKeyDown}
+              onFocus={onInputFocus}
+            >
+              {normalizedMap["root"].children.map((childId) => {
+                const childOutline = normalizedMap[childId];
 
-              return (
-                <OutlineItem
-                  key={childOutline.id}
-                  outline={childOutline}
-                  map={normalizedMap}
-                  refs={visibleOutlineRefs.current}
-                  onInputChange={onInputChange}
-                />
-              );
-            })}
-          </ul>
-        </div>
+                return (
+                  <OutlineItem
+                    key={childOutline.id}
+                    outline={childOutline}
+                    map={normalizedMap}
+                    refs={visibleOutlineRefs.current}
+                    onInputChange={onInputChange}
+                  />
+                );
+              })}
+            </ul>
+          </div>
+        </>
       )}
     </div>
   );

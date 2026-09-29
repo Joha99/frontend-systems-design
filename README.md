@@ -46,16 +46,60 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 
 ## Advanced Systems Design (data structures + keyboard)
 
-Complex, interview-length problems. Each has a `mockApi.ts` with latency and random failures, and combines building a data structure with keyboard navigation and accessibility. Suggested order is top to bottom.
+Complex problems split into 30–45 minute parts. Each part is its own component file with a standalone spec; start each part from your code for the previous one. Every problem folder has a `mockApi.ts` with latency and random failures. Suggested order is top to bottom.
 
-| Status | Problem                    | Path                        | Difficulty | Key Skills                                                                                          |
-| ------ | -------------------------- | --------------------------- | ---------- | --------------------------------------------------------------------------------------------------- |
-|        | Keyboard-Driven Outliner   | `src/outliner/`             | Hard       | normalized tree, DFS visible order, roving focus by id, insert at index, collapse/expand, autosave  |
-|        | Keyboard-Accessible Kanban | `src/keyboard-kanban/`      | Hard       | keyboard drag and drop, aria-live, filtered↔real index mapping, WIP limits, optimistic rollback     |
-|        | @Mention Composer          | `src/mention-composer/`     | Hard       | trie prefix search, MRU ranking, caret positioning, ARIA combobox, atomic mention ranges            |
-|        | Inbox Triage               | `src/inbox-triage/`         | Hard       | shortcut map, cursor vs. selection, range select, undo stack, optimistic updates, cursor pagination |
-|        | Week Calendar              | `src/week-calendar/`        | Very Hard  | overlap clustering + column assignment, roving grid focus, week cache/prefetch, temp ids            |
-|        | Spreadsheet with Formulas  | `src/formula-spreadsheet/`  | Very Hard  | tokenizer + recursive-descent parser, dependency graph, topo sort, cycle detection, batched autosave |
+### Keyboard-Driven Outliner (`src/outliner/Outliner.tsx`)
+
+| Status | Part                                   | Key Skills                                                            |
+| ------ | -------------------------------------- | --------------------------------------------------------------------- |
+| ✅     | 1. Load, normalize + render            | normalized tree, synthetic root node, recursive render by id          |
+| ✅     | 2. Keyboard navigation + Enter         | DFS visible order, delegated keydown, focus by id, immutable inserts  |
+|        | 3. Autosave                            | dirty set, debounce, one save in flight, versioning, retry on failure |
+|        | 4. Stretch: indent/outdent/move + undo | moving subtrees, caret preservation, undo/redo stacks                 |
+
+### Keyboard-Accessible Kanban (`src/keyboard-kanban/`)
+
+| Status | Part                        | File                    | Key Skills                                                         |
+| ------ | --------------------------- | ----------------------- | ------------------------------------------------------------------ |
+|        | 1. Board + focus navigation | `Part1Board.tsx`        | normalized board, 2D arrow navigation, one delegated handler       |
+|        | 2. Keyboard drag and drop   | `Part2KeyboardDrag.tsx` | pick up / move / drop / cancel, aria-live announcements, WIP limit |
+|        | 3. Server sync + undo       | `Part3ServerSync.tsx`   | optimistic move, targeted rollback, undo via API                   |
+|        | 4. Label filter             | `Part4LabelFilter.tsx`  | filtered ↔ full index mapping                                      |
+
+### @Mention Composer (`src/mention-composer/`)
+
+| Status | Part                         | File                      | Key Skills                                               |
+| ------ | ---------------------------- | ------------------------- | -------------------------------------------------------- |
+|        | 1. Trie + ranked suggestions | `Part1TrieSearch.tsx`     | trie insert/prefix search, early exit, recency ranking   |
+|        | 2. @ trigger + combobox      | `Part2Combobox.tsx`       | caret-based query, ARIA combobox, aria-activedescendant  |
+|        | 3. Atomic mentions + send    | `Part3AtomicMentions.tsx` | range tracking under edits, atomic delete, send + errors |
+|        | 4. Popup at the caret        | `Part4CaretPopup.tsx`     | mirror-div caret measurement, viewport flipping          |
+
+### Inbox Triage (`src/inbox-triage/`)
+
+| Status | Part                                | File                             | Key Skills                                                  |
+| ------ | ----------------------------------- | -------------------------------- | ----------------------------------------------------------- |
+|        | 1. List, pagination + cursor        | `Part1ListAndCursor.tsx`         | cursor pagination, j/k cursor, reading pane                 |
+|        | 2. Selection, search + shortcut map | `Part2SelectionAndShortcuts.tsx` | shortcut registry, anchor range select, input-aware hotkeys |
+|        | 3. Optimistic actions + undo        | `Part3OptimisticActions.tsx`     | targeted rollback, undo stack, toasts, aria-live            |
+
+### Week Calendar (`src/week-calendar/`)
+
+| Status | Part                             | File                      | Key Skills                                           |
+| ------ | -------------------------------- | ------------------------- | ---------------------------------------------------- |
+|        | 1. Week grid + overlap layout    | `Part1OverlapLayout.tsx`  | interval clustering, greedy column assignment        |
+|        | 2. Week navigation + caching     | `Part2WeekNavigation.tsx` | cache by week, prefetch, ignoring stale responses    |
+|        | 3. Keyboard grid + moving events | `Part3KeyboardGrid.tsx`   | roving tabindex over a 2D grid, keyboard move/resize |
+|        | 4. Create events + server sync   | `Part4CreateAndSync.tsx`  | optimistic CRUD, temp ids, debounced saves           |
+
+### Spreadsheet with Formulas (`src/formula-spreadsheet/`)
+
+| Status | Part                          | File                       | Key Skills                                               |
+| ------ | ----------------------------- | -------------------------- | -------------------------------------------------------- |
+|        | 1. Grid + keyboard editing    | `Part1GridEditing.tsx`     | sparse cells, Sheets-style edit mode, range selection    |
+|        | 2. Formula parser + evaluator | `Part2FormulaParser.tsx`   | tokenizer, recursive-descent parser, AST evaluation      |
+|        | 3. Dependency graph + cycles  | `Part3DependencyGraph.tsx` | bidirectional edges, topological recalc, cycle detection |
+|        | 4. Batched autosave           | `Part4Autosave.tsx`        | batching, one save in flight, versioning, retry          |
 
 ---
 
