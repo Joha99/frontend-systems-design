@@ -1,0 +1,9 @@
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  border: 1px solid #cccccc;
+  padding: 12px;
+  margin-block-end: 10px;
+}

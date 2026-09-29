@@ -17,6 +17,7 @@
  *    a title <input> and a body <textarea>, both editable.
  * 2. DIRTY SET: remember which note ids have unsaved changes.
  * 3. DEBOUNCE: start a save 1s after the user's LAST edit (in any note).
+ *
  * 4. BATCH: one request containing every dirty note, built from the
  *    CURRENT values at the moment it's sent.
  * 5. ONE AT A TIME: never call saveNotes while a save is in flight. Edits
@@ -57,12 +58,157 @@
  * Time target: 45 minutes.
  */
 
+import { useEffect, useRef, useState, version } from "react";
 import styles from "./AutosaveNotes.module.css";
-import { fetchNotes, saveNotes, setNetwork } from "./mockApi";
+import {
+  fetchNotes,
+  type Note,
+  type NotePatch,
+  saveNotes,
+  type SaveResult,
+  setNetwork,
+} from "./mockApi";
+import { saveChanges } from "../outliner/mockApi";
 
 export const AutosaveNotes = () => {
-  // TODO: implement
-  void [fetchNotes, saveNotes, setNetwork];
+  const [notes, setNotes] = useState<Record<Note["id"], Note>>({});
+  const [saveStatus, setSaveStatus] = useState<"saving" | "saved" | "error">();
 
-  return <div>Autosave Notes</div>;
+  const [unsavedChanges, setUnsavedChanges] = useState<Set<Note["id"]>>(
+    new Set(),
+  );
+  const unsavedChangesRef = useRef<Set<Note["id"]>>(new Set());
+  const versionRef = useRef<SaveResult["version"]>(null);
+
+  useEffect(() => {
+    fetchNotes().then(({ notes, version }) => {
+      console.log(notes, version);
+
+      const notesMap: Record<Note["id"], Note> = {};
+      for (const note of notes) {
+        notesMap[note.id] = note;
+      }
+
+      versionRef.current = version;
+      setNotes(notesMap);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (unsavedChangesRef.current.size === 0 || versionRef.current === null)
+      return;
+
+    // save 1 second after user stops typing
+    let timeoutId = setTimeout(() => {
+      console.log("user stopped typing for 1s");
+      setSaveStatus("saving");
+
+      const changes: Record<string, NotePatch> = {};
+      for (const changedId of unsavedChangesRef.current) {
+        console.log("changedId", changedId);
+        const note = notes[changedId];
+        changes[changedId] = {
+          title: note.title,
+          body: note.body,
+        };
+      }
+
+      if (versionRef.current) {
+        saveNotes(changes, versionRef.current)
+          .then(({ version, savedAt }) => {
+            console.log("save res", version, savedAt);
+            versionRef.current = version;
+
+            // TODO: update the unsaved changes list
+
+            setSaveStatus("saved");
+          })
+          .catch((err) => {
+            console.error(err);
+            setSaveStatus("error");
+          });
+      }
+
+      // to save, we need a map of id to NodePatch
+      // update version
+    }, 1000);
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [notes]); // notes changes every time user types
+
+  const onInputChange = (id: Note["id"], title: Note["title"]) => {
+    console.log("title changed for", id);
+    const newNotesMap = { ...notes };
+    newNotesMap[id] = {
+      ...newNotesMap[id],
+      title,
+    };
+    setNotes(newNotesMap);
+
+    setUnsavedChanges((prev) => new Set([...prev, id]));
+    unsavedChangesRef.current = new Set([...unsavedChangesRef.current, id]);
+  };
+
+  const onTextAreaChange = (id: Note["id"], body: Note["body"]) => {
+    console.log("body changed for", id);
+    const newNotesMap = { ...notes };
+    newNotesMap[id] = {
+      ...newNotesMap[id],
+      body,
+    };
+    setNotes(newNotesMap);
+
+    setUnsavedChanges((prev) => new Set([...prev, id]));
+    unsavedChangesRef.current = new Set([...unsavedChangesRef.current, id]);
+  };
+
+  const onRetrySave = () => {};
+
+  return (
+    <div>
+      <h2>Autosave Notes</h2>
+      <div>
+        <h3>Notes with unsaved changes</h3>
+        <ul>
+          {[...unsavedChanges].map((id) => {
+            return <li key={id}>{id}</li>;
+          })}
+        </ul>
+      </div>
+
+      <div>
+        <h3>Notes</h3>
+        {saveStatus === "saving" && <p>Saving...</p>}
+        {saveStatus === "saved" && <p>Saved successfully!</p>}
+        {saveStatus === "error" && (
+          <div>
+            <p>There was an error saving.</p>
+            <button onClick={onRetrySave}>Retry</button>
+          </div>
+        )}
+        {Object.values(notes).map((note) => {
+          return (
+            <div key={note.id} className={styles.note}>
+              <label>ID: {note.id}</label>
+              <input
+                type="text"
+                value={note.title}
+                onChange={(e) => onInputChange(note.id, e.currentTarget.value)}
+              />
+              <textarea
+                value={note.body}
+                onChange={(e) =>
+                  onTextAreaChange(note.id, e.currentTarget.value)
+                }
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 };
