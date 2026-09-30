@@ -35,6 +35,10 @@ p {
 button {
   font-size: 12px;
   background-color: transparent;
-  border: 1px solid #ccc;
-  border-radius: 100px;
+  cursor: pointer;
+  border: none;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
 }
