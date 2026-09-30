@@ -27,7 +27,6 @@ import { fetchBoard } from "./mockApi";
 
 export const Part1Board = () => {
   // TODO: implement
-  void [fetchBoard];
 
   return <div>Keyboard-Accessible Kanban: Part 1</div>;
 };

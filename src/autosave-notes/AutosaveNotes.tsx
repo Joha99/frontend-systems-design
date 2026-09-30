@@ -193,6 +193,7 @@ export const AutosaveNotes = () => {
     };
 
     updateNotes(newNotesMap);
+
     setUnsavedChanges((prev) => new Set([...prev, id]));
     unsavedChangesRef.current = new Set([...unsavedChangesRef.current, id]);
   };
@@ -205,6 +206,7 @@ export const AutosaveNotes = () => {
     };
 
     updateNotes(newNotesMap);
+
     setUnsavedChanges((prev) => new Set([...prev, id]));
     unsavedChangesRef.current = new Set([...unsavedChangesRef.current, id]);
   };
