@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { AutosaveNotes } from "./autosave-notes/AutosaveNotes";
+import { Part1Board } from "./keyboard-kanban/Part1Board";
 
 function App() {
   return (
     <div className={styles.app}>
-      <AutosaveNotes />
+      <Part1Board />
     </div>
   );
 }
