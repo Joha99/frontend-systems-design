@@ -30,7 +30,7 @@
  * Time target: 25 minutes.
  */
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import styles from "./PixelEditor.module.css";
 
 const GRID_SIZE = 16;
@@ -42,8 +42,8 @@ const PALETTE = [
   "#3b82f6",
 ] as const;
 const EMPTY = "#ffffff";
-const defaultGrid: Grid = Array.from({ length: 16 }, () =>
-  Array(16).fill(EMPTY),
+const defaultGrid: Grid = Array.from({ length: GRID_SIZE }, () =>
+  Array(GRID_SIZE).fill(EMPTY),
 );
 
 type Color = (typeof PALETTE)[number];
@@ -63,6 +63,20 @@ export const PixelEditor = () => {
   // holds currently made changes that were undone
   // each redo entry is a snapshot of a future that came after the state you undid back to from the undo stack
   const [redoStack, setRedoStack] = useState<Grid[]>([]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey && e.shiftKey && e.key === "z") {
+        onRedo();
+      } else if (e.metaKey && e.key === "z") {
+        onUndo();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [undoStack, redoStack]);
 
   const onPaletteClick = (color: Color) => {
     if (color === paletteColor) {
@@ -96,6 +110,8 @@ export const PixelEditor = () => {
   };
 
   const onUndo = () => {
+    if (undoStack.length === 0) return;
+
     // store current state of grid onto the redoStack
     // pop the last grid off undoStack and set current grid to the popped grid
     setLastAction("undo");
@@ -116,6 +132,8 @@ export const PixelEditor = () => {
   };
 
   const onRedo = () => {
+    if (redoStack.length === 0) return;
+
     setLastAction("redo");
 
     setUndoStack((prev) => {
