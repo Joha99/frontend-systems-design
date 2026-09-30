@@ -118,7 +118,8 @@ export const AutosaveNotes = () => {
 
     const changesMap: Record<string, NotePatch> = {};
     for (const changedId of unsavedChangesRef.current) {
-      const note = notes[changedId];
+      // have to use notesRef because batchAndSave can be called recursively within the saveNotes.then
+      const note = notesRef.current[changedId];
       changesMap[changedId] = {
         title: note.title,
         body: note.body,
@@ -133,6 +134,9 @@ export const AutosaveNotes = () => {
         updateSaveStatus("saved");
 
         // check if there are still unsaved changes and if so save again
+        if (unsavedChangesRef.current.size > 0) {
+          batchAndSave();
+        }
       })
       .catch((err) => {
         console.error(err);
