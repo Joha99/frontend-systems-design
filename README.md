@@ -39,7 +39,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅     | CRUD Dashboard                  | `src/crud-dashboard/`        | Hard         | optimistic updates, rollback, per-item loading, form validation, infinite scroll |
 |        | Debounced Multi-Filter Panel    | `src/debounced-filters/`     | Hard         | multiple debounce timers, AbortController, server + client filtering, cleanup    |
 | ✅     | Autosave Notes                  | `src/autosave-notes/`        | Hard         | dirty set, debounce, one save in flight, batching, retry, versioning             |
-| ✅     | Pixel Editor (Undo / Redo)      | `src/undo-redo/`             | Intermediate | undo/redo stacks, structural sharing, clearing redo on new actions              |
+| ✅     | Pixel Editor (Undo / Redo)      | `src/undo-redo/`             | Intermediate | undo/redo stacks, structural sharing, clearing redo on new actions               |
 | ✅     | Image Search Gallery 🚗         | `src/image-search/`          | Medium       | search + submit, mock API fetch, image grid, pagination controls, loading state  |
 | ✅     | Context Paginated List 🚗       | `src/context-paginator/`     | Medium       | React Context provider, multi-component consumers, API pagination, no prop drill |
 |        | Semantic HTML Audit 🚗          | `src/semantic-audit/`        | Easy         | replace div soup with semantic HTML5 tags, string parsing, scoring               |
@@ -101,6 +101,20 @@ Complex problems split into 30–45 minute parts. Each part is its own component
 |        | 2. Formula parser + evaluator | `Part2FormulaParser.tsx`   | tokenizer, recursive-descent parser, AST evaluation      |
 |        | 3. Dependency graph + cycles  | `Part3DependencyGraph.tsx` | bidirectional edges, topological recalc, cycle detection |
 |        | 4. Batched autosave           | `Part4Autosave.tsx`        | batching, one save in flight, versioning, retry          |
+
+---
+
+## Games
+
+Interactive game problems: keyboard input, timers/game loops, immutable board updates, and a core rule to implement. More games (Snake, Minesweeper, Connect Four…) are in the Algorithm + Frontend section.
+
+| Status | Problem      | Path                  | Difficulty   | Key Skills                                                                 |
+| ------ | ------------ | --------------------- | ------------ | -------------------------------------------------------------------------- |
+|        | 2048         | `src/game-2048/`      | Medium       | row slide/merge, reuse via transpose/reverse, immutable board, spawn rules |
+|        | Wordle       | `src/wordle/`         | Medium       | duplicate-letter scoring, document key listener, key status priority       |
+|        | 15 Puzzle    | `src/sliding-puzzle/` | Medium       | solvable shuffles (inversion count), arrow-key moves, timer start/stop     |
+|        | Simon Says   | `src/simon-says/`     | Medium       | timed playback, cancelling timeouts, input locking, stale closures         |
+|        | Whack-a-Mole | `src/whack-a-mole/`   | Intermediate | intervals + countdown, cleanup, stale closures, keyboard shortcuts         |
 
 ---
 
