@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { PixelEditor } from "./undo-redo/PixelEditor";
+import { Part1Board } from "./keyboard-kanban/Part1Board";
 
 function App() {
   return (
     <div className={styles.app}>
-      <PixelEditor />
+      <Part1Board />
     </div>
   );
 }

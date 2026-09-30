@@ -76,7 +76,7 @@ export const PixelEditor = () => {
     document.addEventListener("keydown", onKeyDown);
 
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [undoStack, redoStack]);
+  }, [undoStack, redoStack, grid]);
 
   const onPaletteClick = (color: Color) => {
     if (color === paletteColor) {
@@ -104,6 +104,10 @@ export const PixelEditor = () => {
   };
 
   const onReset = () => {
+    if (lastAction !== "paint") {
+      setRedoStack([]);
+    }
+
     setUndoStack((prev) => [...prev, grid]);
     setPaletteColor(undefined);
     setGrid(defaultGrid.map((row) => [...row]));
