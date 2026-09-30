@@ -7,3 +7,9 @@
   padding: 12px;
   margin-block-end: 10px;
 }
+
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

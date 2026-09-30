@@ -58,7 +58,7 @@
  * Time target: 45 minutes.
  */
 
-import { useEffect, useRef, useState, version } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./AutosaveNotes.module.css";
 import {
   fetchNotes,
@@ -66,13 +66,14 @@ import {
   type NotePatch,
   saveNotes,
   type SaveResult,
-  setNetwork,
 } from "./mockApi";
-import { saveChanges } from "../outliner/mockApi";
 
 export const AutosaveNotes = () => {
   const [notes, setNotes] = useState<Record<Note["id"], Note>>({});
+  const notesRef = useRef<Record<Note["id"], Note>>({});
+
   const [saveStatus, setSaveStatus] = useState<"saving" | "saved" | "error">();
+  const saveStatusRef = useRef<"saving" | "saved" | "error">(null);
 
   const [unsavedChanges, setUnsavedChanges] = useState<Set<Note["id"]>>(
     new Set(),
@@ -82,15 +83,13 @@ export const AutosaveNotes = () => {
 
   useEffect(() => {
     fetchNotes().then(({ notes, version }) => {
-      console.log(notes, version);
-
       const notesMap: Record<Note["id"], Note> = {};
       for (const note of notes) {
         notesMap[note.id] = note;
       }
 
       versionRef.current = version;
-      setNotes(notesMap);
+      updateNotes(notesMap);
     });
   }, []);
 
@@ -98,39 +97,9 @@ export const AutosaveNotes = () => {
     if (unsavedChangesRef.current.size === 0 || versionRef.current === null)
       return;
 
-    // save 1 second after user stops typing
     let timeoutId = setTimeout(() => {
       console.log("user stopped typing for 1s");
-      setSaveStatus("saving");
-
-      const changes: Record<string, NotePatch> = {};
-      for (const changedId of unsavedChangesRef.current) {
-        console.log("changedId", changedId);
-        const note = notes[changedId];
-        changes[changedId] = {
-          title: note.title,
-          body: note.body,
-        };
-      }
-
-      if (versionRef.current) {
-        saveNotes(changes, versionRef.current)
-          .then(({ version, savedAt }) => {
-            console.log("save res", version, savedAt);
-            versionRef.current = version;
-
-            // TODO: update the unsaved changes list
-
-            setSaveStatus("saved");
-          })
-          .catch((err) => {
-            console.error(err);
-            setSaveStatus("error");
-          });
-      }
-
-      // to save, we need a map of id to NodePatch
-      // update version
+      batchAndSave();
     }, 1000);
 
     return () => {
@@ -138,35 +107,107 @@ export const AutosaveNotes = () => {
         clearTimeout(timeoutId);
       }
     };
-  }, [notes]); // notes changes every time user types
+  }, [notes]);
+
+  const batchAndSave = () => {
+    // handle new changes while a save is already in flight
+    // just return because in the saveNotes .then callback, we only removed ids that we know are updated
+    if (saveStatusRef.current === "saving") {
+      return;
+    }
+
+    const changesMap: Record<string, NotePatch> = {};
+    for (const changedId of unsavedChangesRef.current) {
+      const note = notes[changedId];
+      changesMap[changedId] = {
+        title: note.title,
+        body: note.body,
+      };
+    }
+
+    updateSaveStatus("saving");
+    saveNotes(changesMap, versionRef.current!)
+      .then(({ version }) => {
+        versionRef.current = version;
+        updateUnsavedChanges(changesMap);
+        updateSaveStatus("saved");
+
+        // check if there are still unsaved changes and if so save again
+      })
+      .catch((err) => {
+        console.error(err);
+        updateSaveStatus("error");
+      });
+  };
+
+  const updateNotes = (notes: Record<Note["id"], Note>) => {
+    setNotes(notes);
+    notesRef.current = notes;
+  };
+
+  const updateUnsavedChanges = (changes: Record<string, NotePatch>) => {
+    for (const [id, notePatch] of Object.entries(changes)) {
+      const upToDateNote = notesRef.current[id];
+      const noteHasntChanged =
+        upToDateNote.title === notePatch.title &&
+        upToDateNote.body === notePatch.body;
+
+      // check that the notesRef hasn't been updated for same Ids
+      // have to use the ref because when we are saving, the fetch takes a snapshot of the notes state
+      if (noteHasntChanged) {
+        unsavedChangesRef.current!.delete(id);
+      }
+    }
+
+    setUnsavedChanges((prev) => {
+      const newUnsavedChanges = new Set([...prev]);
+      for (const [id, notePatch] of Object.entries(changes)) {
+        const upToDateNote = notesRef.current[id];
+        const noteHasntChanged =
+          upToDateNote.title === notePatch.title &&
+          upToDateNote.body === notePatch.body;
+
+        // check that the notesRef hasn't been updated for same Ids
+        if (noteHasntChanged) {
+          newUnsavedChanges.delete(id);
+        }
+      }
+      return newUnsavedChanges;
+    });
+  };
+
+  const updateSaveStatus = (status: "saving" | "saved" | "error") => {
+    setSaveStatus(status);
+    saveStatusRef.current = status;
+  };
 
   const onInputChange = (id: Note["id"], title: Note["title"]) => {
-    console.log("title changed for", id);
     const newNotesMap = { ...notes };
     newNotesMap[id] = {
       ...newNotesMap[id],
       title,
     };
-    setNotes(newNotesMap);
 
+    updateNotes(newNotesMap);
     setUnsavedChanges((prev) => new Set([...prev, id]));
     unsavedChangesRef.current = new Set([...unsavedChangesRef.current, id]);
   };
 
   const onTextAreaChange = (id: Note["id"], body: Note["body"]) => {
-    console.log("body changed for", id);
     const newNotesMap = { ...notes };
     newNotesMap[id] = {
       ...newNotesMap[id],
       body,
     };
-    setNotes(newNotesMap);
 
+    updateNotes(newNotesMap);
     setUnsavedChanges((prev) => new Set([...prev, id]));
     unsavedChangesRef.current = new Set([...unsavedChangesRef.current, id]);
   };
 
-  const onRetrySave = () => {};
+  const onRetrySave = () => {
+    batchAndSave();
+  };
 
   return (
     <div>
@@ -179,13 +220,12 @@ export const AutosaveNotes = () => {
           })}
         </ul>
       </div>
-
       <div>
         <h3>Notes</h3>
         {saveStatus === "saving" && <p>Saving...</p>}
         {saveStatus === "saved" && <p>Saved successfully!</p>}
         {saveStatus === "error" && (
-          <div>
+          <div className={styles.errorMessage}>
             <p>There was an error saving.</p>
             <button onClick={onRetrySave}>Retry</button>
           </div>
