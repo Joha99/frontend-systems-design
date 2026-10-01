@@ -38,5 +38,9 @@ import styles from "./WhackAMole.module.css";
 export const WhackAMole = () => {
   // TODO: implement
 
-  return <div>Whack-a-Mole</div>;
+  return (
+    <div>
+      <h2>Whack-a-Mole</h2>
+    </div>
+  );
 };

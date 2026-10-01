@@ -39,5 +39,9 @@ import styles from "./SlidingWindowChart.module.css";
 export const SlidingWindowChart = () => {
   // TODO: implement
 
-  return <div>Sliding Window Chart</div>;
+  return (
+    <div>
+      <h2>Sliding Window Chart</h2>
+    </div>
+  );
 };

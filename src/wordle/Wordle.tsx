@@ -43,5 +43,9 @@ export const Wordle = () => {
   // TODO: implement
   void [WORDS, ANSWERS];
 
-  return <div>Wordle</div>;
+  return (
+    <div>
+      <h2>Wordle</h2>
+    </div>
+  );
 };

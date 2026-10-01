@@ -38,5 +38,9 @@ import styles from "./Pathfinder.module.css";
 export const Pathfinder = () => {
   // TODO: implement
 
-  return <div>Pathfinder</div>;
+  return (
+    <div>
+      <h2>Pathfinder</h2>
+    </div>
+  );
 };

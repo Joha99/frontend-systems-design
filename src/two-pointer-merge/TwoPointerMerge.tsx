@@ -41,5 +41,9 @@ import styles from "./TwoPointerMerge.module.css";
 export const TwoPointerMerge = () => {
   // TODO: implement
 
-  return <div>Two Pointer Merge</div>;
+  return (
+    <div>
+      <h2>Two Pointer Merge</h2>
+    </div>
+  );
 };

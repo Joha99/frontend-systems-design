@@ -34,5 +34,9 @@ export const Part2KeyboardDrag = () => {
   // TODO: implement
   void [fetchBoard];
 
-  return <div>Keyboard-Accessible Kanban: Part 2</div>;
+  return (
+    <div>
+      <h2>Keyboard-Accessible Kanban: Part 2</h2>
+    </div>
+  );
 };

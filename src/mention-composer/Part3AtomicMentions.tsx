@@ -33,5 +33,9 @@ export const Part3AtomicMentions = () => {
   // TODO: implement
   void [fetchUsers, fetchRecentMentions, sendMessage];
 
-  return <div>@Mention Composer: Part 3</div>;
+  return (
+    <div>
+      <h2>@Mention Composer: Part 3</h2>
+    </div>
+  );
 };

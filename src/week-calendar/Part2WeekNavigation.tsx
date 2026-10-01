@@ -26,5 +26,9 @@ export const Part2WeekNavigation = () => {
   // TODO: implement
   void [fetchEvents];
 
-  return <div>Week Calendar: Part 2</div>;
+  return (
+    <div>
+      <h2>Week Calendar: Part 2</h2>
+    </div>
+  );
 };

@@ -37,5 +37,9 @@ import styles from "./SimonSays.module.css";
 export const SimonSays = () => {
   // TODO: implement
 
-  return <div>Simon Says</div>;
+  return (
+    <div>
+      <h2>Simon Says</h2>
+    </div>
+  );
 };

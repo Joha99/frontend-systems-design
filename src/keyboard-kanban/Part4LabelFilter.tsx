@@ -27,5 +27,9 @@ export const Part4LabelFilter = () => {
   // TODO: implement
   void [fetchBoard, moveCard];
 
-  return <div>Keyboard-Accessible Kanban: Part 4</div>;
+  return (
+    <div>
+      <h2>Keyboard-Accessible Kanban: Part 4</h2>
+    </div>
+  );
 };

@@ -28,5 +28,9 @@ export const Part4Autosave = () => {
   // TODO: implement
   void [fetchSheet, saveCells];
 
-  return <div>Spreadsheet with Formulas: Part 4</div>;
+  return (
+    <div>
+      <h2>Spreadsheet with Formulas: Part 4</h2>
+    </div>
+  );
 };

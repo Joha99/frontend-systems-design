@@ -35,5 +35,9 @@ export const Part3OptimisticActions = () => {
   // TODO: implement
   void [fetchThreads, setRead, archiveThreads, setStarred];
 
-  return <div>Inbox Triage: Part 3</div>;
+  return (
+    <div>
+      <h2>Inbox Triage: Part 3</h2>
+    </div>
+  );
 };

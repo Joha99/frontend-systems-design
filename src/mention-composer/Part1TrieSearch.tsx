@@ -34,5 +34,9 @@ export const Part1TrieSearch = () => {
   // TODO: implement
   void [fetchUsers, fetchRecentMentions];
 
-  return <div>@Mention Composer: Part 1</div>;
+  return (
+    <div>
+      <h2>@Mention Composer: Part 1</h2>
+    </div>
+  );
 };

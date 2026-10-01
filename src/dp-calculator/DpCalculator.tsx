@@ -36,5 +36,9 @@ import styles from "./DpCalculator.module.css";
 export const DpCalculator = () => {
   // TODO: implement
 
-  return <div>DP Calculator</div>;
+  return (
+    <div>
+      <h2>DP Calculator</h2>
+    </div>
+  );
 };

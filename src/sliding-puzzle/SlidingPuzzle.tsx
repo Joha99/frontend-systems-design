@@ -36,5 +36,9 @@ import styles from "./SlidingPuzzle.module.css";
 export const SlidingPuzzle = () => {
   // TODO: implement
 
-  return <div>15 Puzzle</div>;
+  return (
+    <div>
+      <h2>15 Puzzle</h2>
+    </div>
+  );
 };

@@ -40,5 +40,9 @@ import styles from "./TrieAutocomplete.module.css";
 export const TrieAutocomplete = () => {
   // TODO: implement
 
-  return <div>Trie Autocomplete</div>;
+  return (
+    <div>
+      <h2>Trie Autocomplete</h2>
+    </div>
+  );
 };

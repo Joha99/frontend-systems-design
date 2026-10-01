@@ -33,5 +33,9 @@ export const Part1OverlapLayout = () => {
   // TODO: implement
   void [fetchEvents];
 
-  return <div>Week Calendar: Part 1</div>;
+  return (
+    <div>
+      <h2>Week Calendar: Part 1</h2>
+    </div>
+  );
 };

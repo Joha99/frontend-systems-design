@@ -31,5 +31,9 @@ export const Part1ListAndCursor = () => {
   // TODO: implement
   void [fetchThreads, setRead];
 
-  return <div>Inbox Triage: Part 1</div>;
+  return (
+    <div>
+      <h2>Inbox Triage: Part 1</h2>
+    </div>
+  );
 };

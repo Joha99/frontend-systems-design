@@ -39,5 +39,9 @@ import styles from "./TaskScheduler.module.css";
 export const TaskScheduler = () => {
   // TODO: implement
 
-  return <div>Task Scheduler</div>;
+  return (
+    <div>
+      <h2>Task Scheduler</h2>
+    </div>
+  );
 };

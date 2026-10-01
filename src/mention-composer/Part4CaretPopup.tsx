@@ -27,5 +27,9 @@ export const Part4CaretPopup = () => {
   // TODO: implement
   void [fetchUsers, fetchRecentMentions, sendMessage];
 
-  return <div>@Mention Composer: Part 4</div>;
+  return (
+    <div>
+      <h2>@Mention Composer: Part 4</h2>
+    </div>
+  );
 };

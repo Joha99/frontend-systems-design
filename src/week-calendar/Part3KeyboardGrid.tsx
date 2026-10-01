@@ -32,5 +32,9 @@ export const Part3KeyboardGrid = () => {
   // TODO: implement
   void [fetchEvents];
 
-  return <div>Week Calendar: Part 3</div>;
+  return (
+    <div>
+      <h2>Week Calendar: Part 3</h2>
+    </div>
+  );
 };

@@ -32,5 +32,9 @@ export const Part4CreateAndSync = () => {
   // TODO: implement
   void [fetchEvents, createEvent, updateEvent, deleteEvent];
 
-  return <div>Week Calendar: Part 4</div>;
+  return (
+    <div>
+      <h2>Week Calendar: Part 4</h2>
+    </div>
+  );
 };

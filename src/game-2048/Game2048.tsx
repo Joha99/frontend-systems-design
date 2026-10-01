@@ -41,5 +41,9 @@ import styles from "./Game2048.module.css";
 export const Game2048 = () => {
   // TODO: implement
 
-  return <div>2048</div>;
+  return (
+    <div>
+      <h2>2048</h2>
+    </div>
+  );
 };

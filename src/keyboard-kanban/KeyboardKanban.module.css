@@ -1,0 +1,31 @@
+.column {
+  width: 200px;
+  height: 600px;
+  background-color: #ebebeb;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: stretch;
+  padding: 5px;
+}
+
+.column-header {
+  background-color: #d4d3d3;
+  display: flex;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 5px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-count), auto);
+  gap: 5px;
+}
+
+.card {
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  padding: 6px;
+}

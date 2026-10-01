@@ -35,5 +35,9 @@ export const Part1GridEditing = () => {
   // TODO: implement
   void [fetchSheet];
 
-  return <div>Spreadsheet with Formulas: Part 1</div>;
+  return (
+    <div>
+      <h2>Spreadsheet with Formulas: Part 1</h2>
+    </div>
+  );
 };

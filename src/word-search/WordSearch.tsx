@@ -38,5 +38,9 @@ import styles from "./WordSearch.module.css";
 export const WordSearch = () => {
   // TODO: implement
 
-  return <div>Word Search</div>;
+  return (
+    <div>
+      <h2>Word Search</h2>
+    </div>
+  );
 };

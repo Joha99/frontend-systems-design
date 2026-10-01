@@ -30,5 +30,9 @@ export const Part2SelectionAndShortcuts = () => {
   // TODO: implement
   void [fetchThreads, setRead];
 
-  return <div>Inbox Triage: Part 2</div>;
+  return (
+    <div>
+      <h2>Inbox Triage: Part 2</h2>
+    </div>
+  );
 };

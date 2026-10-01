@@ -39,5 +39,9 @@ import styles from "./DebouncedFilters.module.css";
 export const DebouncedFilters = () => {
   // TODO: implement
 
-  return <div>Debounced Filters</div>;
+  return (
+    <div>
+      <h2>Debounced Filters</h2>
+    </div>
+  );
 };

@@ -28,5 +28,9 @@ export const Part2FormulaParser = () => {
   // TODO: implement
   void [fetchSheet];
 
-  return <div>Spreadsheet with Formulas: Part 2</div>;
+  return (
+    <div>
+      <h2>Spreadsheet with Formulas: Part 2</h2>
+    </div>
+  );
 };

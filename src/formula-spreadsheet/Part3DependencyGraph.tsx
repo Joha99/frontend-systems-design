@@ -29,5 +29,9 @@ export const Part3DependencyGraph = () => {
   // TODO: implement
   void [fetchSheet];
 
-  return <div>Spreadsheet with Formulas: Part 3</div>;
+  return (
+    <div>
+      <h2>Spreadsheet with Formulas: Part 3</h2>
+    </div>
+  );
 };

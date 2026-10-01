@@ -29,5 +29,9 @@ export const Part3ServerSync = () => {
   // TODO: implement
   void [fetchBoard, moveCard];
 
-  return <div>Keyboard-Accessible Kanban: Part 3</div>;
+  return (
+    <div>
+      <h2>Keyboard-Accessible Kanban: Part 3</h2>
+    </div>
+  );
 };

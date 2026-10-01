@@ -49,5 +49,9 @@ import styles from "./IntervalScheduler.module.css";
 export const IntervalScheduler = () => {
   // TODO: implement
 
-  return <div>Interval Scheduler</div>;
+  return (
+    <div>
+      <h2>Interval Scheduler</h2>
+    </div>
+  );
 };

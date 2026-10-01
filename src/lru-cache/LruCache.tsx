@@ -42,5 +42,9 @@ import styles from "./LruCache.module.css";
 export const LruCache = () => {
   // TODO: implement
 
-  return <div>LRU Cache</div>;
+  return (
+    <div>
+      <h2>LRU Cache</h2>
+    </div>
+  );
 };

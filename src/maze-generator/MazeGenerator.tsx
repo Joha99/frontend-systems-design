@@ -37,5 +37,9 @@ import styles from "./MazeGenerator.module.css";
 export const MazeGenerator = () => {
   // TODO: implement
 
-  return <div>Maze Generator</div>;
+  return (
+    <div>
+      <h2>Maze Generator</h2>
+    </div>
+  );
 };

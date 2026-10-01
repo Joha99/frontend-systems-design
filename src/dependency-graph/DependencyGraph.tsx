@@ -36,5 +36,9 @@ import styles from "./DependencyGraph.module.css";
 export const DependencyGraph = () => {
   // TODO: implement
 
-  return <div>Dependency Graph</div>;
+  return (
+    <div>
+      <h2>Dependency Graph</h2>
+    </div>
+  );
 };

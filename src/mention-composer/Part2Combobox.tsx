@@ -32,5 +32,9 @@ export const Part2Combobox = () => {
   // TODO: implement
   void [fetchUsers, fetchRecentMentions];
 
-  return <div>@Mention Composer: Part 2</div>;
+  return (
+    <div>
+      <h2>@Mention Composer: Part 2</h2>
+    </div>
+  );
 };
