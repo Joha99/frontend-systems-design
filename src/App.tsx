@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { Part2KeyboardDrag } from "./keyboard-kanban/Part2KeyboardDrag";
+import { WhackAMole } from "./whack-a-mole/WhackAMole";
 
 function App() {
   return (
     <div className={styles.app}>
-      <Part2KeyboardDrag />
+      <WhackAMole />
     </div>
   );
 }
