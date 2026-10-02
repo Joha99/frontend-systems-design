@@ -16,18 +16,16 @@
  *      up (same column and index).
  *    Focus stays on the moving card the whole time.
  *
- * 3. WIP limits: a column with a `limit` that is full can't be entered. The
- *    card stays put.
+ * Done when: you can pick up any card, move it to any spot with the arrow
+ * keys, drop it or cancel back to where it started, and focus never leaves
+ * the card.
  *
- * 4. Announce each step in an aria-live region, e.g.
- *    "Picked up Fix login bug. Position 2 of 4 in To Do."
- *    "Moved to In Progress, position 1 of 3." / "In Progress is full."
- *    "Dropped." / "Move cancelled. Returned to To Do, position 2."
+ * Stretch:
+ * - WIP limits: a column with a `limit` that is full can't be entered.
+ * - Announce each step in an aria-live region ("Picked up Fix login bug.
+ *   Position 2 of 4 in To Do." / "Dropped." / "Move cancelled.").
  *
- * Done when: a screen reader user could move a card to any valid spot and
- * know where it is at every step.
- *
- * Time target: 45 minutes.
+ * Time target: 35 minutes.
  */
 
 import {
@@ -35,6 +33,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type FocusEvent,
   type KeyboardEvent,
 } from "react";
 import styles from "./KeyboardKanban.module.css";
@@ -173,14 +172,20 @@ export const Part2KeyboardDrag = () => {
       const newColumnsMap = { ...columns };
 
       // remove from curr column
-      newColumnsMap[column.id].cardIds = newColumnsMap[
-        column.id
-      ].cardIds.filter((id) => id !== cardId);
+      newColumnsMap[column.id] = {
+        ...newColumnsMap[column.id],
+        cardIds: newColumnsMap[column.id].cardIds.filter((id) => id !== cardId),
+      };
 
       // add back to original column
-      newColumnsMap[pickupLocation.columnId].cardIds = newColumnsMap[
-        pickupLocation.columnId
-      ].cardIds.toSpliced(pickupLocation.cardIndex, 0, cardId);
+      newColumnsMap[pickupLocation.columnId] = {
+        ...newColumnsMap[pickupLocation.columnId],
+        cardIds: newColumnsMap[pickupLocation.columnId].cardIds.toSpliced(
+          pickupLocation.cardIndex,
+          0,
+          cardId,
+        ),
+      };
 
       setColumns(newColumnsMap);
       setLiftedCard(undefined);
@@ -194,7 +199,12 @@ export const Part2KeyboardDrag = () => {
     toIndex: number,
   ) => {
     const newColumnsMap = { ...columns };
-    newColumnsMap[toColumnId].cardIds = [...newColumnsMap[toColumnId].cardIds];
+
+    newColumnsMap[toColumnId] = {
+      ...newColumnsMap[toColumnId],
+      cardIds: [...newColumnsMap[toColumnId].cardIds],
+    };
+
     let currCardIndex = newColumnsMap[toColumnId].cardIds.indexOf(cardId);
 
     if (currCardIndex !== -1) {
@@ -208,9 +218,10 @@ export const Part2KeyboardDrag = () => {
     } else {
       const { column } = getColumn(cardId)!;
 
-      newColumnsMap[column.id].cardIds = newColumnsMap[
-        column.id
-      ].cardIds.filter((id) => id !== cardId);
+      newColumnsMap[column.id] = {
+        ...newColumnsMap[column.id],
+        cardIds: newColumnsMap[column.id].cardIds.filter((id) => id !== cardId),
+      };
 
       const insertIndex = Math.min(
         toIndex,
@@ -227,6 +238,19 @@ export const Part2KeyboardDrag = () => {
     setFocusedCard(cardId);
   };
 
+  // to avoid having to handle focus for tab and click on a card, attach on Focus to parent
+  const onFocus = (e: FocusEvent<HTMLDivElement>) => {
+    let cardId;
+    for (const [id, el] of Object.entries(cardRefs.current)) {
+      if (el === e.target) {
+        cardId = id;
+        break;
+      }
+    }
+
+    setFocusedCard(cardId);
+  };
+
   return (
     <div>
       <h2>Keyboard-Accessible Kanban: Part 2</h2>
@@ -236,6 +260,7 @@ export const Part2KeyboardDrag = () => {
         onKeyDown={(e) => {
           onColumnKeyDown(e);
         }}
+        onFocus={(e) => onFocus(e)}
       >
         {columnsArray.map((column) => {
           return (
