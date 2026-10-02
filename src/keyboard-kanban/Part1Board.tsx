@@ -113,14 +113,22 @@ export const Part1Board = () => {
       let start = columnIndex + offset;
 
       while (start !== boundary) {
-        const nextColumn = columnArray[start];
-        if (nextColumn.cardIds.length >= focusedCardIndex + 1) {
-          const nextFocusedCardId = nextColumn.cardIds[focusedCardIndex];
-          const nextFocusedDiv = cardRefs.current[nextFocusedCardId];
-          nextFocusedDiv.focus();
-          return;
+        const nextColumnCards = columnArray[start].cardIds;
+
+        if (nextColumnCards.length === 0) {
+          start += offset;
+          continue;
         }
-        start += offset;
+
+        const nextFocusedCardIndex = Math.min(
+          nextColumnCards.length - 1,
+          focusedCardIndex,
+        );
+
+        const nextFocusedCardId = nextColumnCards[nextFocusedCardIndex];
+        const nextFocusedDiv = cardRefs.current[nextFocusedCardId];
+        nextFocusedDiv.focus();
+        return;
       }
     }
   };
