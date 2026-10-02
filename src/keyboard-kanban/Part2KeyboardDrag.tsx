@@ -52,6 +52,10 @@ export const Part2KeyboardDrag = () => {
 
   const [focusedCard, setFocusedCard] = useState<Card["id"]>();
   const [liftedCard, setLiftedCard] = useState<Card["id"]>();
+  const [pickupLocation, setPickupLocation] = useState<{
+    columnId: Column["id"];
+    cardIndex: number;
+  }>();
 
   const columnsArray = Object.values(columns);
 
@@ -75,9 +79,9 @@ export const Part2KeyboardDrag = () => {
 
   useEffect(() => {
     if (!focusedCard) return;
+
     const nextFocusedDiv = cardRefs.current[focusedCard];
     nextFocusedDiv.focus();
-    console.log("focused", focusedCard, nextFocusedDiv);
   }, [focusedCard, columns]);
 
   const getColumn = (cardId: Card["id"]) => {
@@ -146,13 +150,41 @@ export const Part2KeyboardDrag = () => {
           nextColumnCards.length - 1,
           focusedCardIndex,
         );
+
         const nextFocusedCardId = nextColumnCards[nextFocusedCardIndex];
         setFocusedCard(nextFocusedCardId);
         return;
       }
     } else if (e.key === " ") {
       e.preventDefault();
-      setLiftedCard(cardId); // still has focus
+
+      if (!liftedCard) {
+        // pickup
+        setLiftedCard(cardId); // still has focus
+        setPickupLocation({ columnId: column.id, cardIndex: focusedCardIndex });
+      } else {
+        // drop
+        setLiftedCard(undefined);
+        setPickupLocation(undefined);
+      }
+    } else if (e.key === "Escape" && pickupLocation && liftedCard) {
+      const { column } = getColumn(liftedCard)!;
+
+      const newColumnsMap = { ...columns };
+
+      // remove from curr column
+      newColumnsMap[column.id].cardIds = newColumnsMap[
+        column.id
+      ].cardIds.filter((id) => id !== cardId);
+
+      // add back to original column
+      newColumnsMap[pickupLocation.columnId].cardIds = newColumnsMap[
+        pickupLocation.columnId
+      ].cardIds.toSpliced(pickupLocation.cardIndex, 0, cardId);
+
+      setColumns(newColumnsMap);
+      setLiftedCard(undefined);
+      setPickupLocation(undefined);
     }
   };
 
