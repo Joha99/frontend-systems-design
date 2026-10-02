@@ -62,7 +62,7 @@ Complex problems split into 30–45 minute parts. Each part is its own component
 
 | Status | Part                        | File                    | Key Skills                                                         |
 | ------ | --------------------------- | ----------------------- | ------------------------------------------------------------------ |
-|        | 1. Board + focus navigation | `Part1Board.tsx`        | normalized board, 2D arrow navigation, one delegated handler       |
+| ✅     | 1. Board + focus navigation | `Part1Board.tsx`        | normalized board, 2D arrow navigation, one delegated handler       |
 |        | 2. Keyboard drag and drop   | `Part2KeyboardDrag.tsx` | pick up / move / drop / cancel, aria-live announcements, WIP limit |
 |        | 3. Server sync + undo       | `Part3ServerSync.tsx`   | optimistic move, targeted rollback, undo via API                   |
 |        | 4. Label filter             | `Part4LabelFilter.tsx`  | filtered ↔ full index mapping                                      |

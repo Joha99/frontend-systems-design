@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { Part1Board } from "./keyboard-kanban/Part1Board";
+import { Part2KeyboardDrag } from "./keyboard-kanban/Part2KeyboardDrag";
 
 function App() {
   return (
     <div className={styles.app}>
-      <Part1Board />
+      <Part2KeyboardDrag />
     </div>
   );
 }
