@@ -77,9 +77,8 @@ export const Part2KeyboardDrag = () => {
     if (!focusedCard) return;
     const nextFocusedDiv = cardRefs.current[focusedCard];
     nextFocusedDiv.focus();
-
-    console.log(nextFocusedDiv);
-  }, [focusedCard]);
+    console.log("focused", focusedCard, nextFocusedDiv);
+  }, [focusedCard, columns]);
 
   const getColumn = (cardId: Card["id"]) => {
     for (
@@ -116,8 +115,12 @@ export const Part2KeyboardDrag = () => {
       const offset = e.key === "ArrowDown" ? 1 : -1;
 
       if (focusedCardIndex !== boundary) {
-        const nextFocusedCardId = cardsInColumn[focusedCardIndex + offset];
-        setFocusedCard(nextFocusedCardId);
+        if (liftedCard) {
+          moveCard(cardId, column.id, focusedCardIndex + offset);
+        } else {
+          const nextFocusedCardId = cardsInColumn[focusedCardIndex + offset];
+          setFocusedCard(nextFocusedCardId);
+        }
       }
     } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault();
@@ -125,6 +128,11 @@ export const Part2KeyboardDrag = () => {
       const boundary = e.key === "ArrowLeft" ? -1 : columnsArray.length;
       const offset = e.key === "ArrowLeft" ? -1 : 1;
       let nextColumnIndex = columnIndex + offset;
+
+      if (liftedCard && nextColumnIndex !== boundary) {
+        moveCard(cardId, columnsArray[nextColumnIndex].id, focusedCardIndex);
+        return;
+      }
 
       while (nextColumnIndex !== boundary) {
         const nextColumnCards = columnsArray[nextColumnIndex].cardIds;
@@ -144,8 +152,7 @@ export const Part2KeyboardDrag = () => {
       }
     } else if (e.key === " ") {
       e.preventDefault();
-
-      setLiftedCard(cardId);
+      setLiftedCard(cardId); // still has focus
     }
   };
 
@@ -153,7 +160,40 @@ export const Part2KeyboardDrag = () => {
     cardId: Card["id"],
     toColumnId: Column["id"],
     toIndex: number,
-  ) => {};
+  ) => {
+    const newColumnsMap = { ...columns };
+    newColumnsMap[toColumnId].cardIds = [...newColumnsMap[toColumnId].cardIds];
+    let currCardIndex = newColumnsMap[toColumnId].cardIds.indexOf(cardId);
+
+    if (currCardIndex !== -1) {
+      [
+        newColumnsMap[toColumnId].cardIds[currCardIndex],
+        newColumnsMap[toColumnId].cardIds[toIndex],
+      ] = [
+        newColumnsMap[toColumnId].cardIds[toIndex],
+        newColumnsMap[toColumnId].cardIds[currCardIndex],
+      ];
+    } else {
+      const { column } = getColumn(cardId)!;
+
+      newColumnsMap[column.id].cardIds = newColumnsMap[
+        column.id
+      ].cardIds.filter((id) => id !== cardId);
+
+      const insertIndex = Math.min(
+        toIndex,
+        newColumnsMap[toColumnId].cardIds.length - 1,
+      );
+
+      if (toIndex >= newColumnsMap[toColumnId].cardIds.length) {
+        newColumnsMap[toColumnId].cardIds.push(cardId);
+      } else {
+        newColumnsMap[toColumnId].cardIds.splice(insertIndex, 0, cardId);
+      }
+    }
+    setColumns(newColumnsMap);
+    setFocusedCard(cardId);
+  };
 
   return (
     <div>
@@ -182,9 +222,6 @@ export const Part2KeyboardDrag = () => {
                       if (el) {
                         cardRefs.current[cardId] = el;
                       }
-                      return () => {
-                        delete cardRefs.current[cardId];
-                      };
                     }}
                   >
                     <h5>
