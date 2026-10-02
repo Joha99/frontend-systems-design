@@ -10,7 +10,6 @@
  *    left to right, cards top to bottom.
  * 2. Store it NORMALIZED: cards by id, each column holding an ordered array
  *    of card ids.
- *
  * 3. Every card is focusable. Tab/Shift+Tab moves between cards in DOM order.
  * 4. ArrowUp/ArrowDown moves focus within a column (stop at the ends).
  *    ArrowLeft/ArrowRight moves focus to the adjacent column, to the card at
@@ -37,7 +36,6 @@ import { type Board, type Card, type Column, fetchBoard } from "./mockApi";
 export const Part1Board = () => {
   const [columns, setColumns] = useState<Record<Column["id"], Column>>({});
   const [cards, setCards] = useState<Record<Card["id"], Card>>({});
-  const [focused, setFocused] = useState<Card["id"]>();
 
   const cardRefs = useRef<Record<Card["id"], HTMLDivElement>>({});
 
@@ -80,9 +78,8 @@ export const Part1Board = () => {
   };
 
   const onColumnKeyDown = (e: KeyboardEvent) => {
-    console.log("key", e.key, "target", e.target);
-
     let cardId;
+
     for (const [id, el] of Object.entries(cardRefs.current)) {
       if (el === e.target) {
         cardId = id;
@@ -93,47 +90,37 @@ export const Part1Board = () => {
 
     const { column, columnIndex } = getColumn(cardId);
 
-    // Tab + shift moves between cards
-
-    if (e.key === "ArrowDown") {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
 
       const cardsInColumn = column.cardIds;
-      const focusedCardId = cardsInColumn.indexOf(cardId);
+      const focusedCardIndex = cardsInColumn.indexOf(cardId);
+      const boundary = e.key === "ArrowDown" ? cardsInColumn.length - 1 : 0;
+      const offset = e.key === "ArrowDown" ? 1 : -1;
 
-      if (focusedCardId !== cardsInColumn.length - 1) {
-        const nextFocusedCardId = cardsInColumn[focusedCardId + 1];
+      if (focusedCardIndex !== boundary) {
+        const nextFocusedCardId = cardsInColumn[focusedCardIndex + offset];
         const nextFocusedDiv = cardRefs.current[nextFocusedCardId];
         nextFocusedDiv.focus();
       }
-    } else if (e.key === "ArrowUp") {
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault();
 
-      const cardsInColumn = column.cardIds;
-      const focusedCardId = cardsInColumn.indexOf(cardId);
+      const columnArray = Object.values(columns);
+      const boundary = e.key === "ArrowLeft" ? -1 : columnArray.length;
+      const offset = e.key === "ArrowLeft" ? -1 : 1;
+      const focusedCardIndex = column.cardIds.indexOf(cardId);
+      let start = columnIndex + offset;
 
-      if (focusedCardId !== 0) {
-        const nextFocusedCardId = cardsInColumn[focusedCardId - 1];
-        const nextFocusedDiv = cardRefs.current[nextFocusedCardId];
-        nextFocusedDiv.focus();
-      }
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-
-      if (columnIndex !== 0) {
-        const nextColumn = Object.values(columns)[columnIndex - 1];
-        const nextFocusedCardId = nextColumn.cardIds[0];
-        const nextFocusedDiv = cardRefs.current[nextFocusedCardId];
-        nextFocusedDiv.focus();
-      }
-    } else if (e.key === "ArrowRight") {
-      e.preventDefault();
-
-      if (columnIndex !== Object.values(columns).length - 1) {
-        const nextColumn = Object.values(columns)[columnIndex + 1];
-        const nextFocusedCardId = nextColumn.cardIds[0];
-        const nextFocusedDiv = cardRefs.current[nextFocusedCardId];
-        nextFocusedDiv.focus();
+      while (start !== boundary) {
+        const nextColumn = columnArray[start];
+        if (nextColumn.cardIds.length >= focusedCardIndex + 1) {
+          const nextFocusedCardId = nextColumn.cardIds[focusedCardIndex];
+          const nextFocusedDiv = cardRefs.current[nextFocusedCardId];
+          nextFocusedDiv.focus();
+          return;
+        }
+        start += offset;
       }
     }
   };
