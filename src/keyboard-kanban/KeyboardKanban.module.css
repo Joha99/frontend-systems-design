@@ -28,4 +28,15 @@
   border: 2px solid #ccc;
   border-radius: 5px;
   padding: 6px;
+  width: 190px;
+}
+
+.lifted-card {
+  border: 2px solid #0d6e27;
+  border-radius: 5px;
+  background-color: #c3ffd3;
+  padding: 6px;
+  transform: translate(8px, -4px) scale(1.03);
+  z-index: 1;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }

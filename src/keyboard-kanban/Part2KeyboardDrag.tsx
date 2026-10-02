@@ -7,6 +7,7 @@
  * Requirements:
  * 1. Write one local operation, moveCard(cardId, toColumnId, toIndex), and
  *    use it for every kind of move.
+ *
  * 2. Space on a focused card PICKS IT UP (visually lifted).
  *    While lifted:
  *    - ArrowUp/Down moves it within its column.
@@ -14,8 +15,10 @@
  *    - Space DROPS it. Escape CANCELS and returns it to where it was picked
  *      up (same column and index).
  *    Focus stays on the moving card the whole time.
+ *
  * 3. WIP limits: a column with a `limit` that is full can't be entered. The
  *    card stays put.
+ *
  * 4. Announce each step in an aria-live region, e.g.
  *    "Picked up Fix login bug. Position 2 of 4 in To Do."
  *    "Moved to In Progress, position 1 of 3." / "In Progress is full."
@@ -47,6 +50,9 @@ export const Part2KeyboardDrag = () => {
   const [columns, setColumns] = useState<ColumnMap>({});
   const [cards, setCards] = useState<CardMap>({});
 
+  const [focusedCard, setFocusedCard] = useState<Card["id"]>();
+  const [liftedCard, setLiftedCard] = useState<Card["id"]>();
+
   const columnsArray = Object.values(columns);
 
   useEffect(() => {
@@ -66,6 +72,14 @@ export const Part2KeyboardDrag = () => {
       );
     });
   }, []);
+
+  useEffect(() => {
+    if (!focusedCard) return;
+    const nextFocusedDiv = cardRefs.current[focusedCard];
+    nextFocusedDiv.focus();
+
+    console.log(nextFocusedDiv);
+  }, [focusedCard]);
 
   const getColumn = (cardId: Card["id"]) => {
     for (
@@ -103,8 +117,7 @@ export const Part2KeyboardDrag = () => {
 
       if (focusedCardIndex !== boundary) {
         const nextFocusedCardId = cardsInColumn[focusedCardIndex + offset];
-        const nextFocusedDiv = cardRefs.current[nextFocusedCardId];
-        nextFocusedDiv.focus();
+        setFocusedCard(nextFocusedCardId);
       }
     } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault();
@@ -125,14 +138,22 @@ export const Part2KeyboardDrag = () => {
           nextColumnCards.length - 1,
           focusedCardIndex,
         );
-
         const nextFocusedCardId = nextColumnCards[nextFocusedCardIndex];
-        const nextFocusedDiv = cardRefs.current[nextFocusedCardId];
-        nextFocusedDiv.focus();
+        setFocusedCard(nextFocusedCardId);
         return;
       }
+    } else if (e.key === " ") {
+      e.preventDefault();
+
+      setLiftedCard(cardId);
     }
   };
+
+  const moveCard = (
+    cardId: Card["id"],
+    toColumnId: Column["id"],
+    toIndex: number,
+  ) => {};
 
   return (
     <div>
@@ -150,10 +171,11 @@ export const Part2KeyboardDrag = () => {
               <h4 className={styles["column-header"]}>{column.title}</h4>
               {column.cardIds.map((cardId) => {
                 const card = cards[cardId];
+                const isLifted = cardId === liftedCard;
 
                 return (
                   <div
-                    className={styles.card}
+                    className={`${isLifted ? styles["lifted-card"] : styles.card}`}
                     key={cardId}
                     tabIndex={0}
                     ref={(el) => {
