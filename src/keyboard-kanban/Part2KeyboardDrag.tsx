@@ -35,50 +35,49 @@ import {
   type KeyboardEvent,
 } from "react";
 import styles from "./KeyboardKanban.module.css";
-import { type Board, type Card, type Column, fetchBoard } from "./mockApi";
+import { type Card, type Column, fetchBoard } from "./mockApi";
+
+type ColumnMap = Record<Column["id"], Column>;
+type CardMap = Record<Card["id"], Card>;
+type CardRefs = Record<Card["id"], HTMLDivElement>;
 
 export const Part2KeyboardDrag = () => {
-  const [columns, setColumns] = useState<Record<Column["id"], Column>>({});
-  const [cards, setCards] = useState<Record<Card["id"], Card>>({});
+  const cardRefs = useRef<CardRefs>({});
 
-  const cardRefs = useRef<Record<Card["id"], HTMLDivElement>>({});
+  const [columns, setColumns] = useState<ColumnMap>({});
+  const [cards, setCards] = useState<CardMap>({});
+
+  const columnsArray = Object.values(columns);
 
   useEffect(() => {
     fetchBoard().then((res) => {
-      console.log("fetch result", res);
+      setCards(
+        res.cards.reduce((acc, curr) => {
+          acc[curr.id] = curr;
+          return acc;
+        }, {} as CardMap),
+      );
 
-      const cardMap: Record<Card["id"], Card> = {};
-      res.cards.reduce((acc, curr) => {
-        acc[curr.id] = curr;
-        return acc;
-      }, cardMap);
-      setCards(cardMap);
-
-      const columnMap: Record<Column["id"], Column> = {};
-      res.columns.reduce((acc, curr) => {
-        acc[curr.id] = curr;
-        return acc;
-      }, columnMap);
-      setColumns(columnMap);
+      setColumns(
+        res.columns.reduce((acc, curr) => {
+          acc[curr.id] = curr;
+          return acc;
+        }, {} as ColumnMap),
+      );
     });
   }, []);
 
-  const getColumn = (
-    cardId: Card["id"],
-  ): { column: Column; columnIndex: number } => {
-    let columnWithCard;
-    let columnIndex;
-
-    for (let i = 0; i < Object.values(columns).length; i++) {
-      const column = Object.values(columns)[i];
+  const getColumn = (cardId: Card["id"]) => {
+    for (
+      let columnIndex = 0;
+      columnIndex < columnsArray.length;
+      columnIndex++
+    ) {
+      const column = columnsArray[columnIndex];
       if (column.cardIds.includes(cardId)) {
-        columnWithCard = column;
-        columnIndex = i;
-        break;
+        return { column, columnIndex };
       }
     }
-
-    return { column: columnWithCard!, columnIndex: columnIndex! };
   };
 
   const onColumnKeyDown = (e: KeyboardEvent) => {
@@ -92,13 +91,13 @@ export const Part2KeyboardDrag = () => {
 
     if (!cardId) return;
 
-    const { column, columnIndex } = getColumn(cardId);
+    const { column, columnIndex } = getColumn(cardId)!;
+    const cardsInColumn = column.cardIds;
+    const focusedCardIndex = cardsInColumn.indexOf(cardId);
 
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
 
-      const cardsInColumn = column.cardIds;
-      const focusedCardIndex = cardsInColumn.indexOf(cardId);
       const boundary = e.key === "ArrowDown" ? cardsInColumn.length - 1 : 0;
       const offset = e.key === "ArrowDown" ? 1 : -1;
 
@@ -110,17 +109,15 @@ export const Part2KeyboardDrag = () => {
     } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       e.preventDefault();
 
-      const columnArray = Object.values(columns);
-      const boundary = e.key === "ArrowLeft" ? -1 : columnArray.length;
+      const boundary = e.key === "ArrowLeft" ? -1 : columnsArray.length;
       const offset = e.key === "ArrowLeft" ? -1 : 1;
-      const focusedCardIndex = column.cardIds.indexOf(cardId);
-      let start = columnIndex + offset;
+      let nextColumnIndex = columnIndex + offset;
 
-      while (start !== boundary) {
-        const nextColumnCards = columnArray[start].cardIds;
+      while (nextColumnIndex !== boundary) {
+        const nextColumnCards = columnsArray[nextColumnIndex].cardIds;
 
         if (nextColumnCards.length === 0) {
-          start += offset;
+          nextColumnIndex += offset;
           continue;
         }
 
@@ -142,14 +139,12 @@ export const Part2KeyboardDrag = () => {
       <h2>Keyboard-Accessible Kanban: Part 2</h2>
       <div
         className={styles.grid}
-        style={
-          { "--grid-count": Object.values(columns).length } as CSSProperties
-        }
+        style={{ "--grid-count": columnsArray.length } as CSSProperties}
         onKeyDown={(e) => {
           onColumnKeyDown(e);
         }}
       >
-        {Object.values(columns).map((column) => {
+        {columnsArray.map((column) => {
           return (
             <div className={styles.column} key={column.id}>
               <h4 className={styles["column-header"]}>{column.title}</h4>
