@@ -1,0 +1,46 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  inline-size: 100%;
+  gap: 16px;
+  padding: 20px;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.dropdown {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 6px;
+  margin: 0;
+  list-style-type: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  margin-block-start: 5px;
+}
+
+.list-item {
+  border: none;
+  inline-size: 100%;
+  padding: 4px 6px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    background-color: #dcf8ff;
+  }
+}
+
+.watchlist {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}

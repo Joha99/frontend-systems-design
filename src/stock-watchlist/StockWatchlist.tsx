@@ -15,16 +15,21 @@
  * Requirements:
  * 1. A search input. As the user types, show matching tickers (symbol,
  *    name, exchange) in a list below it.
+ *
  * 2. Selecting a result (click, or ArrowUp/ArrowDown + Enter) adds it to
  *    the watchlist and clears the search. A ticker already in the
  *    watchlist can't be added twice (show it as "Added" or disabled).
+ *
  * 3. Each watchlist row shows the symbol, name, latest price, and change
  *    (+/− and %), green when up and red when down since the session open.
  *    Show "Loading…" until the first price arrives.
+ *
  * 4. Adding a ticker subscribes to it. Removing it (an × button on the
  *    row) unsubscribes. There must be exactly ONE subscription per ticker
  *    in the watchlist at all times.
+ *
  * 5. Updates for one ticker must not overwrite or reset the others.
+ *
  * 6. Show getActiveSubscriptionCount() somewhere on screen (a debug line is
  *    fine) and make sure it always equals the watchlist length, including
  *    after removing, re-adding, and remounting.
@@ -52,15 +57,134 @@
  */
 
 import styles from "./StockWatchlist.module.css";
-import { getActiveSubscriptionCount, search, subscribe } from "./API";
+import {
+  getActiveSubscriptionCount,
+  search,
+  subscribe,
+  type PriceUpdate,
+  type Ticker,
+} from "./API";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+
+type WatchListItem = PriceUpdate & Pick<Ticker, "name">;
+type WatchListMap = Record<PriceUpdate["symbol"], WatchListItem>;
+type UnsubscribeMap = Record<PriceUpdate["symbol"], () => void>;
 
 export const StockWatchlist = () => {
-  // TODO: implement
-  void [search, subscribe, getActiveSubscriptionCount];
+  const [searchValue, setSearchValue] = useState("");
+  const [watchList, setWatchList] = useState<WatchListMap>({});
+  const [filteredList, setFilteredList] = useState<Ticker[]>([]);
+
+  const unsubscribeMap = useRef<UnsubscribeMap>({});
+
+  const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget.value;
+    const list = search(input);
+
+    setFilteredList(list);
+    setSearchValue(input);
+  };
+
+  const onSubscribeToTicker = (ticker: Ticker) => {
+    const unsubscribe = subscribe(ticker.symbol, (update: PriceUpdate) => {
+      setWatchList((prev) => {
+        const newWatchList = { ...prev };
+        newWatchList[ticker.symbol] = {
+          name: ticker.name,
+          ...update,
+        };
+        return newWatchList;
+      });
+    });
+
+    unsubscribeMap.current[ticker.symbol] = unsubscribe;
+    setFilteredList([]);
+    setSearchValue("");
+  };
+
+  const onUnsubscribeToTicker = (ticker: WatchListItem) => {
+    const unsubscribeFn = unsubscribeMap.current[ticker.symbol];
+
+    if (unsubscribeFn) {
+      unsubscribeFn();
+
+      delete unsubscribeMap.current[ticker.symbol];
+      setWatchList((prev) => {
+        const { [ticker.symbol]: _, ...rest } = prev;
+        return rest;
+      });
+    }
+  };
+
+  const watchListArray = Object.values(watchList);
+  const watchListCount = getActiveSubscriptionCount();
 
   return (
-    <div>
-      <h2>Stock Watchlist</h2>
+    <div className={styles.grid}>
+      <div className={styles["content-wrapper"]}>
+        <h3>Search for stocks</h3>
+        <div>
+          <input
+            type="text"
+            value={searchValue}
+            onChange={(e) => onInputChange(e)}
+            placeholder="Search"
+          />
+          {filteredList.length > 0 && (
+            <ul className={styles.dropdown}>
+              {filteredList.map((ticker) => {
+                return (
+                  <li key={ticker.symbol}>
+                    <button
+                      className={styles["list-item"]}
+                      onClick={() => onSubscribeToTicker(ticker)}
+                    >
+                      <span>[{ticker.symbol}]</span>
+                      <span>{ticker.name}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className={styles["content-wrapper"]}>
+        <h3>Your watchlist ({watchListCount})</h3>
+        <table className={styles.watchlist}>
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Change</th>
+              <th>Change %</th>
+              <th>Unsubscribe</th>
+            </tr>
+          </thead>
+          {watchListArray.length > 0 && (
+            <tbody>
+              {watchListArray.map((ticker) => {
+                return (
+                  <tr key={ticker.symbol}>
+                    <td>{ticker.symbol}</td>
+                    <td>{ticker.name}</td>
+                    <td>{ticker.price}</td>
+                    <td>{ticker.change}</td>
+                    <td>{ticker.changePercent}%</td>
+                    <td>
+                      <button onClick={() => onUnsubscribeToTicker(ticker)}>
+                        X
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          )}
+        </table>
+      </div>
     </div>
   );
 };
