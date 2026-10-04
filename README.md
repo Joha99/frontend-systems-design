@@ -46,6 +46,18 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 
 ---
 
+## Reported Interview Questions
+
+Problems reported from real interviews. The data-driven ones have an `API.ts` that simulates the server (a local module with built-in data, like a take-home's API file).
+
+| Status | Problem                     | Path                     | Reported | Difficulty | Key Skills                                                                                |
+| ------ | --------------------------- | ------------------------ | -------- | ---------- | ----------------------------------------------------------------------------------------- |
+|        | Stock Watchlist             | `src/stock-watchlist/`   | Citadel  | Hard       | search + keyboard select, one subscription per item, cleanup, stale callbacks             |
+|        | Real-Time Trading Dashboard | `src/trading-dashboard/` | Citadel  | Hard       | event stream, newest-first by timestamp, 30s sliding-window stats, pause/resume, batching |
+|        | Battleship                  | `src/battleship/`        | Citadel  | Medium     | random non-overlapping placement, turns as a state machine, hunt/target AI                |
+
+---
+
 ## Advanced Systems Design (data structures + keyboard)
 
 Complex problems split into 30–45 minute parts. Each part is its own component file with a standalone spec; start each part from your code for the previous one. Every problem folder has a `mockApi.ts` with latency and random failures. Suggested order is top to bottom.
@@ -60,12 +72,12 @@ Complex problems split into 30–45 minute parts. Each part is its own component
 
 ### Keyboard-Accessible Kanban (`src/keyboard-kanban/`)
 
-| Status | Part                        | File                    | Key Skills                                                         |
-| ------ | --------------------------- | ----------------------- | ------------------------------------------------------------------ |
-| ✅     | 1. Board + focus navigation | `Part1Board.tsx`        | normalized board, 2D arrow navigation, one delegated handler       |
-| ✅     | 2. Keyboard drag and drop   | `Part2KeyboardDrag.tsx` | pick up / move / drop / cancel, focus across remounts             |
-|        | 3. Server sync + undo       | `Part3ServerSync.tsx`   | optimistic move, targeted rollback, undo via API                   |
-|        | 4. Label filter             | `Part4LabelFilter.tsx`  | filtered ↔ full index mapping                                      |
+| Status | Part                        | File                    | Key Skills                                                   |
+| ------ | --------------------------- | ----------------------- | ------------------------------------------------------------ |
+| ✅     | 1. Board + focus navigation | `Part1Board.tsx`        | normalized board, 2D arrow navigation, one delegated handler |
+| ✅     | 2. Keyboard drag and drop   | `Part2KeyboardDrag.tsx` | pick up / move / drop / cancel, focus across remounts        |
+|        | 3. Server sync + undo       | `Part3ServerSync.tsx`   | optimistic move, targeted rollback, undo via API             |
+|        | 4. Label filter             | `Part4LabelFilter.tsx`  | filtered ↔ full index mapping                                |
 
 ### @Mention Composer (`src/mention-composer/`)
 
