@@ -152,38 +152,48 @@ export const StockWatchlist = () => {
 
       <div className={styles["content-wrapper"]}>
         <h3>Your watchlist ({watchListCount})</h3>
-        <table className={styles.watchlist}>
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Name</th>
-              <th>Price</th>
-              <th>Change</th>
-              <th>Change %</th>
-              <th>Unsubscribe</th>
-            </tr>
-          </thead>
-          {watchListArray.length > 0 && (
+        {watchListArray.length > 0 && (
+          <table className={styles.watchlist}>
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Change</th>
+                <th>Change %</th>
+              </tr>
+            </thead>
             <tbody>
               {watchListArray.map((ticker) => {
+                const { symbol, name, price, change, changePercent } = ticker;
                 return (
-                  <tr key={ticker.symbol}>
-                    <td>{ticker.symbol}</td>
-                    <td>{ticker.name}</td>
-                    <td>{ticker.price}</td>
-                    <td>{ticker.change}</td>
-                    <td>{ticker.changePercent}%</td>
+                  <tr
+                    key={symbol}
+                    style={{
+                      backgroundColor:
+                        change > 0
+                          ? "#d3ffd3"
+                          : change < 0
+                            ? "#ffd3d3"
+                            : undefined,
+                    }}
+                  >
                     <td>
                       <button onClick={() => onUnsubscribeToTicker(ticker)}>
-                        X
+                        🅧
                       </button>
+                      {symbol}
                     </td>
+                    <td>{name}</td>
+                    <td>{price}</td>
+                    <td>{change}</td>
+                    <td>{changePercent}%</td>
                   </tr>
                 );
               })}
             </tbody>
-          )}
-        </table>
+          </table>
+        )}
       </div>
     </div>
   );
