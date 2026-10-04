@@ -66,16 +66,30 @@ import {
 } from "./API";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 
-type WatchListItem = PriceUpdate & Pick<Ticker, "name">;
-type WatchListMap = Record<PriceUpdate["symbol"], WatchListItem>;
+type WatchlistItem = PriceUpdate & Pick<Ticker, "name">;
+type WatchlistMap = Record<PriceUpdate["symbol"], WatchlistItem>;
 type UnsubscribeMap = Record<PriceUpdate["symbol"], () => void>;
 
 export const StockWatchlist = () => {
   const [searchValue, setSearchValue] = useState("");
-  const [watchList, setWatchList] = useState<WatchListMap>({});
+  const [watchlist, setWatchlist] = useState<WatchlistMap>({});
   const [filteredList, setFilteredList] = useState<Ticker[]>([]);
+  const [subscriptionCount, setSubscriptionCount] = useState<number>(0);
 
   const unsubscribeMap = useRef<UnsubscribeMap>({});
+
+  useEffect(() => {
+    setSubscriptionCount(getActiveSubscriptionCount());
+
+    return () => {
+      if (Object.values(unsubscribeMap.current).length > 0) {
+        for (const fn of Object.values(unsubscribeMap.current)) {
+          fn();
+        }
+      }
+      setSubscriptionCount(0);
+    };
+  }, []);
 
   const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const input = e.currentTarget.value;
@@ -87,37 +101,39 @@ export const StockWatchlist = () => {
 
   const onSubscribeToTicker = (ticker: Ticker) => {
     const unsubscribe = subscribe(ticker.symbol, (update: PriceUpdate) => {
-      setWatchList((prev) => {
-        const newWatchList = { ...prev };
-        newWatchList[ticker.symbol] = {
+      setWatchlist((prev) => {
+        const newWatchlist = { ...prev };
+        newWatchlist[ticker.symbol] = {
           name: ticker.name,
           ...update,
         };
-        return newWatchList;
+        return newWatchlist;
       });
     });
 
     unsubscribeMap.current[ticker.symbol] = unsubscribe;
+    setSubscriptionCount(getActiveSubscriptionCount());
     setFilteredList([]);
     setSearchValue("");
   };
 
-  const onUnsubscribeToTicker = (ticker: WatchListItem) => {
+  const onUnsubscribeToTicker = (ticker: WatchlistItem) => {
     const unsubscribeFn = unsubscribeMap.current[ticker.symbol];
 
     if (unsubscribeFn) {
       unsubscribeFn();
 
       delete unsubscribeMap.current[ticker.symbol];
-      setWatchList((prev) => {
+      setWatchlist((prev) => {
         const { [ticker.symbol]: _, ...rest } = prev;
         return rest;
       });
+
+      setSubscriptionCount(getActiveSubscriptionCount());
     }
   };
 
-  const watchListArray = Object.values(watchList);
-  const watchListCount = getActiveSubscriptionCount();
+  const watchlistArray = Object.values(watchlist);
 
   return (
     <div className={styles.grid}>
@@ -133,14 +149,18 @@ export const StockWatchlist = () => {
           {filteredList.length > 0 && (
             <ul className={styles.dropdown}>
               {filteredList.map((ticker) => {
+                const { symbol, name } = ticker;
+                const isInWatchlist = watchlist[symbol] !== undefined;
+
                 return (
-                  <li key={ticker.symbol}>
+                  <li key={symbol}>
                     <button
                       className={styles["list-item"]}
                       onClick={() => onSubscribeToTicker(ticker)}
+                      disabled={isInWatchlist}
                     >
-                      <span>[{ticker.symbol}]</span>
-                      <span>{ticker.name}</span>
+                      <span>[{symbol}]</span>
+                      <span>{name}</span>
                     </button>
                   </li>
                 );
@@ -151,8 +171,8 @@ export const StockWatchlist = () => {
       </div>
 
       <div className={styles["content-wrapper"]}>
-        <h3>Your watchlist ({watchListCount})</h3>
-        {watchListArray.length > 0 && (
+        <h3>Your watchlist ({subscriptionCount})</h3>
+        {watchlistArray.length > 0 && (
           <table className={styles.watchlist}>
             <thead>
               <tr>
@@ -164,7 +184,7 @@ export const StockWatchlist = () => {
               </tr>
             </thead>
             <tbody>
-              {watchListArray.map((ticker) => {
+              {watchlistArray.map((ticker) => {
                 const { symbol, name, price, change, changePercent } = ticker;
                 return (
                   <tr
