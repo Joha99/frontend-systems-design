@@ -4,57 +4,47 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 
 ## Problems
 
-| Status | Problem                         | Path                         | Difficulty   | Key Skills                                                                       |
-| ------ | ------------------------------- | ---------------------------- | ------------ | -------------------------------------------------------------------------------- |
-| ✅     | Toggle Counter                  | `src/toggle-counter/`        | Easy         | useState, derived values, controlled checkbox                                    |
-|        | Character Counter Textarea      | `src/char-counter/`          | Easy         | controlled textarea, derived state, conditional styling                          |
-| ✅     | Contact Form                    | `src/contact-form/`          | Easy         | controlled forms, validation, POST requests, event.preventDefault                |
-| ✅     | Data Table                      | `src/data-table/`            | Intermediate | useMemo, Array.sort, filtering, pagination math                                  |
-| ✅     | Typeahead / Autocomplete        | `src/typeahead/`             | Intermediate | debouncing, fetch API, AbortController, useEffect cleanup                        |
-| ✅     | CRUD Todo List                  | `src/crud-list/`             | Intermediate | all HTTP methods, local state sync, per-item loading/error                       |
-| ✅     | Modify Existing Code            | _(provided at problem time)_ | Intermediate | debugging, reading unfamiliar code, adding features                              |
-| ✅     | Tooltip with Outside Click      | `src/tooltip-hover/`         | Intermediate | useRef, click-outside detection, Escape key, toggle state                        |
-| ✅     | Debounced Search                | `src/debounced-search/`      | Intermediate | AbortController, debounce, fetch cleanup, AbortError filtering                   |
-| ✅     | Lazy Image Gallery              | `src/lazy-images/`           | Intermediate | IntersectionObserver, unobserve, lazy loading, Set tracking                      |
-| ✅     | Multi-Step Form Wizard          | `src/multi-step-wizard/`     | Intermediate | multi-step navigation, shared state, step validation, form submission            |
-| ✅     | Nested Comments                 | `src/nested-comments/`       | Intermediate | recursive components, tree structures, adding to nested state                    |
-| ✅     | Throttled Resize Tracker        | `src/throttled-resize/`      | Intermediate | throttle/debounce pattern, window events, cleanup                                |
-| ✅     | Shopping Cart (useReducer)      | `src/shopping-cart/`         | Intermediate | useReducer, action dispatching, computed totals, complex state                   |
-| ✅     | Real-Time Chat                  | `src/chat/`                  | Hard         | setInterval in useEffect, auto-scroll, polling, useRef                           |
-| ✅     | Infinite Scroll Feed            | `src/infinite-scroll/`       | Hard         | IntersectionObserver, offset pagination, useRef, observer cleanup                |
-| ✅     | Drag-and-Drop Kanban            | `src/kanban/`                | Hard         | HTML Drag and Drop API, dataTransfer, complex state management                   |
-| ✅     | Accessible Modal                | `src/modal/`                 | Hard         | compound components, portals, focus trapping, paginated list in modal            |
-| ✅     | Interactive Spreadsheet         | `src/spreadsheet/`           | Hard         | tabIndex, keyboard nav, focus management, event propagation, outside click       |
-| ✅     | Flash Message (useLayoutEffect) | `src/flash-message/`         | Hard         | useLayoutEffect, DOM measurement, toast stacking, auto-dismiss                   |
-| ✅     | Global Store (Redux pattern)    | `src/global-store/`          | Hard         | useReducer + Context, paginated notifications, page clamping                     |
-| ✅     | Paginated Table                 | `src/paginated-table/`       | Hard         | server-side pagination, skip/limit, page window math, sortable columns           |
-| ✅     | Calendar Month View             | `src/calendar/`              | Hard         | date math, grid layout, week numbers, month navigation                           |
-| ✅     | Social Media Feed               | `src/virtual-feed/`          | Hard         | IntersectionObserver (multiple), infinite scroll, read tracking, new post banner |
-|        | Image Carousel                  | `src/image-carousel/`        | Hard         | IntersectionObserver, lazy loading, autoplay, scroll-snap, slide detection       |
-| ✅     | Searchable Dropdown             | `src/searchable-dropdown/`   | Hard         | binary search, range index, virtual scroll, keyboard nav, outside click          |
-| ✅     | Command Palette                 | `src/command-palette/`       | Hard         | document keydown, portal, focus save/restore, roving highlight, focus trapping   |
-| ✅     | Accessible Tabs                 | `src/accessible-tabs/`       | Hard         | roving tabIndex, ARIA tabs pattern, dynamic add/remove, focus across boundaries  |
-| ✅     | Tree Select                     | `src/tree-select/`           | Hard         | roving tabIndex, tree flattening, expand/collapse focus, type-ahead, ARIA tree   |
-| ✅     | Virtualized Data Table          | `src/virtual-table/`         | Hard         | virtualization with table layout, sortable columns, inline editing, keyboard nav |
-| ✅     | CRUD Dashboard                  | `src/crud-dashboard/`        | Hard         | optimistic updates, rollback, per-item loading, form validation, infinite scroll |
-|        | Debounced Multi-Filter Panel    | `src/debounced-filters/`     | Hard         | multiple debounce timers, AbortController, server + client filtering, cleanup    |
-| ✅     | Autosave Notes                  | `src/autosave-notes/`        | Hard         | dirty set, debounce, one save in flight, batching, retry, versioning             |
-| ✅     | Pixel Editor (Undo / Redo)      | `src/undo-redo/`             | Intermediate | undo/redo stacks, structural sharing, clearing redo on new actions               |
-| ✅     | Image Search Gallery 🚗         | `src/image-search/`          | Medium       | search + submit, mock API fetch, image grid, pagination controls, loading state  |
-| ✅     | Context Paginated List 🚗       | `src/context-paginator/`     | Medium       | React Context provider, multi-component consumers, API pagination, no prop drill |
-|        | Semantic HTML Audit 🚗          | `src/semantic-audit/`        | Easy         | replace div soup with semantic HTML5 tags, string parsing, scoring               |
-
----
-
-## Reported Interview Questions
-
-Problems reported from real interviews. The data-driven ones have an `API.ts` that simulates the server (a local module with built-in data, like a take-home's API file).
-
-| Status | Problem                     | Path                     | Reported | Difficulty | Key Skills                                                                                |
-| ------ | --------------------------- | ------------------------ | -------- | ---------- | ----------------------------------------------------------------------------------------- |
-|        | Stock Watchlist             | `src/stock-watchlist/`   | Citadel  | Hard       | search + keyboard select, one subscription per item, cleanup, stale callbacks             |
-|        | Real-Time Trading Dashboard | `src/trading-dashboard/` | Citadel  | Hard       | event stream, newest-first by timestamp, 30s sliding-window stats, pause/resume, batching |
-|        | Battleship                  | `src/battleship/`        | Citadel  | Medium     | random non-overlapping placement, turns as a state machine, hunt/target AI                |
+| Status | Problem                               | Path                         | Difficulty   | Key Skills                                                                                |
+| ------ | ------------------------------------- | ---------------------------- | ------------ | ----------------------------------------------------------------------------------------- |
+| ✅     | Toggle Counter                        | `src/toggle-counter/`        | Easy         | useState, derived values, controlled checkbox                                             |
+|        | Character Counter Textarea            | `src/char-counter/`          | Easy         | controlled textarea, derived state, conditional styling                                   |
+| ✅     | Contact Form                          | `src/contact-form/`          | Easy         | controlled forms, validation, POST requests, event.preventDefault                         |
+| ✅     | Data Table                            | `src/data-table/`            | Intermediate | useMemo, Array.sort, filtering, pagination math                                           |
+| ✅     | Typeahead / Autocomplete              | `src/typeahead/`             | Intermediate | debouncing, fetch API, AbortController, useEffect cleanup                                 |
+| ✅     | CRUD Todo List                        | `src/crud-list/`             | Intermediate | all HTTP methods, local state sync, per-item loading/error                                |
+| ✅     | Modify Existing Code                  | _(provided at problem time)_ | Intermediate | debugging, reading unfamiliar code, adding features                                       |
+| ✅     | Tooltip with Outside Click            | `src/tooltip-hover/`         | Intermediate | useRef, click-outside detection, Escape key, toggle state                                 |
+| ✅     | Debounced Search                      | `src/debounced-search/`      | Intermediate | AbortController, debounce, fetch cleanup, AbortError filtering                            |
+| ✅     | Lazy Image Gallery                    | `src/lazy-images/`           | Intermediate | IntersectionObserver, unobserve, lazy loading, Set tracking                               |
+| ✅     | Multi-Step Form Wizard                | `src/multi-step-wizard/`     | Intermediate | multi-step navigation, shared state, step validation, form submission                     |
+| ✅     | Nested Comments                       | `src/nested-comments/`       | Intermediate | recursive components, tree structures, adding to nested state                             |
+| ✅     | Throttled Resize Tracker              | `src/throttled-resize/`      | Intermediate | throttle/debounce pattern, window events, cleanup                                         |
+| ✅     | Shopping Cart (useReducer)            | `src/shopping-cart/`         | Intermediate | useReducer, action dispatching, computed totals, complex state                            |
+| ✅     | Real-Time Chat                        | `src/chat/`                  | Hard         | setInterval in useEffect, auto-scroll, polling, useRef                                    |
+| ✅     | Infinite Scroll Feed                  | `src/infinite-scroll/`       | Hard         | IntersectionObserver, offset pagination, useRef, observer cleanup                         |
+| ✅     | Drag-and-Drop Kanban                  | `src/kanban/`                | Hard         | HTML Drag and Drop API, dataTransfer, complex state management                            |
+| ✅     | Accessible Modal                      | `src/modal/`                 | Hard         | compound components, portals, focus trapping, paginated list in modal                     |
+| ✅     | Interactive Spreadsheet               | `src/spreadsheet/`           | Hard         | tabIndex, keyboard nav, focus management, event propagation, outside click                |
+| ✅     | Flash Message (useLayoutEffect)       | `src/flash-message/`         | Hard         | useLayoutEffect, DOM measurement, toast stacking, auto-dismiss                            |
+| ✅     | Global Store (Redux pattern)          | `src/global-store/`          | Hard         | useReducer + Context, paginated notifications, page clamping                              |
+| ✅     | Paginated Table                       | `src/paginated-table/`       | Hard         | server-side pagination, skip/limit, page window math, sortable columns                    |
+| ✅     | Calendar Month View                   | `src/calendar/`              | Hard         | date math, grid layout, week numbers, month navigation                                    |
+| ✅     | Social Media Feed                     | `src/virtual-feed/`          | Hard         | IntersectionObserver (multiple), infinite scroll, read tracking, new post banner          |
+|        | Image Carousel                        | `src/image-carousel/`        | Hard         | IntersectionObserver, lazy loading, autoplay, scroll-snap, slide detection                |
+| ✅     | Searchable Dropdown                   | `src/searchable-dropdown/`   | Hard         | binary search, range index, virtual scroll, keyboard nav, outside click                   |
+| ✅     | Command Palette                       | `src/command-palette/`       | Hard         | document keydown, portal, focus save/restore, roving highlight, focus trapping            |
+| ✅     | Accessible Tabs                       | `src/accessible-tabs/`       | Hard         | roving tabIndex, ARIA tabs pattern, dynamic add/remove, focus across boundaries           |
+| ✅     | Tree Select                           | `src/tree-select/`           | Hard         | roving tabIndex, tree flattening, expand/collapse focus, type-ahead, ARIA tree            |
+| ✅     | Virtualized Data Table                | `src/virtual-table/`         | Hard         | virtualization with table layout, sortable columns, inline editing, keyboard nav          |
+| ✅     | CRUD Dashboard                        | `src/crud-dashboard/`        | Hard         | optimistic updates, rollback, per-item loading, form validation, infinite scroll          |
+|        | Debounced Multi-Filter Panel          | `src/debounced-filters/`     | Hard         | multiple debounce timers, AbortController, server + client filtering, cleanup             |
+| ✅     | Autosave Notes                        | `src/autosave-notes/`        | Hard         | dirty set, debounce, one save in flight, batching, retry, versioning                      |
+| ✅     | Pixel Editor (Undo / Redo)            | `src/undo-redo/`             | Intermediate | undo/redo stacks, structural sharing, clearing redo on new actions                        |
+|        | Stock Watchlist (Citadel)             | `src/stock-watchlist/`       | Hard         | search + keyboard select, one subscription per item, cleanup, stale callbacks             |
+|        | Real-Time Trading Dashboard (Citadel) | `src/trading-dashboard/`     | Hard         | event stream, newest-first by timestamp, 30s sliding-window stats, pause/resume, batching |
+| ✅     | Image Search Gallery 🚗               | `src/image-search/`          | Medium       | search + submit, mock API fetch, image grid, pagination controls, loading state           |
+| ✅     | Context Paginated List 🚗             | `src/context-paginator/`     | Medium       | React Context provider, multi-component consumers, API pagination, no prop drill          |
+|        | Semantic HTML Audit 🚗                | `src/semantic-audit/`        | Easy         | replace div soup with semantic HTML5 tags, string parsing, scoring                        |
 
 ---
 
@@ -120,13 +110,14 @@ Complex problems split into 30–45 minute parts. Each part is its own component
 
 Interactive game problems: keyboard input, timers/game loops, immutable board updates, and a core rule to implement. More games (Snake, Minesweeper, Connect Four…) are in the Algorithm + Frontend section.
 
-| Status | Problem      | Path                  | Difficulty   | Key Skills                                                                 |
-| ------ | ------------ | --------------------- | ------------ | -------------------------------------------------------------------------- |
-|        | 2048         | `src/game-2048/`      | Medium       | row slide/merge, reuse via transpose/reverse, immutable board, spawn rules |
-|        | Wordle       | `src/wordle/`         | Medium       | duplicate-letter scoring, document key listener, key status priority       |
-|        | 15 Puzzle    | `src/sliding-puzzle/` | Medium       | solvable shuffles (inversion count), arrow-key moves, timer start/stop     |
-|        | Simon Says   | `src/simon-says/`     | Medium       | timed playback, cancelling timeouts, input locking, stale closures         |
-|        | Whack-a-Mole | `src/whack-a-mole/`   | Intermediate | intervals + countdown, cleanup, stale closures, keyboard shortcuts         |
+| Status | Problem              | Path                  | Difficulty   | Key Skills                                                                 |
+| ------ | -------------------- | --------------------- | ------------ | -------------------------------------------------------------------------- |
+|        | 2048                 | `src/game-2048/`      | Medium       | row slide/merge, reuse via transpose/reverse, immutable board, spawn rules |
+|        | Wordle               | `src/wordle/`         | Medium       | duplicate-letter scoring, document key listener, key status priority       |
+|        | 15 Puzzle            | `src/sliding-puzzle/` | Medium       | solvable shuffles (inversion count), arrow-key moves, timer start/stop     |
+|        | Simon Says           | `src/simon-says/`     | Medium       | timed playback, cancelling timeouts, input locking, stale closures         |
+| ✅     | Whack-a-Mole         | `src/whack-a-mole/`   | Intermediate | intervals + countdown, cleanup, stale closures, keyboard shortcuts         |
+|        | Battleship (Citadel) | `src/battleship/`     | Medium       | random non-overlapping placement, turns as a state machine, hunt/target AI |
 
 ---
 

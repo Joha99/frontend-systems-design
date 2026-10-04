@@ -1,0 +1,14 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 3px;
+}
+
+.cell {
+  width: 100px;
+  height: 100px;
+}
+
+.mole {
+  outline: 2px solid green;
+}

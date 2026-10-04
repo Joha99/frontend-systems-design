@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { WhackAMole } from "./whack-a-mole/WhackAMole";
+import { StockWatchlist } from "./stock-watchlist/StockWatchlist";
 
 function App() {
   return (
     <div className={styles.app}>
-      <WhackAMole />
+      <StockWatchlist />
     </div>
   );
 }

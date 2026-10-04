@@ -33,14 +33,113 @@
  * Time target: 30 minutes.
  */
 
+import { useEffect, useState } from "react";
 import styles from "./WhackAMole.module.css";
 
 export const WhackAMole = () => {
-  // TODO: implement
+  const [gameStatus, setGameStatus] = useState<"started" | "over">();
+  const [gameTimer, setGameTimer] = useState<number>(30);
+  const [score, setScore] = useState<number>(0);
+  const [mole, setMole] = useState<number>();
+
+  // Reset mole every 1 second
+  useEffect(() => {
+    if (mole === undefined) return;
+
+    let intervalId = setInterval(() => {
+      createNewMole();
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [mole]);
+
+  // Listen to game status and start countdown
+  useEffect(() => {
+    if (!gameStatus || gameStatus === "over") return;
+
+    let intervalId: number;
+    if (gameStatus === "started") {
+      // Countdown starts
+      intervalId = setInterval(() => {
+        setGameTimer((prev) => {
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (intervalId !== undefined) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [gameStatus]);
+
+  // Reset game state when timer runs out
+  useEffect(() => {
+    if (gameTimer === 0) {
+      setGameStatus("over");
+      setMole(undefined);
+    }
+  }, [gameTimer]);
+
+  // Generate a new mole location
+  const createNewMole = () => {
+    let randomIndex = Math.floor(Math.random() * 9);
+    if (mole !== undefined && randomIndex === mole) {
+      while (randomIndex === mole) {
+        randomIndex = Math.floor(Math.random() * 9);
+      }
+    }
+    setMole(randomIndex);
+  };
+
+  // Set initial states when game starts
+  const onGameStart = () => {
+    setGameTimer(30);
+    setScore(0);
+    setGameStatus("started");
+    createNewMole();
+  };
+
+  const onCellClick = (index: number) => {
+    if (index === mole) {
+      createNewMole();
+      setScore((prev) => prev + 1);
+    }
+  };
 
   return (
     <div>
       <h2>Whack-a-Mole</h2>
+
+      {!gameStatus ? (
+        <button onClick={onGameStart}>Start</button>
+      ) : gameStatus === "started" ? (
+        <div>
+          {gameTimer} SECONDS | SCORE: {score}
+        </div>
+      ) : (
+        <div>
+          Game over! Final score is {score}.
+          <button onClick={onGameStart}>Play again</button>
+        </div>
+      )}
+
+      <div className={styles.grid}>
+        {Array.from({ length: 9 }, (_, i) => {
+          const hasMole = mole === i;
+
+          return (
+            <button
+              key={i}
+              className={`${styles.cell} ${hasMole ? styles.mole : ""}`}
+              onClick={() => onCellClick(i)}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
