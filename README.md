@@ -40,7 +40,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 |        | Debounced Multi-Filter Panel          | `src/debounced-filters/`     | Hard         | multiple debounce timers, AbortController, server + client filtering, cleanup             |
 | ✅     | Autosave Notes                        | `src/autosave-notes/`        | Hard         | dirty set, debounce, one save in flight, batching, retry, versioning                      |
 | ✅     | Pixel Editor (Undo / Redo)            | `src/undo-redo/`             | Intermediate | undo/redo stacks, structural sharing, clearing redo on new actions                        |
-|        | Stock Watchlist (Citadel)             | `src/stock-watchlist/`       | Hard         | search + keyboard select, one subscription per item, cleanup, stale callbacks             |
+| ✅     | Stock Watchlist (Citadel)             | `src/stock-watchlist/`       | Hard         | search + keyboard select, one subscription per item, cleanup, stale callbacks             |
 |        | Real-Time Trading Dashboard (Citadel) | `src/trading-dashboard/`     | Hard         | event stream, newest-first by timestamp, 30s sliding-window stats, pause/resume, batching |
 | ✅     | Image Search Gallery 🚗               | `src/image-search/`          | Medium       | search + submit, mock API fetch, image grid, pagination controls, loading state           |
 | ✅     | Context Paginated List 🚗             | `src/context-paginator/`     | Medium       | React Context provider, multi-component consumers, API pagination, no prop drill          |

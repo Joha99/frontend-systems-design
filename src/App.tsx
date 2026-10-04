@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { StockWatchlist } from "./stock-watchlist/StockWatchlist";
+import { TradingDashboard } from "./trading-dashboard/TradingDashboard";
 
 function App() {
   return (
     <div className={styles.app}>
-      <StockWatchlist />
+      <TradingDashboard />
     </div>
   );
 }

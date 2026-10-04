@@ -66,7 +66,10 @@ import {
 } from "./API";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 
-type WatchlistItem = PriceUpdate & Pick<Ticker, "name">;
+type WatchlistItem = PriceUpdate &
+  Pick<Ticker, "name"> & {
+    isLoading: boolean;
+  };
 type WatchlistMap = Record<PriceUpdate["symbol"], WatchlistItem>;
 type UnsubscribeMap = Record<PriceUpdate["symbol"], () => void>;
 
@@ -100,11 +103,26 @@ export const StockWatchlist = () => {
   };
 
   const onSubscribeToTicker = (ticker: Ticker) => {
+    setWatchlist((prev) => {
+      const newWatchlist = { ...prev };
+      newWatchlist[ticker.symbol] = {
+        name: ticker.name,
+        symbol: ticker.symbol,
+        price: 0,
+        change: 0,
+        changePercent: 0,
+        timestamp: 0,
+        isLoading: true,
+      };
+      return newWatchlist;
+    });
+
     const unsubscribe = subscribe(ticker.symbol, (update: PriceUpdate) => {
       setWatchlist((prev) => {
         const newWatchlist = { ...prev };
         newWatchlist[ticker.symbol] = {
           name: ticker.name,
+          isLoading: false,
           ...update,
         };
         return newWatchlist;
@@ -185,7 +203,18 @@ export const StockWatchlist = () => {
             </thead>
             <tbody>
               {watchlistArray.map((ticker) => {
-                const { symbol, name, price, change, changePercent } = ticker;
+                const {
+                  symbol,
+                  name,
+                  price,
+                  change,
+                  changePercent,
+                  isLoading,
+                } = ticker;
+                if (isLoading) {
+                  return null;
+                }
+
                 return (
                   <tr
                     key={symbol}
