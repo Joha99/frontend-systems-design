@@ -21,20 +21,17 @@
  *    Each shows the NEWEST events first, by timestamp (not arrival
  *    order: late events go where their timestamp belongs).
  * 3. Keep memory bounded: each list keeps at most the latest 100 events.
- *
  * 4. Statistics over the latest 30 seconds, per side (buy / sell):
  *    trade count, total volume (sum of quantity), and VWAP
  *    (sum(price × quantity) / sum(quantity)). Also the latest bid/ask per
  *    symbol from quotes.
  *    The window must slide with time: stats change as old trades fall out,
  *    even if no new events arrive.
- *
  * 5. Pause / Resume button:
  *    - While paused, the lists and stats on screen stop changing.
  *    - No events are lost: on Resume, everything that arrived while paused
  *      appears, and stats include it.
  *    - Show how many events arrived while paused ("12 new events").
- *
  * 6. Bursts must not freeze the page: 40 events arriving at once should
  *    cause one re-render, not 40.
  *
@@ -53,8 +50,15 @@ import {
 } from "./API";
 import { useEffect, useRef, useState } from "react";
 
-const LIMIT = 20;
+const LIMIT = 100;
 const REFRESH_INTERVAL = 1000;
+
+interface Statistic {
+  tradeCount: number;
+  totalVolumn: number;
+  vwap: number;
+  // latestBid: number;
+}
 
 export const TradingDashboard = () => {
   const [dashboardStatus, setDashboardStatus] = useState<"pause" | "resume">(
@@ -66,9 +70,15 @@ export const TradingDashboard = () => {
   const [buyTrades, setBuyTrades] = useState<TradeEvent[]>([]);
   const [sellTrades, setSellTrades] = useState<TradeEvent[]>([]);
 
-  const quotesRef = useRef<QuoteEvent[]>([]);
-  const buyTradesRef = useRef<TradeEvent[]>([]);
-  const sellTradesRef = useRef<TradeEvent[]>([]);
+  const batchedQuotesRef = useRef<QuoteEvent[]>([]);
+  const batchedBuysRef = useRef<TradeEvent[]>([]);
+  const batchedSellsRef = useRef<TradeEvent[]>([]);
+
+  // Stats cover every trade that occured in the last 30 seconds
+  const recentBuysRef = useRef<TradeEvent[]>([]);
+  const recentSellsRef = useRef<TradeEvent[]>([]);
+  const [buyStats, setBuyStats] = useState<Statistic>();
+  const [sellStats, setSellStats] = useState<Statistic>();
 
   const unsubscribeFnRef = useRef<() => void>(() => {});
 
@@ -87,54 +97,129 @@ export const TradingDashboard = () => {
 
   const sortByTimestamp = (list: MarketEvent[]) => {
     list.sort((a, b) => {
-      return a.timestamp - b.timestamp;
+      return b.timestamp - a.timestamp;
     });
   };
 
   const streamEvents = (event: MarketEvent) => {
-    console.log("NEW MARKET EVENT", event);
-
     if (event.type === "quote") {
-      quotesRef.current.push(event);
+      batchedQuotesRef.current.push(event);
     }
 
     if (event.type === "trade") {
       if (event.side === "buy") {
-        buyTradesRef.current.push(event);
+        batchedBuysRef.current.push(event);
       }
 
       if (event.side === "sell") {
-        sellTradesRef.current.push(event);
+        batchedSellsRef.current.push(event);
       }
     }
   };
 
+  const mergeSortedEvents = (
+    prevState: MarketEvent[],
+    batchList: MarketEvent[],
+    limit: number = LIMIT,
+  ): MarketEvent[] => {
+    const newList = [];
+
+    let p = 0;
+    let q = 0;
+
+    while (
+      newList.length < limit &&
+      p < prevState.length &&
+      q < batchList.length
+    ) {
+      const currQuote = prevState[p];
+      const newQuote = batchList[q];
+
+      if (currQuote.timestamp > newQuote.timestamp) {
+        newList.push(currQuote);
+      } else {
+        newList.push(newQuote);
+      }
+
+      p++;
+      q++;
+    }
+
+    while (newList.length < limit && p < prevState.length) {
+      newList.push(prevState[p]);
+      p++;
+    }
+
+    while (newList.length < limit && q < batchList.length) {
+      newList.push(batchList[q]);
+      q++;
+    }
+
+    return newList;
+  };
+
+  const getStatistic = (list: TradeEvent[]): Statistic => {
+    const tradeCount = list.length;
+
+    let totalVolumn = 0;
+    let totalCost = 0;
+
+    for (const event of list) {
+      totalVolumn += event.quantity;
+      totalCost += event.price * event.quantity;
+    }
+
+    const vwap = totalCost / totalVolumn;
+
+    return {
+      tradeCount,
+      totalVolumn,
+      vwap,
+    };
+  };
+
   const updateLists = () => {
+    // Only keep the trades that happened in last 30s for calculating stats
+    const now = Date.now();
+
+    recentBuysRef.current = [
+      ...recentBuysRef.current,
+      ...batchedBuysRef.current,
+    ].filter((event) => now - event.timestamp <= 30000);
+    setBuyStats(getStatistic(recentBuysRef.current));
+
+    recentSellsRef.current = [
+      ...recentSellsRef.current,
+      ...batchedSellsRef.current,
+    ].filter((event) => now - event.timestamp <= 30000);
+    setSellStats(getStatistic(recentSellsRef.current));
+
+    // If dashboard is paused, don't update the rendered lists
     if (dashboardStatusRef.current === "pause") return;
-    const batchedQuotes = [...quotesRef.current];
-    const batchedSells = [...sellTradesRef.current];
-    const batchedBuys = [...buyTradesRef.current];
 
+    // Sort the batches that need to be added to the rendered states
+    const batchedQuotes = [...batchedQuotesRef.current];
+    sortByTimestamp(batchedQuotes);
+    const batchedSells = [...batchedSellsRef.current];
+    sortByTimestamp(batchedSells);
+    const batchedBuys = [...batchedBuysRef.current];
+    sortByTimestamp(batchedBuys);
+
+    // Merge the sorted batches into the rendered states
     setQuotes((prev) => {
-      const newQuotes = [...prev, ...batchedQuotes];
-      sortByTimestamp(newQuotes);
-      return newQuotes.slice(0, 100);
+      return mergeSortedEvents(prev, batchedQuotes) as QuoteEvent[];
     });
-
     setSellTrades((prev) => {
-      const newSellTrades = [...prev, ...batchedSells];
-      sortByTimestamp(newSellTrades);
-      return newSellTrades.slice(0, 100);
+      return mergeSortedEvents(prev, batchedSells) as TradeEvent[];
     });
     setBuyTrades((prev) => {
-      const newBuyTrades = [...prev, ...batchedBuys];
-      sortByTimestamp(newBuyTrades);
-      return newBuyTrades.slice(0, 100);
+      return mergeSortedEvents(prev, batchedBuys) as TradeEvent[];
     });
 
-    quotesRef.current = [];
-    sellTradesRef.current = [];
-    buyTradesRef.current = [];
+    // Reset the refs holding the batches
+    batchedQuotesRef.current = [];
+    batchedSellsRef.current = [];
+    batchedBuysRef.current = [];
   };
 
   const updateDashboardStatus = (status: "pause" | "resume") => {
@@ -170,12 +255,13 @@ export const TradingDashboard = () => {
       <div className={styles.grid}>
         <div>
           <h3>Quotes ({quotes.length})</h3>
-          {/* TODO: render stats over last 30 sec */}
           <ul>
             {quotes.map((quote) => {
+              const time = new Date(quote.timestamp).toLocaleString();
+
               return (
                 <li key={quote.id}>
-                  {quote.id} [{quote.symbol}] | {quote.timestamp}
+                  {time} | [{quote.symbol}]
                 </li>
               );
             })}
@@ -184,12 +270,23 @@ export const TradingDashboard = () => {
 
         <div>
           <h3>Buy Trades ({buyTrades.length})</h3>
-          {/* TODO: render stats over last 30 sec */}
+          {buyStats && (
+            <div>
+              <h4>Buy stats over buy trades over last 30 seconds</h4>
+              <ul>
+                <li>TRADE COUNT: {buyStats.tradeCount}</li>
+                <li>TRADE VOLUMN: {buyStats.totalVolumn}</li>
+                <li>VWAP: {buyStats.vwap}</li>
+              </ul>
+            </div>
+          )}
           <ul>
             {buyTrades.map((trade) => {
+              const time = new Date(trade.timestamp).toLocaleString();
+
               return (
                 <li key={trade.id}>
-                  {trade.id} [{trade.symbol}] | {trade.timestamp}
+                  {time} | [{trade.symbol}]
                 </li>
               );
             })}
@@ -198,12 +295,23 @@ export const TradingDashboard = () => {
 
         <div>
           <h3>Sell Trades ({sellTrades.length})</h3>
-          {/* TODO: render stats over last 30 sec */}
+          {sellStats && (
+            <div>
+              <h4>Sell stats over sell trades over last 30 seconds</h4>
+              <ul>
+                <li>TRADE COUNT: {sellStats.tradeCount}</li>
+                <li>TRADE VOLUMN: {sellStats.totalVolumn}</li>
+                <li>VWAP: {sellStats.vwap}</li>
+              </ul>
+            </div>
+          )}
           <ul>
             {sellTrades.map((trade) => {
+              const time = new Date(trade.timestamp).toLocaleString();
+
               return (
                 <li key={trade.id}>
-                  {trade.id} [{trade.symbol}] | {trade.timestamp}
+                  {time} | [{trade.symbol}]
                 </li>
               );
             })}
