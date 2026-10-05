@@ -89,7 +89,7 @@ export const TradingDashboard = () => {
       updateLists();
     }, REFRESH_INTERVAL);
 
-    () => {
+    return () => {
       unsubscribeFnRef.current();
       clearInterval(intervalId);
     };
@@ -109,10 +109,12 @@ export const TradingDashboard = () => {
     if (event.type === "trade") {
       if (event.side === "buy") {
         batchedBuysRef.current.push(event);
+        recentBuysRef.current.push(event);
       }
 
       if (event.side === "sell") {
         batchedSellsRef.current.push(event);
+        recentSellsRef.current.push(event);
       }
     }
   };
@@ -137,12 +139,11 @@ export const TradingDashboard = () => {
 
       if (currQuote.timestamp > newQuote.timestamp) {
         newList.push(currQuote);
+        p++;
       } else {
         newList.push(newQuote);
+        q++;
       }
-
-      p++;
-      q++;
     }
 
     while (newList.length < limit && p < prevState.length) {
@@ -179,23 +180,21 @@ export const TradingDashboard = () => {
   };
 
   const updateLists = () => {
-    // Only keep the trades that happened in last 30s for calculating stats
+    // Filter out events that didn't occur within last 30s for lists used to calculate stats
     const now = Date.now();
-
-    recentBuysRef.current = [
-      ...recentBuysRef.current,
-      ...batchedBuysRef.current,
-    ].filter((event) => now - event.timestamp <= 30000);
-    setBuyStats(getStatistic(recentBuysRef.current));
-
-    recentSellsRef.current = [
-      ...recentSellsRef.current,
-      ...batchedSellsRef.current,
-    ].filter((event) => now - event.timestamp <= 30000);
-    setSellStats(getStatistic(recentSellsRef.current));
+    recentBuysRef.current = recentBuysRef.current.filter(
+      (event) => now - event.timestamp <= 30000,
+    );
+    recentSellsRef.current = recentSellsRef.current.filter(
+      (event) => now - event.timestamp <= 30000,
+    );
 
     // If dashboard is paused, don't update the rendered lists
     if (dashboardStatusRef.current === "pause") return;
+
+    // Update the rendered stats
+    setBuyStats(getStatistic(recentBuysRef.current));
+    setSellStats(getStatistic(recentSellsRef.current));
 
     // Sort the batches that need to be added to the rendered states
     const batchedQuotes = [...batchedQuotesRef.current];
