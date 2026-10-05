@@ -21,51 +21,195 @@
  *    Each shows the NEWEST events first, by timestamp (not arrival
  *    order: late events go where their timestamp belongs).
  * 3. Keep memory bounded: each list keeps at most the latest 100 events.
+ *
  * 4. Statistics over the latest 30 seconds, per side (buy / sell):
  *    trade count, total volume (sum of quantity), and VWAP
  *    (sum(price × quantity) / sum(quantity)). Also the latest bid/ask per
  *    symbol from quotes.
  *    The window must slide with time: stats change as old trades fall out,
  *    even if no new events arrive.
+ *
  * 5. Pause / Resume button:
  *    - While paused, the lists and stats on screen stop changing.
  *    - No events are lost: on Resume, everything that arrived while paused
  *      appears, and stats include it.
  *    - Show how many events arrived while paused ("12 new events").
+ *
  * 6. Bursts must not freeze the page: 40 events arriving at once should
  *    cause one re-render, not 40.
  *
  * Done when: the dashboard runs for 2 minutes with lists capped at 100,
  * stats match a hand check on a paused snapshot, and pausing for 10s then
  * resuming shows the missed events in the right order.
- *
- * Think about:
- * - Where do incoming events go before they're shown: state, or a ref
- *   that a timer flushes into state? How does that help with bursts AND
- *   with pause?
- * - Your onEvent callback is created once, at subscribe time. What does it
- *   see when `paused` changes later?
- * - Stats over "the last 30 seconds": what data structure lets you drop
- *   old trades cheaply as time moves on? (Sliding window.)
- *
- * Stretch:
- * - Filter everything by symbol.
- * - A tiny sparkline of trade price for the selected symbol.
- * - Highlight trades larger than 400 shares.
- *
- * Time target: 60 minutes.
  */
 
 import styles from "./TradingDashboard.module.css";
-import { getActiveSubscriptionCount, subscribeToEvents } from "./API";
+import {
+  getActiveSubscriptionCount,
+  type MarketEvent,
+  subscribeToEvents,
+  type QuoteEvent,
+  type TradeEvent,
+} from "./API";
+import { useEffect, useRef, useState } from "react";
+
+const LIMIT = 20;
+const REFRESH_INTERVAL = 1000;
 
 export const TradingDashboard = () => {
-  // TODO: implement
-  void [subscribeToEvents, getActiveSubscriptionCount];
+  const [dashboardStatus, setDashboardStatus] = useState<"pause" | "resume">(
+    "resume",
+  );
+  const dashboardStatusRef = useRef<"pause" | "resume">("resume");
+
+  const [quotes, setQuotes] = useState<QuoteEvent[]>([]);
+  const [buyTrades, setBuyTrades] = useState<TradeEvent[]>([]);
+  const [sellTrades, setSellTrades] = useState<TradeEvent[]>([]);
+
+  const quotesRef = useRef<QuoteEvent[]>([]);
+  const buyTradesRef = useRef<TradeEvent[]>([]);
+  const sellTradesRef = useRef<TradeEvent[]>([]);
+
+  const unsubscribeFnRef = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    unsubscribeFnRef.current = subscribeToEvents(streamEvents);
+
+    const intervalId = setInterval(() => {
+      updateLists();
+    }, REFRESH_INTERVAL);
+
+    () => {
+      unsubscribeFnRef.current();
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  const sortByTimestamp = (list: MarketEvent[]) => {
+    list.sort((a, b) => {
+      return a.timestamp - b.timestamp;
+    });
+  };
+
+  const streamEvents = (event: MarketEvent) => {
+    console.log("NEW MARKET EVENT", event);
+
+    if (event.type === "quote") {
+      quotesRef.current.push(event);
+    }
+
+    if (event.type === "trade") {
+      if (event.side === "buy") {
+        buyTradesRef.current.push(event);
+      }
+
+      if (event.side === "sell") {
+        sellTradesRef.current.push(event);
+      }
+    }
+  };
+
+  const updateLists = () => {
+    if (dashboardStatusRef.current === "pause") return;
+    const batchedQuotes = [...quotesRef.current];
+    const batchedSells = [...sellTradesRef.current];
+    const batchedBuys = [...buyTradesRef.current];
+
+    setQuotes((prev) => {
+      const newQuotes = [...prev, ...batchedQuotes];
+      sortByTimestamp(newQuotes);
+      return newQuotes.slice(0, 100);
+    });
+
+    setSellTrades((prev) => {
+      const newSellTrades = [...prev, ...batchedSells];
+      sortByTimestamp(newSellTrades);
+      return newSellTrades.slice(0, 100);
+    });
+    setBuyTrades((prev) => {
+      const newBuyTrades = [...prev, ...batchedBuys];
+      sortByTimestamp(newBuyTrades);
+      return newBuyTrades.slice(0, 100);
+    });
+
+    quotesRef.current = [];
+    sellTradesRef.current = [];
+    buyTradesRef.current = [];
+  };
+
+  const updateDashboardStatus = (status: "pause" | "resume") => {
+    setDashboardStatus(status);
+    dashboardStatusRef.current = status;
+  };
+
+  const onPause = () => {
+    updateDashboardStatus("pause");
+  };
+
+  const onResume = () => {
+    updateDashboardStatus("resume");
+  };
 
   return (
-    <div>
+    <div style={{ width: "100%" }}>
       <h2>Real-Time Trading Dashboard</h2>
+      <div>
+        <button
+          onClick={onPause}
+          className={`${dashboardStatus === "pause" ? styles.activeStatus : ""}`}
+        >
+          Pause
+        </button>
+        <button
+          onClick={onResume}
+          className={`${dashboardStatus === "resume" ? styles.activeStatus : ""}`}
+        >
+          Resume
+        </button>
+      </div>
+      <div className={styles.grid}>
+        <div>
+          <h3>Quotes ({quotes.length})</h3>
+          {/* TODO: render stats over last 30 sec */}
+          <ul>
+            {quotes.map((quote) => {
+              return (
+                <li key={quote.id}>
+                  {quote.id} [{quote.symbol}] | {quote.timestamp}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div>
+          <h3>Buy Trades ({buyTrades.length})</h3>
+          {/* TODO: render stats over last 30 sec */}
+          <ul>
+            {buyTrades.map((trade) => {
+              return (
+                <li key={trade.id}>
+                  {trade.id} [{trade.symbol}] | {trade.timestamp}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div>
+          <h3>Sell Trades ({sellTrades.length})</h3>
+          {/* TODO: render stats over last 30 sec */}
+          <ul>
+            {sellTrades.map((trade) => {
+              return (
+                <li key={trade.id}>
+                  {trade.id} [{trade.symbol}] | {trade.timestamp}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 };
