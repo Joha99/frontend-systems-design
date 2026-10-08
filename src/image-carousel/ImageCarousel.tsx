@@ -81,7 +81,7 @@ export const ImageCarousel = () => {
   const [fetchStatus, setFetchStatus] = useState<Fetch>();
   const [products, setProducts] = useState<Record<Product["id"], Product>>({});
   const [selectedProduct, setSelectedProduct] = useState<Product["id"]>();
-  const [slide, setSlide] = useState<number>();
+  const [slide, setSlide] = useState<number>(0);
 
   const slidesRef = useRef<Record<number, HTMLDivElement>>({});
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -96,9 +96,9 @@ export const ImageCarousel = () => {
           acc[curr.id] = curr;
           return acc;
         }, newProducts);
+
         setProducts(newProducts);
         setSelectedProduct(data.products[0].id);
-        setSlide(0);
         setFetchStatus("success");
       })
       .catch((err) => {
@@ -108,11 +108,12 @@ export const ImageCarousel = () => {
   }, []);
 
   useEffect(() => {
-    if (slide === undefined) return;
+    if (Object.values(slidesRef.current).length === 0) {
+      return;
+    }
+
     const newSlideElement = slidesRef.current[slide];
-    newSlideElement.scrollIntoView({
-      behavior: "smooth",
-    });
+    newSlideElement.scrollIntoView();
   }, [slide]);
 
   useEffect(() => {
@@ -145,7 +146,6 @@ export const ImageCarousel = () => {
   }, [selectedProduct]);
 
   const onSlideChange = (offset: number) => {
-    if (slide === undefined) return;
     setSlide(slide + offset);
   };
 
