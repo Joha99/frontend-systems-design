@@ -62,6 +62,7 @@
  * Time target: 45 minutes.
  */
 
+import { useEffect, useState } from "react";
 import "./ImageCarousel.css";
 
 const API_URL =
@@ -76,12 +77,57 @@ export interface Product {
 }
 
 export const ImageCarousel = () => {
-  // TODO: implement
-  void [API_URL, AUTOPLAY_MS];
+  // TODO: set up a useEffect to fetch first 5 on mount
+  // TODO: create loading state
+
+  // each product as a list of images
+  const [products, setProducts] = useState<Record<Product["id"], Product>>([]);
+  const [selected, setSelected] = useState<Product["id"]>();
+  const [slide, setSlide] = useState<number>();
+
+  useEffect(() => {
+    fetch(API_URL)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("data", data);
+        const newProducts: Record<Product["id"], Product> = {};
+        (data.products as Product[]).reduce((acc, curr) => {
+          acc[curr.id] = curr;
+          return acc;
+        }, newProducts);
+        setProducts(newProducts);
+        setSelected(data.products[0].id);
+        setSlide(0);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  const onSlideChange = () => {};
+
+  const onProductChange = () => {};
+
+  const shownProduct = selected !== undefined ? products[selected] : undefined;
 
   return (
     <div className="carousel-page">
       <h2>Image Carousel</h2>
+      {shownProduct && (
+        <div className="carousel">
+          <button className="carousel-arrow prev">PREV</button>
+          <div className="carousel-track">
+            {shownProduct.images.map((img) => {
+              return (
+                <div className="carousel-slide">
+                  <img key={img} src={img} />
+                </div>
+              );
+            })}
+          </div>
+          <button className="carousel-arrow next">NEXT</button>
+        </div>
+      )}
+
+      {/* TODO: place product selector */}
     </div>
   );
 };
