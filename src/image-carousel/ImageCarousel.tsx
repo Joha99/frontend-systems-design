@@ -190,7 +190,6 @@ export const ImageCarousel = () => {
   }
 
   const selectedProductSlides = products[selectedProduct].images;
-  console.log("hovered", hovered);
   return (
     <div className="carousel-page">
       <div className="carousel">
