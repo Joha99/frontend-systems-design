@@ -62,7 +62,7 @@
  * Time target: 45 minutes.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./ImageCarousel.css";
 
 const API_URL =
@@ -76,20 +76,21 @@ export interface Product {
   thumbnail: string;
 }
 
-export const ImageCarousel = () => {
-  // TODO: set up a useEffect to fetch first 5 on mount
-  // TODO: create loading state
+type Fetch = "loading" | "success" | "error";
 
-  // each product as a list of images
+export const ImageCarousel = () => {
+  const [fetchStatus, setFetchStatus] = useState<Fetch>();
   const [products, setProducts] = useState<Record<Product["id"], Product>>([]);
   const [selected, setSelected] = useState<Product["id"]>();
   const [slide, setSlide] = useState<number>();
 
+  const slidesRef = useRef<Record<number, HTMLDivElement>>({});
+
   useEffect(() => {
+    setFetchStatus("loading");
     fetch(API_URL)
       .then((res) => res.json())
       .then((data) => {
-        console.log("data", data);
         const newProducts: Record<Product["id"], Product> = {};
         (data.products as Product[]).reduce((acc, curr) => {
           acc[curr.id] = curr;
@@ -98,36 +99,85 @@ export const ImageCarousel = () => {
         setProducts(newProducts);
         setSelected(data.products[0].id);
         setSlide(0);
+        setFetchStatus("success");
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        setFetchStatus("error");
+      });
   }, []);
 
-  const onSlideChange = () => {};
+  useEffect(() => {
+    if (slide === undefined) return;
+    const newSlideElement = slidesRef.current[slide];
+    newSlideElement.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [slide]);
 
-  const onProductChange = () => {};
+  const onSlideChange = (offset: number) => {
+    if (slide === undefined) return;
+    setSlide(slide + offset);
+  };
 
-  const shownProduct = selected !== undefined ? products[selected] : undefined;
+  const onProductChange = (id: Product["id"]) => {
+    setSelected(id);
+    setSlide(0);
+  };
+
+  console.log(slidesRef.current);
 
   return (
     <div className="carousel-page">
       <h2>Image Carousel</h2>
-      {shownProduct && (
-        <div className="carousel">
-          <button className="carousel-arrow prev">PREV</button>
+      <div className="carousel">
+        {selected && (
           <div className="carousel-track">
-            {shownProduct.images.map((img) => {
+            <button
+              className="carousel-arrow prev"
+              disabled={slide === 0}
+              onClick={() => onSlideChange(-1)}
+            >
+              PREV
+            </button>
+            {products[selected].images.map((img, i) => {
               return (
-                <div className="carousel-slide">
+                <div
+                  key={img}
+                  className="carousel-slide"
+                  ref={(el) => {
+                    if (el) {
+                      slidesRef.current[i] = el;
+                    }
+                  }}
+                >
                   <img key={img} src={img} />
                 </div>
               );
             })}
+            <button
+              className="carousel-arrow next"
+              disabled={slide === products[selected].images.length - 1}
+              onClick={() => onSlideChange(1)}
+            >
+              NEXT
+            </button>
           </div>
-          <button className="carousel-arrow next">NEXT</button>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* TODO: place product selector */}
+      <div className="carousel-thumbnails">
+        {Object.values(products).map((product) => {
+          return (
+            <button
+              key={product.id}
+              onClick={() => onProductChange(product.id)}
+            >
+              <img src={product.thumbnail} />
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };

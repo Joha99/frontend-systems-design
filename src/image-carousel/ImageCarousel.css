@@ -7,6 +7,7 @@
 
 .carousel {
   position: relative;
+  margin-bottom: 10px;
 }
 
 .carousel-track {
@@ -60,11 +61,13 @@
 
 .carousel-thumbnails {
   display: flex;
-  gap: 8px;
+  justify-content: space-around;
 }
 
 .carousel-thumbnails img {
   width: 80px;
   height: 80px;
   object-fit: cover;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
