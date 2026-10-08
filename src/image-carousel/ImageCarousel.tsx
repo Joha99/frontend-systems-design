@@ -80,7 +80,7 @@ type Fetch = "loading" | "success" | "error";
 
 export const ImageCarousel = () => {
   const [fetchStatus, setFetchStatus] = useState<Fetch>();
-  const [products, setProducts] = useState<Record<Product["id"], Product>>([]);
+  const [products, setProducts] = useState<Record<Product["id"], Product>>({});
   const [selected, setSelected] = useState<Product["id"]>();
   const [slide, setSlide] = useState<number>();
 
@@ -127,43 +127,64 @@ export const ImageCarousel = () => {
 
   console.log(slidesRef.current);
 
+  if (fetchStatus === "loading") {
+    return <p>Loading...</p>;
+  }
+
+  if (fetchStatus === "error") {
+    return <p>There was an issue retrieving the products.</p>;
+  }
+
+  const selectedImages =
+    selected === undefined ? [] : products[selected].images;
+
   return (
     <div className="carousel-page">
-      <h2>Image Carousel</h2>
       <div className="carousel">
-        {selected && (
-          <div className="carousel-track">
-            <button
-              className="carousel-arrow prev"
-              disabled={slide === 0}
-              onClick={() => onSlideChange(-1)}
-            >
-              PREV
-            </button>
-            {products[selected].images.map((img, i) => {
-              return (
-                <div
-                  key={img}
-                  className="carousel-slide"
-                  ref={(el) => {
-                    if (el) {
-                      slidesRef.current[i] = el;
-                    }
-                  }}
-                >
-                  <img key={img} src={img} />
-                </div>
-              );
-            })}
-            <button
-              className="carousel-arrow next"
-              disabled={slide === products[selected].images.length - 1}
-              onClick={() => onSlideChange(1)}
-            >
-              NEXT
-            </button>
-          </div>
-        )}
+        <div className="carousel-track">
+          <button
+            className="carousel-arrow prev"
+            disabled={slide === 0}
+            onClick={() => onSlideChange(-1)}
+          >
+            PREV
+          </button>
+          {selectedImages.map((img, i) => {
+            return (
+              <div
+                key={img}
+                className="carousel-slide"
+                ref={(el) => {
+                  if (el) {
+                    slidesRef.current[i] = el;
+                  }
+                }}
+              >
+                <img key={img} src={img} />
+              </div>
+            );
+          })}
+          <button
+            className="carousel-arrow next"
+            disabled={slide === selectedImages.length - 1}
+            onClick={() => onSlideChange(1)}
+          >
+            NEXT
+          </button>
+        </div>
+        <div className="carousel-dots">
+          {Array.from({ length: selectedImages.length }, (_, i) => {
+            const isSelected = slide === i;
+
+            return (
+              <button
+                key={i}
+                className={`carousel-dot ${isSelected ? "selected" : ""}`}
+                onClick={() => onSlideChange(i - slide)}
+              />
+            );
+          })}
+        </div>
       </div>
 
       <div className="carousel-thumbnails">
