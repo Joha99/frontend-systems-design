@@ -80,10 +80,11 @@ type Fetch = "loading" | "success" | "error";
 export const ImageCarousel = () => {
   const [fetchStatus, setFetchStatus] = useState<Fetch>();
   const [products, setProducts] = useState<Record<Product["id"], Product>>({});
-  const [selected, setSelected] = useState<Product["id"]>();
+  const [selectedProduct, setSelectedProduct] = useState<Product["id"]>();
   const [slide, setSlide] = useState<number>();
 
   const slidesRef = useRef<Record<number, HTMLDivElement>>({});
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setFetchStatus("loading");
@@ -96,7 +97,7 @@ export const ImageCarousel = () => {
           return acc;
         }, newProducts);
         setProducts(newProducts);
-        setSelected(data.products[0].id);
+        setSelectedProduct(data.products[0].id);
         setSlide(0);
         setFetchStatus("success");
       })
@@ -115,7 +116,7 @@ export const ImageCarousel = () => {
   }, [slide]);
 
   useEffect(() => {
-    if (selected === undefined) return;
+    if (selectedProduct === undefined) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -129,6 +130,7 @@ export const ImageCarousel = () => {
         });
       },
       {
+        root: carouselRef.current,
         threshold: 1,
       },
     );
@@ -140,7 +142,7 @@ export const ImageCarousel = () => {
     return () => {
       observer.disconnect();
     };
-  }, [selected]);
+  }, [selectedProduct]);
 
   const onSlideChange = (offset: number) => {
     if (slide === undefined) return;
@@ -148,7 +150,7 @@ export const ImageCarousel = () => {
   };
 
   const onProductChange = (id: Product["id"]) => {
-    setSelected(id);
+    setSelectedProduct(id);
     setSlide(0);
   };
 
@@ -161,12 +163,12 @@ export const ImageCarousel = () => {
   }
 
   const selectedImages =
-    selected === undefined ? [] : products[selected].images;
+    selectedProduct === undefined ? [] : products[selectedProduct].images;
 
   return (
     <div className="carousel-page">
       <div className="carousel">
-        <div className="carousel-track">
+        <div className="carousel-track" ref={carouselRef}>
           <button
             className="carousel-arrow prev"
             disabled={slide === 0}
