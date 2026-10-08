@@ -12,7 +12,6 @@
  * 1. Fetch the 5 products on mount. Show one product at a time as a
  *    horizontal carousel of its images (one image per slide, full width).
  *    Handle loading and error states.
- *
  * 2. Carousel mechanics: CSS scroll-snap on a horizontal overflow container.
  *    Prev / Next arrow buttons on the sides (disabled at the ends).
  *    Dot indicators below: the active dot is highlighted, and clicking a
@@ -115,6 +114,34 @@ export const ImageCarousel = () => {
     });
   }, [slide]);
 
+  useEffect(() => {
+    if (selected === undefined) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const matchingSlide = Object.entries(slidesRef.current).find(
+              (value) => value[1] === entry.target,
+            );
+            setSlide(parseInt(matchingSlide![0]));
+          }
+        });
+      },
+      {
+        threshold: 1,
+      },
+    );
+
+    Object.values(slidesRef.current).forEach((el) => {
+      observer.observe(el);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [selected]);
+
   const onSlideChange = (offset: number) => {
     if (slide === undefined) return;
     setSlide(slide + offset);
@@ -124,8 +151,6 @@ export const ImageCarousel = () => {
     setSelected(id);
     setSlide(0);
   };
-
-  console.log(slidesRef.current);
 
   if (fetchStatus === "loading") {
     return <p>Loading...</p>;
