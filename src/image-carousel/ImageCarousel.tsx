@@ -80,7 +80,7 @@ type Fetch = "loading" | "success" | "error";
 export const ImageCarousel = () => {
   const [fetchStatus, setFetchStatus] = useState<Fetch>();
   const [products, setProducts] = useState<Record<Product["id"], Product>>({});
-  const [selectedProduct, setSelectedProduct] = useState<Product["id"]>();
+  const [selectedProduct, setSelectedProduct] = useState<Product>();
   const [slide, setSlide] = useState<number>(0);
 
   const slidesRef = useRef<Record<number, HTMLDivElement>>({});
@@ -98,7 +98,7 @@ export const ImageCarousel = () => {
         }, newProducts);
 
         setProducts(newProducts);
-        setSelectedProduct(data.products[0].id);
+        setSelectedProduct(data.products[0]);
         setFetchStatus("success");
       })
       .catch((err) => {
@@ -150,7 +150,7 @@ export const ImageCarousel = () => {
   };
 
   const onProductChange = (id: Product["id"]) => {
-    setSelectedProduct(id);
+    setSelectedProduct(products[id]);
     setSlide(0);
   };
 
@@ -162,8 +162,11 @@ export const ImageCarousel = () => {
     return <p>There was an issue retrieving the products.</p>;
   }
 
-  const selectedImages =
-    selectedProduct === undefined ? [] : products[selectedProduct].images;
+  if (!selectedProduct) {
+    return <p>There are no products.</p>;
+  }
+
+  const selectedImages = selectedProduct.images;
 
   return (
     <div className="carousel-page">
