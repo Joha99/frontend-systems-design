@@ -1,10 +1,15 @@
 import styles from "./App.module.css";
-import { TradingDashboard } from "./trading-dashboard/TradingDashboard";
+import { ImageCarousel } from "./image-carousel/ImageCarousel";
+// Up next:
+// import { Battleship } from "./battleship/Battleship";
+// import { Part3ServerSync } from "./keyboard-kanban/Part3ServerSync";
 
 function App() {
   return (
     <div className={styles.app}>
-      <TradingDashboard />
+      <ImageCarousel />
+      {/* <Battleship /> */}
+      {/* <Part3ServerSync /> */}
     </div>
   );
 }

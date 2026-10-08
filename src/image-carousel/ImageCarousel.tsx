@@ -1,41 +1,87 @@
 /**
  * Image Carousel with Lazy Loading + Autoplay
  *
- * Build an image carousel similar to Instagram's post carousel or a product
- * image gallery, with lazy loading, autoplay, and dot indicators.
+ * Build an image carousel like Instagram's post carousel or a product
+ * image gallery: lazy loading, autoplay, dot indicators, keyboard support.
  *
- * API: GET https://dummyjson.com/products?limit=5&select=title,images,thumbnail
- * Response: { products: [{ id, title, images: [url, ...], thumbnail }] }
+ * API: GET https://dummyjson.com/products?limit=5&skip=166&select=title,images,thumbnail
+ * Response: { products: [{ id, title, images: [url, ...], thumbnail }], total, skip, limit }
+ * (skip=166 returns 5 products with 6 images each.)
  *
  * Requirements:
- * 1. Fetch 5 products. Each product has multiple images. Display one product at a time
- *    with a horizontal carousel of its images.
+ * 1. Fetch the 5 products on mount. Show one product at a time as a
+ *    horizontal carousel of its images (one image per slide, full width).
+ *    Handle loading and error states.
+ *
  * 2. Carousel mechanics: CSS scroll-snap on a horizontal overflow container.
- *    Prev/Next arrow buttons on the sides. Dot indicators below showing current slide.
- * 3. Lazy loading: only load images that are currently visible or one slide ahead.
- *    Use IntersectionObserver on each slide (rootMargin: "0px 100% 0px 0px" to preload
- *    the next slide). Show a placeholder/skeleton until loaded.
- * 4. Autoplay: carousel advances every 4 seconds. Pauses when user hovers over it or
- *    when any slide is partially off-screen (use IntersectionObserver with threshold: 1.0
- *    on the carousel container to detect if it's fully visible).
- * 5. Current slide detection: use IntersectionObserver (threshold: 0.5) on each slide
- *    to determine which slide is active (update dot indicators). Do NOT use scroll
- *    event listeners.
- * 6. Product selector: clickable thumbnails below the carousel to switch between products.
- *    Switching resets to slide 0 and restarts autoplay.
- * 7. Keyboard navigation: left/right arrow keys move slides when carousel is focused.
+ *    Prev / Next arrow buttons on the sides (disabled at the ends).
+ *    Dot indicators below: the active dot is highlighted, and clicking a
+ *    dot scrolls to that slide. Swiping / trackpad-scrolling must also work.
  *
- * Observer management:
- * - You'll need multiple IntersectionObservers with different configs (thresholds, rootMargins).
- *   Think about when to create/destroy them (product switch, component unmount).
- * - Each observer serves a different purpose: lazy loading, active slide detection,
- *   autoplay pause, preloading.
+ * 3. Lazy loading: only load images for slides that are visible or the
+ *    next slide over. Show a skeleton placeholder until the image has
+ *    actually finished loading. Once loaded, an image stays loaded.
  *
- * Time target: 30 minutes.
+ * 4. Active slide detection: figure out which slide is active using
+ *    IntersectionObserver, NOT scroll event listeners. The dots and the
+ *    arrow disabled states follow it, no matter how the user moved
+ *    (arrows, dots, swipe, keyboard).
+ *
+ * 5. Autoplay: advance one slide every 4 seconds, wrapping from the last
+ *    slide back to the first. Pause while:
+ *    - the user hovers over the carousel, or
+ *    - the carousel is not fully visible in the viewport.
+ *    Any manual navigation resets the 4s countdown.
+ *
+ * 6. Product selector: clickable thumbnails below the carousel. Switching
+ *    products jumps to slide 0 (no smooth scroll) and restarts autoplay.
+ *    The selected thumbnail is highlighted.
+ *
+ * 7. Keyboard: Left / Right arrow keys move slides when the carousel has
+ *    focus. Each slide's image has meaningful alt text ("<title>, image 2 of 6").
+ *
+ * Done when: you can swipe, click arrows/dots, and use the keyboard and the
+ * dots always stay in sync; the Network tab shows only the current + next
+ * image requested; autoplay stops when you hover or scroll the carousel
+ * half off-screen; switching products causes no stale observers or timers.
+ *
+ * Think about:
+ * - You'll need several IntersectionObservers with different configs
+ *   (threshold, rootMargin, root). Which ones observe the slides, which one
+ *   observes the whole carousel, and what should `root` be for each?
+ * - The slides are new DOM nodes when the product changes. When do your
+ *   observers need to be torn down and recreated?
+ * - Autoplay is driven by a timer, but the "current slide" comes from an
+ *   observer callback. How does the timer read the latest value?
+ *
+ * Stretch:
+ * - Respect `prefers-reduced-motion`: no autoplay, no smooth scrolling.
+ * - A play / pause button for autoplay (required for accessibility, WCAG 2.2.2).
+ * - Announce "Slide 3 of 6" with an aria-live region.
+ *
+ * Time target: 45 minutes.
  */
 
 import "./ImageCarousel.css";
 
+const API_URL =
+  "https://dummyjson.com/products?limit=5&skip=166&select=title,images,thumbnail";
+const AUTOPLAY_MS = 4000;
+
+export interface Product {
+  id: number;
+  title: string;
+  images: string[];
+  thumbnail: string;
+}
+
 export const ImageCarousel = () => {
-  return <div>Image Carousel</div>;
+  // TODO: implement
+  void [API_URL, AUTOPLAY_MS];
+
+  return (
+    <div className="carousel-page">
+      <h2>Image Carousel</h2>
+    </div>
+  );
 };
