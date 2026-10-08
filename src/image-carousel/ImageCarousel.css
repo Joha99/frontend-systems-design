@@ -1,8 +1,8 @@
 /* Layout shell only. Scroll-snap, skeleton, and active states are yours. */
 
 .carousel-page {
-  max-width: 640px;
-  margin: 0 auto;
+  width: 640px;
+  margin: 200px auto;
 }
 
 .carousel {

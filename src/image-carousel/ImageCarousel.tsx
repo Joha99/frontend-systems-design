@@ -25,17 +25,14 @@
  *    IntersectionObserver, NOT scroll event listeners. The dots and the
  *    arrow disabled states follow it, no matter how the user moved
  *    (arrows, dots, swipe, keyboard).
- *
  * 5. Autoplay: advance one slide every 4 seconds, wrapping from the last
  *    slide back to the first. Pause while:
  *    - the user hovers over the carousel, or
  *    - the carousel is not fully visible in the viewport.
  *    Any manual navigation resets the 4s countdown.
- *
  * 6. Product selector: clickable thumbnails below the carousel. Switching
  *    products jumps to slide 0 (no smooth scroll) and restarts autoplay.
  *    The selected thumbnail is highlighted.
- *
  * 7. Keyboard: Left / Right arrow keys move slides when the carousel has
  *    focus. Each slide's image has meaningful alt text ("<title>, image 2 of 6").
  *
@@ -67,6 +64,7 @@ import "./ImageCarousel.css";
 const API_URL =
   "https://dummyjson.com/products?limit=5&skip=166&select=title,images,thumbnail";
 const AUTOPLAY_MS = 4000;
+const CAROUSEL_WIDTH = 640;
 
 export interface Product {
   id: number;
@@ -78,10 +76,12 @@ export interface Product {
 type Fetch = "loading" | "success" | "error";
 
 export const ImageCarousel = () => {
-  const [fetchStatus, setFetchStatus] = useState<Fetch>();
+  const [fetchStatus, setFetchStatus] = useState<Fetch>("loading");
   const [products, setProducts] = useState<Record<Product["id"], Product>>({});
-  const [selectedProduct, setSelectedProduct] = useState<Product>();
+  const [selectedProduct, setSelectedProduct] = useState<Product["id"]>();
   const [slide, setSlide] = useState<number>(0);
+  const [hovered, setHovered] = useState<boolean>();
+  const [manualSlideChange, setManualSlideChange] = useState<number>(0);
 
   const slidesRef = useRef<Record<number, HTMLDivElement>>({});
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -98,7 +98,7 @@ export const ImageCarousel = () => {
         }, newProducts);
 
         setProducts(newProducts);
-        setSelectedProduct(data.products[0]);
+        setSelectedProduct(data.products[0].id);
         setFetchStatus("success");
       })
       .catch((err) => {
@@ -106,15 +106,6 @@ export const ImageCarousel = () => {
         setFetchStatus("error");
       });
   }, []);
-
-  useEffect(() => {
-    if (Object.values(slidesRef.current).length === 0) {
-      return;
-    }
-
-    const newSlideElement = slidesRef.current[slide];
-    newSlideElement.scrollIntoView();
-  }, [slide]);
 
   useEffect(() => {
     if (selectedProduct === undefined) return;
@@ -145,12 +136,44 @@ export const ImageCarousel = () => {
     };
   }, [selectedProduct]);
 
+  useEffect(() => {
+    if (hovered) return;
+
+    const intervalId = setInterval(() => {
+      if (!carouselRef.current) return;
+
+      // manually scroll the scroll container
+      const { scrollLeft, scrollWidth } = carouselRef.current;
+
+      if (scrollLeft + CAROUSEL_WIDTH >= scrollWidth) {
+        carouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        carouselRef.current.scrollBy({
+          left: CAROUSEL_WIDTH,
+          behavior: "smooth",
+        });
+      }
+    }, AUTOPLAY_MS);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [hovered, manualSlideChange]); // whenever we hover over carousel or a user makes a manual slide change, we reset the timer
+
+  // On manual slide change, we programmically set the scroll position to show the correct product slide.
+  // The intersection observer picks up this scroll position change and sets the slide state.
   const onSlideChange = (offset: number) => {
-    setSlide(slide + offset);
+    if (!carouselRef.current) return;
+
+    const newSlide = slide + offset;
+    carouselRef.current.scrollTo({
+      left: newSlide * CAROUSEL_WIDTH,
+    });
+    setManualSlideChange((prev) => prev + 1);
   };
 
   const onProductChange = (id: Product["id"]) => {
-    setSelectedProduct(products[id]);
+    setSelectedProduct(id);
     setSlide(0);
   };
 
@@ -162,16 +185,21 @@ export const ImageCarousel = () => {
     return <p>There was an issue retrieving the products.</p>;
   }
 
-  if (!selectedProduct) {
+  if (selectedProduct === undefined || !products[selectedProduct]) {
     return <p>There are no products.</p>;
   }
 
-  const selectedImages = selectedProduct.images;
-
+  const selectedProductSlides = products[selectedProduct].images;
+  console.log("hovered", hovered);
   return (
     <div className="carousel-page">
       <div className="carousel">
-        <div className="carousel-track" ref={carouselRef}>
+        <div
+          className="carousel-track"
+          ref={carouselRef}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
           <button
             className="carousel-arrow prev"
             disabled={slide === 0}
@@ -179,7 +207,7 @@ export const ImageCarousel = () => {
           >
             PREV
           </button>
-          {selectedImages.map((img, i) => {
+          {selectedProductSlides.map((img, i) => {
             return (
               <div
                 key={img}
@@ -196,14 +224,14 @@ export const ImageCarousel = () => {
           })}
           <button
             className="carousel-arrow next"
-            disabled={slide === selectedImages.length - 1}
+            disabled={slide === selectedProductSlides.length - 1}
             onClick={() => onSlideChange(1)}
           >
             NEXT
           </button>
         </div>
         <div className="carousel-dots">
-          {Array.from({ length: selectedImages.length }, (_, i) => {
+          {Array.from({ length: selectedProductSlides.length }, (_, i) => {
             const isSelected = slide === i;
 
             return (
