@@ -16,11 +16,9 @@
  *    Prev / Next arrow buttons on the sides (disabled at the ends).
  *    Dot indicators below: the active dot is highlighted, and clicking a
  *    dot scrolls to that slide. Swiping / trackpad-scrolling must also work.
- *
  * 3. Lazy loading: only load images for slides that are visible or the
  *    next slide over. Show a skeleton placeholder until the image has
  *    actually finished loading. Once loaded, an image stays loaded.
- *
  * 4. Active slide detection: figure out which slide is active using
  *    IntersectionObserver, NOT scroll event listeners. The dots and the
  *    arrow disabled states follow it, no matter how the user moved
@@ -33,29 +31,6 @@
  * 6. Product selector: clickable thumbnails below the carousel. Switching
  *    products jumps to slide 0 (no smooth scroll) and restarts autoplay.
  *    The selected thumbnail is highlighted.
- * 7. Keyboard: Left / Right arrow keys move slides when the carousel has
- *    focus. Each slide's image has meaningful alt text ("<title>, image 2 of 6").
- *
- * Done when: you can swipe, click arrows/dots, and use the keyboard and the
- * dots always stay in sync; the Network tab shows only the current + next
- * image requested; autoplay stops when you hover or scroll the carousel
- * half off-screen; switching products causes no stale observers or timers.
- *
- * Think about:
- * - You'll need several IntersectionObservers with different configs
- *   (threshold, rootMargin, root). Which ones observe the slides, which one
- *   observes the whole carousel, and what should `root` be for each?
- * - The slides are new DOM nodes when the product changes. When do your
- *   observers need to be torn down and recreated?
- * - Autoplay is driven by a timer, but the "current slide" comes from an
- *   observer callback. How does the timer read the latest value?
- *
- * Stretch:
- * - Respect `prefers-reduced-motion`: no autoplay, no smooth scrolling.
- * - A play / pause button for autoplay (required for accessibility, WCAG 2.2.2).
- * - Announce "Slide 3 of 6" with an aria-live region.
- *
- * Time target: 45 minutes.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -76,12 +51,17 @@ export interface Product {
 type Fetch = "loading" | "success" | "error";
 
 export const ImageCarousel = () => {
-  const [fetchStatus, setFetchStatus] = useState<Fetch>("loading");
   const [products, setProducts] = useState<Record<Product["id"], Product>>({});
   const [selectedProduct, setSelectedProduct] = useState<Product["id"]>();
+
   const [slide, setSlide] = useState<number>(0);
-  const [hovered, setHovered] = useState<boolean>();
   const [manualSlideChange, setManualSlideChange] = useState<number>(0);
+  const [preloadedSlides, setPreloadedSlides] = useState<Set<number>>(
+    new Set<number>(),
+  ); // added if active slide or nearby slides, reset when product is changed
+
+  const [hovered, setHovered] = useState<boolean>();
+  const [fetchStatus, setFetchStatus] = useState<Fetch>("loading");
 
   const slidesRef = useRef<Record<number, HTMLDivElement>>({});
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -107,25 +87,26 @@ export const ImageCarousel = () => {
       });
   }, []);
 
+  // for setting the active slide state depending on scroll of carousel track
   useEffect(() => {
     if (selectedProduct === undefined) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const matchingSlide = Object.entries(slidesRef.current).find(
-              (value) => value[1] === entry.target,
-            );
-            setSlide(parseInt(matchingSlide![0]));
-          }
-        });
-      },
-      {
-        root: carouselRef.current,
-        threshold: 1,
-      },
-    );
+    const options = {
+      root: carouselRef.current,
+      threshold: 0.6,
+    };
+
+    // detects how much the track has scrolled and sets the slide accordingly
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const matchingSlide = Object.entries(slidesRef.current).find(
+            (value) => value[1] === entry.target,
+          );
+          setSlide(parseInt(matchingSlide![0]));
+        }
+      });
+    }, options);
 
     Object.values(slidesRef.current).forEach((el) => {
       observer.observe(el);
@@ -136,29 +117,63 @@ export const ImageCarousel = () => {
     };
   }, [selectedProduct]);
 
+  // for preloading nearby slide images
   useEffect(() => {
-    if (hovered) return;
+    const options = {
+      root: carouselRef.current,
+      rootMargin: "0px 10px", // extends the detection area of the root
+      threshold: 0,
+    };
 
-    const intervalId = setInterval(() => {
-      if (!carouselRef.current) return;
+    // every time a slide changes, we need to preload the slide next to it
+    // the entries here include the visible slide and the nearby slides
+    const observer = new IntersectionObserver((entries) => {
+      const preloadedSlideIds: number[] = [];
 
-      // manually scroll the scroll container
-      const { scrollLeft, scrollWidth } = carouselRef.current;
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const matchingSlide = Object.entries(slidesRef.current).find(
+            (value) => value[1] === entry.target,
+          );
+          preloadedSlideIds.push(parseInt(matchingSlide![0]));
+        }
+      });
 
-      if (scrollLeft + CAROUSEL_WIDTH >= scrollWidth) {
-        carouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        carouselRef.current.scrollBy({
-          left: CAROUSEL_WIDTH,
-          behavior: "smooth",
-        });
-      }
-    }, AUTOPLAY_MS);
+      setPreloadedSlides((prev) => new Set([...prev, ...preloadedSlideIds]));
+    }, options);
+
+    Object.values(slidesRef.current).forEach((el) => {
+      observer.observe(el);
+    });
 
     return () => {
-      clearInterval(intervalId);
+      observer.disconnect();
     };
-  }, [hovered, manualSlideChange]); // whenever we hover over carousel or a user makes a manual slide change, we reset the timer
+  }, [slide, selectedProduct]);
+
+  // useEffect(() => {
+  //   if (hovered) return;
+
+  //   const intervalId = setInterval(() => {
+  //     if (!carouselRef.current) return;
+
+  //     // manually scroll the scroll container
+  //     const { scrollLeft, scrollWidth } = carouselRef.current;
+
+  //     if (scrollLeft + CAROUSEL_WIDTH >= scrollWidth) {
+  //       carouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
+  //     } else {
+  //       carouselRef.current.scrollBy({
+  //         left: CAROUSEL_WIDTH,
+  //         behavior: "smooth",
+  //       });
+  //     }
+  //   }, AUTOPLAY_MS);
+
+  //   return () => {
+  //     clearInterval(intervalId);
+  //   };
+  // }, [hovered, manualSlideChange]); // whenever we hover over carousel or a user makes a manual slide change, we reset the timer
 
   // On manual slide change, we programmically set the scroll position to show the correct product slide.
   // The intersection observer picks up this scroll position change and sets the slide state.
@@ -173,8 +188,14 @@ export const ImageCarousel = () => {
   };
 
   const onProductChange = (id: Product["id"]) => {
+    if (!carouselRef.current) return;
+
     setSelectedProduct(id);
-    setSlide(0);
+    setPreloadedSlides(new Set<number>());
+    carouselRef.current.scrollTo({
+      left: 0,
+    });
+    setManualSlideChange((prev) => prev + 1);
   };
 
   if (fetchStatus === "loading") {
@@ -207,6 +228,8 @@ export const ImageCarousel = () => {
             PREV
           </button>
           {selectedProductSlides.map((img, i) => {
+            const isPreloaded = preloadedSlides.has(i);
+
             return (
               <div
                 key={img}
@@ -217,7 +240,14 @@ export const ImageCarousel = () => {
                   }
                 }}
               >
-                <img key={img} src={img} />
+                {isPreloaded ? (
+                  <img
+                    src={img}
+                    alt={`Product image of ${products[selectedProduct].title}`}
+                  />
+                ) : (
+                  <p>Loading...</p>
+                )}
               </div>
             );
           })}
