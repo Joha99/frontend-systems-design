@@ -33,15 +33,6 @@
  *   live, and what happens if New Game is clicked before it fires?
  * - Game phases (your turn / computer's turn / game over) as one piece of
  *   state, rather than several booleans that can contradict each other.
- *
- * Stretch:
- * - Let the player place their own ships (click + R to rotate) before the
- *   game starts.
- * - Keyboard play: arrow keys move a target cursor on the enemy board,
- *   Enter fires.
- * - Two-player hot-seat mode with a "pass the device" screen between turns.
- *
- * Time target: 60 minutes.
  */
 
 import styles from "./Battleship.module.css";
