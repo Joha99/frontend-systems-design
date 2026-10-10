@@ -120,8 +120,10 @@ export const Part1BuildTree = () => {
       // add folders to the entry map
       for (let f = 0; f < folders.length; f++) {
         const folderName = `${folders[f]}/`;
+        // key by full path ("src/components"), not name: two folders can share a name
+        const folderPath = folders.slice(0, f + 1).join("/");
 
-        if (seenFolders[folderName] !== undefined) continue;
+        if (seenFolders[folderPath] !== undefined) continue;
 
         // we have to add a folder to the children of parent folders if f is > 0
         const folderId = `e${nextId++}`;
@@ -134,14 +136,14 @@ export const Part1BuildTree = () => {
           children: new Set(),
         };
         entryMap[folderId] = folderNode;
-        seenFolders[folderName] = folderId;
+        seenFolders[folderPath] = folderId;
 
         if (f === 0) {
           rootChildren.add(folderId);
         } else {
           // we are guaranteed to have already added the parent folder to the entry map
-          const parentFolderName = `${folders[f - 1]}/`;
-          const parentFolderId = seenFolders[parentFolderName];
+          const parentFolderPath = folders.slice(0, f).join("/");
+          const parentFolderId = seenFolders[parentFolderPath];
           entryMap[parentFolderId].children.add(folderId);
           entryMap[parentFolderId].size++;
         }
@@ -151,8 +153,8 @@ export const Part1BuildTree = () => {
         if (folders.length === 0) {
           rootChildren.add(entry.id);
         } else {
-          const parentFolderName = `${folders[folders.length - 1]}/`;
-          const parentFolderId = seenFolders[parentFolderName];
+          const parentFolderPath = folders.join("/");
+          const parentFolderId = seenFolders[parentFolderPath];
           entryMap[parentFolderId].children.add(entry.id);
           entryMap[parentFolderId].size++;
         }
