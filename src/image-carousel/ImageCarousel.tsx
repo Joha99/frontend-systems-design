@@ -56,8 +56,8 @@ export const ImageCarousel = () => {
 
   const [slide, setSlide] = useState<number>(0);
   const [manualSlideChange, setManualSlideChange] = useState<number>(0);
-  const [preloadedSlides, setPreloadedSlides] = useState<Set<number>>(
-    new Set<number>(),
+  const [preloadedSlides, setPreloadedSlides] = useState<Set<string>>(
+    new Set<string>(),
   ); // added if active slide or nearby slides, reset when product is changed
 
   const [hovered, setHovered] = useState<boolean>();
@@ -119,6 +119,8 @@ export const ImageCarousel = () => {
 
   // for preloading nearby slide images
   useEffect(() => {
+    if (selectedProduct === undefined) return;
+
     const options = {
       root: carouselRef.current,
       rootMargin: "0px 10px", // extends the detection area of the root
@@ -128,18 +130,18 @@ export const ImageCarousel = () => {
     // every time a slide changes, we need to preload the slide next to it
     // the entries here include the visible slide and the nearby slides
     const observer = new IntersectionObserver((entries) => {
-      const preloadedSlideIds: number[] = [];
-
+      const preloadedImgUrls: string[] = [];
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const matchingSlide = Object.entries(slidesRef.current).find(
             (value) => value[1] === entry.target,
           );
-          preloadedSlideIds.push(parseInt(matchingSlide![0]));
+          const slideIndex = parseInt(matchingSlide![0]);
+          const imgUrl = products[selectedProduct].images[slideIndex];
+          preloadedImgUrls.push(imgUrl);
         }
       });
-
-      setPreloadedSlides((prev) => new Set([...prev, ...preloadedSlideIds]));
+      setPreloadedSlides((prev) => new Set([...prev, ...preloadedImgUrls]));
     }, options);
 
     Object.values(slidesRef.current).forEach((el) => {
@@ -149,7 +151,7 @@ export const ImageCarousel = () => {
     return () => {
       observer.disconnect();
     };
-  }, [slide, selectedProduct]);
+  }, [selectedProduct]);
 
   useEffect(() => {
     if (hovered) return;
@@ -191,7 +193,6 @@ export const ImageCarousel = () => {
     if (!carouselRef.current) return;
 
     setSelectedProduct(id);
-    setPreloadedSlides(new Set<number>());
     carouselRef.current.scrollTo({
       left: 0,
     });
@@ -228,7 +229,7 @@ export const ImageCarousel = () => {
             PREV
           </button>
           {selectedProductSlides.map((img, i) => {
-            const isPreloaded = preloadedSlides.has(i);
+            const isPreloaded = preloadedSlides.has(img);
 
             return (
               <div
