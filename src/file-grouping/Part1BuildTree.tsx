@@ -45,16 +45,36 @@ interface TreeNode extends FileEntry {
 }
 type EntryMap = Record<TreeNode["id"], TreeNode>;
 
-const Entry = ({ node, entries }: { node: TreeNode; entries: EntryMap }) => {
+const getSortedChildren = (
+  id: TreeNode["id"],
+  entries: EntryMap,
+): TreeNode["id"][] => {
+  const node = entries[id];
+  const childrenIds = [...node.children];
+  const folders = childrenIds
+    .filter((id) => entries[id].type === "folder")
+    .sort((a, b) => entries[a].path.localeCompare(entries[b].path));
+  const files = childrenIds
+    .filter((id) => entries[id].type === "file")
+    .sort((a, b) => entries[a].path.localeCompare(entries[b].path));
+
+  return [...folders, ...files];
+};
+
+const Entry = ({ id, entries }: { id: TreeNode["id"]; entries: EntryMap }) => {
   const [open, setOpen] = useState<boolean>(false);
 
   const onClick = () => {
     setOpen((prev) => !prev);
   };
 
+  const node = entries[id];
+
   if (node.children.size === 0) {
     return <li>{node.type === "folder" ? <h3>{node.path}</h3> : node.path}</li>;
   }
+
+  const sortedChildren = getSortedChildren(id, entries);
 
   return (
     <li>
@@ -63,8 +83,8 @@ const Entry = ({ node, entries }: { node: TreeNode; entries: EntryMap }) => {
       </h3>
       {open && (
         <ul>
-          {[...node.children].map((id) => {
-            return <Entry key={id} node={entries[id]} entries={entries} />;
+          {sortedChildren.map((id) => {
+            return <Entry key={id} id={id} entries={entries} />;
           })}
         </ul>
       )}
@@ -164,16 +184,14 @@ export const Part1BuildTree = () => {
     return null;
   }
 
-  const rootLevelChildren = [...entries[rootId].children];
+  const sortedChildren = getSortedChildren(rootId, entries);
 
   return (
     <div>
       <h2>File Browser with Grouping: Part 1</h2>
       <ol>
-        {rootLevelChildren.map((childId) => {
-          return (
-            <Entry key={childId} node={entries[childId]} entries={entries} />
-          );
+        {sortedChildren.map((id) => {
+          return <Entry key={id} id={id} entries={entries} />;
         })}
       </ol>
     </div>
