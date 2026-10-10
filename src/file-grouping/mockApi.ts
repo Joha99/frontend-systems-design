@@ -105,7 +105,9 @@ const FILE_PATHS = [
 const EMPTY_FOLDER_PATHS = ["tmp", "src/components/legacy", "docs/drafts"];
 
 // Days ago. Picked so every date group in Part 2 has something in it.
-const DAYS_AGO = [0, 0, 0, 1, 1, 3, 5, 6, 9, 15, 22, 29, 45, 70, 120, 200, 400, 800];
+const DAYS_AGO = [
+  0, 0, 0, 1, 1, 3, 5, 6, 9, 15, 22, 29, 45, 70, 120, 200, 400, 800,
+];
 
 /** Tiny seeded PRNG so the data is the same on every load. */
 let seed = 42;
@@ -117,14 +119,17 @@ const random = () => {
 const sizeFor = (path: string) => {
   if (path.endsWith("empty.txt")) return 0;
   if (/\.(mp4|mov|zip|gz)$/.test(path)) return Math.floor(5e6 + random() * 2e8);
-  if (/\.(png|jpg|pdf|xlsx|woff2|mp3)$/.test(path)) return Math.floor(2e4 + random() * 2e6);
+  if (/\.(png|jpg|pdf|xlsx|woff2|mp3)$/.test(path))
+    return Math.floor(2e4 + random() * 2e6);
   return Math.floor(200 + random() * 40_000);
 };
 
 const now = Date.now();
 const timeAgo = () => {
   const days = DAYS_AGO[Math.floor(random() * DAYS_AGO.length)];
-  return new Date(now - days * DAY - random() * 6 * 60 * 60 * 1000).toISOString();
+  return new Date(
+    now - days * DAY - random() * 6 * 60 * 60 * 1000,
+  ).toISOString();
 };
 
 let nextId = 1;
@@ -148,7 +153,9 @@ const db: FileEntry[] = [
 ];
 
 const delay = (min = 300, max = 900) =>
-  new Promise((resolve) => setTimeout(resolve, min + Math.random() * (max - min)));
+  new Promise((resolve) =>
+    setTimeout(resolve, min + Math.random() * (max - min)),
+  );
 
 const shuffled = <T>(items: T[]) => {
   const copy = [...items];
@@ -172,7 +179,14 @@ export async function fetchEntries(): Promise<FileEntry[]> {
 // Part 4: live updates
 // ---------------------------------------------------------------------------
 
-const NEW_FILE_NAMES = ["todo.md", "scratch.ts", "photo.jpg", "report.pdf", "clip.mp4", "notes.txt"];
+const NEW_FILE_NAMES = [
+  "todo.md",
+  "scratch.ts",
+  "photo.jpg",
+  "report.pdf",
+  "clip.mp4",
+  "notes.txt",
+];
 
 const parentOf = (path: string) => path.split("/").slice(0, -1).join("/");
 const nameOf = (path: string) => path.split("/").pop()!;
@@ -186,7 +200,12 @@ const randomEvent = (): FileEvent | null => {
   if (roll < 0.35) {
     file.size = sizeFor(file.path);
     file.modifiedAt = new Date().toISOString();
-    return { type: "modified", id: file.id, size: file.size, modifiedAt: file.modifiedAt };
+    return {
+      type: "modified",
+      id: file.id,
+      size: file.size,
+      modifiedAt: file.modifiedAt,
+    };
   }
 
   if (roll < 0.55) {
@@ -208,12 +227,16 @@ const randomEvent = (): FileEvent | null => {
   if (roll < 0.8) {
     // Move to another folder (sometimes into a brand-new folder that
     // doesn't exist yet), or rename in place.
-    const folders = [...new Set(files.map((f) => parentOf(f.path))), "archive/2026"];
+    const folders = [
+      ...new Set(files.map((f) => parentOf(f.path))),
+      "archive/2026",
+    ];
     const target =
       random() < 0.3
         ? parentOf(file.path)
         : folders[Math.floor(random() * folders.length)];
-    const name = random() < 0.3 ? `renamed-${nameOf(file.path)}` : nameOf(file.path);
+    const name =
+      random() < 0.3 ? `renamed-${nameOf(file.path)}` : nameOf(file.path);
     file.path = target ? `${target}/${name}` : name;
     return { type: "moved", id: file.id, newPath: file.path };
   }
@@ -226,7 +249,9 @@ const randomEvent = (): FileEvent | null => {
  * Pushes file events every 1.5–3s. About 1 in 8 ticks is a burst of 25
  * events at once (like a `git checkout`). Returns an unsubscribe function.
  */
-export function subscribeToFileEvents(onEvent: (event: FileEvent) => void): () => void {
+export function subscribeToFileEvents(
+  onEvent: (event: FileEvent) => void,
+): () => void {
   let timer: ReturnType<typeof setTimeout>;
   let active = true;
 

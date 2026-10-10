@@ -32,22 +32,6 @@
  *
  * 5. Clicking a folder opens it. A breadcrumb trail ("Root / src /
  *    components") shows where you are, and each crumb is clickable.
- *
- * Done when: the root shows 7 files and 7 folders; "src/util" and
- * "src/utils" are separate folders; "tmp" shows as an empty folder; the
- * meeting notes sort notes1, notes2, notes3, notes10, notes11; and the
- * "src" size equals the sum of every file under it.
- *
- * Think about:
- * - Splitting a path gives you every ancestor. How do you make sure an
- *   ancestor is created only once, even when it's seen many times and in
- *   any order? What should you key folders by while building?
- * - Folder size depends on children's sizes. Which traversal order lets you
- *   compute a parent after all its children?
- * - Should the aggregates be stored in state or derived? What changes in
- *   Part 4 when files start moving?
- *
- * Time target: 40 minutes.
  */
 
 import { useEffect, useState } from "react";
@@ -62,18 +46,28 @@ interface TreeNode extends FileEntry {
 type EntryMap = Record<TreeNode["id"], TreeNode>;
 
 const Entry = ({ node, entries }: { node: TreeNode; entries: EntryMap }) => {
+  const [open, setOpen] = useState<boolean>(false);
+
+  const onClick = () => {
+    setOpen((prev) => !prev);
+  };
+
   if (node.children.size === 0) {
-    return <li>{node.path}</li>;
+    return <li>{node.type === "folder" ? <h3>{node.path}</h3> : node.path}</li>;
   }
 
   return (
     <li>
-      <h3>{node.path}</h3>
-      <ul>
-        {[...node.children].map((id) => {
-          return <Entry key={id} node={entries[id]} entries={entries} />;
-        })}
-      </ul>
+      <h3>
+        {node.path} <button onClick={onClick}>{open ? "▲" : "▼"}</button>
+      </h3>
+      {open && (
+        <ul>
+          {[...node.children].map((id) => {
+            return <Entry key={id} node={entries[id]} entries={entries} />;
+          })}
+        </ul>
+      )}
     </li>
   );
 };
@@ -156,7 +150,6 @@ export const Part1BuildTree = () => {
       children: rootChildren,
     };
     entryMap[rootId] = rootNode;
-    console.log("entry map", Object.values(entryMap));
     setEntries(entryMap);
     setRootId(rootId);
   };
