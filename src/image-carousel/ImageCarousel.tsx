@@ -151,29 +151,29 @@ export const ImageCarousel = () => {
     };
   }, [slide, selectedProduct]);
 
-  // useEffect(() => {
-  //   if (hovered) return;
+  useEffect(() => {
+    if (hovered) return;
 
-  //   const intervalId = setInterval(() => {
-  //     if (!carouselRef.current) return;
+    const intervalId = setInterval(() => {
+      if (!carouselRef.current) return;
 
-  //     // manually scroll the scroll container
-  //     const { scrollLeft, scrollWidth } = carouselRef.current;
+      // manually scroll the scroll container
+      const { scrollLeft, scrollWidth } = carouselRef.current;
 
-  //     if (scrollLeft + CAROUSEL_WIDTH >= scrollWidth) {
-  //       carouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
-  //     } else {
-  //       carouselRef.current.scrollBy({
-  //         left: CAROUSEL_WIDTH,
-  //         behavior: "smooth",
-  //       });
-  //     }
-  //   }, AUTOPLAY_MS);
+      if (scrollLeft + CAROUSEL_WIDTH >= scrollWidth) {
+        carouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        carouselRef.current.scrollBy({
+          left: CAROUSEL_WIDTH,
+          behavior: "smooth",
+        });
+      }
+    }, AUTOPLAY_MS);
 
-  //   return () => {
-  //     clearInterval(intervalId);
-  //   };
-  // }, [hovered, manualSlideChange]); // whenever we hover over carousel or a user makes a manual slide change, we reset the timer
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [hovered, manualSlideChange]); // whenever we hover over carousel or a user makes a manual slide change, we reset the timer
 
   // On manual slide change, we programmically set the scroll position to show the correct product slide.
   // The intersection observer picks up this scroll position change and sets the slide state.
