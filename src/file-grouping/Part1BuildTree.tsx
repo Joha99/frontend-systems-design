@@ -24,12 +24,10 @@
  *    - item count: direct children only ("4 items")
  *    - modified: the latest modifiedAt of anything inside it
  *    Compute all of them in ONE pass over the tree, not one walk per folder.
- *
  * 4. Show ONE folder at a time (start at the root) as a list: icon, name,
  *    size (human readable: "12.4 KB", "1.2 MB"), modified date.
  *    Folders first, then files. Within each, sort by name using natural
  *    order: notes2 comes before notes10.
- *
  * 5. Clicking a folder opens it. A breadcrumb trail ("Root / src /
  *    components") shows where you are, and each crumb is clickable.
  */
