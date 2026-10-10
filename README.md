@@ -45,6 +45,7 @@ React + TypeScript interview prep problems. Each problem is self-contained in it
 | ✅     | Image Search Gallery 🚗               | `src/image-search/`          | Medium       | search + submit, mock API fetch, image grid, pagination controls, loading state           |
 | ✅     | Context Paginated List 🚗             | `src/context-paginator/`     | Medium       | React Context provider, multi-component consumers, API pagination, no prop drill          |
 |        | Semantic HTML Audit 🚗                | `src/semantic-audit/`        | Easy         | replace div soup with semantic HTML5 tags, string parsing, scoring                        |
+|        | Responsive Photo Grid                 | `src/photo-grid/`            | Hard         | 2D nav over a reflowing 1D list, measured column count, Shift-range select, optimistic delete |
 
 ---
 
@@ -94,6 +95,15 @@ Complex problems split into 30–45 minute parts. Each part is its own component
 |        | 2. Week navigation + caching     | `Part2WeekNavigation.tsx` | cache by week, prefetch, ignoring stale responses    |
 |        | 3. Keyboard grid + moving events | `Part3KeyboardGrid.tsx`   | roving tabindex over a 2D grid, keyboard move/resize |
 |        | 4. Create events + server sync   | `Part4CreateAndSync.tsx`  | optimistic CRUD, temp ids, debounced saves           |
+
+### File Browser with Grouping (`src/file-grouping/`)
+
+| Status | Part                         | File                    | Key Skills                                                       |
+| ------ | ---------------------------- | ----------------------- | ---------------------------------------------------------------- |
+|        | 1. Flat paths → tree         | `Part1BuildTree.tsx`    | implied folders, normalized tree, post-order aggregates, natural sort |
+|        | 2. Group by                  | `Part2GroupBy.tsx`      | generic grouping (key fn + order), calendar-day buckets, useMemo |
+|        | 3. Keyboard navigation       | `Part3KeyboardNav.tsx`  | flattened visible rows, roving tabIndex, type-ahead, focus recovery |
+|        | 4. Live updates              | `Part4LiveUpdates.tsx`  | incremental tree updates, ancestor aggregates, batching bursts   |
 
 ### Spreadsheet with Formulas (`src/formula-spreadsheet/`)
 
