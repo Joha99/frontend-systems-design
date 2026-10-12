@@ -33,167 +33,175 @@
  */
 
 import { useEffect, useState } from "react";
-import styles from "./FileGrouping.module.css";
 import { fetchEntries, type FileEntry } from "./mockApi";
 
-let nextId = 66;
-
 interface TreeNode extends FileEntry {
-  children: Set<FileEntry["id"]>;
+  /** Last path segment, for display and sorting. `path` stays the full path. */
+  name: string;
+  children: Set<TreeNode["id"]>;
 }
 type EntryMap = Record<TreeNode["id"], TreeNode>;
 
-const getSortedChildren = (
-  id: TreeNode["id"],
-  entries: EntryMap,
-): TreeNode["id"][] => {
-  const node = entries[id];
-  const childrenIds = [...node.children];
+// Folder ids come from the full path, so a folder gets the same id no matter
+// which entry implies it, and "assets/archive" and "archive" never collide.
+const folderId = (path: string) => `folder:${path}`;
+const ROOT_ID = folderId("");
+
+const getSortedChildren = (id: TreeNode["id"], entries: EntryMap) => {
+  const byName = (a: TreeNode["id"], b: TreeNode["id"]) =>
+    entries[a].name.localeCompare(entries[b].name, undefined, {
+      numeric: true,
+    });
+
+  const childrenIds = [...entries[id].children];
   const folders = childrenIds
     .filter((id) => entries[id].type === "folder")
-    .sort((a, b) => entries[a].path.localeCompare(entries[b].path));
+    .sort(byName);
   const files = childrenIds
     .filter((id) => entries[id].type === "file")
-    .sort((a, b) => entries[a].path.localeCompare(entries[b].path));
+    .sort(byName);
 
   return [...folders, ...files];
 };
 
-const Entry = ({ id, entries }: { id: TreeNode["id"]; entries: EntryMap }) => {
-  const [open, setOpen] = useState<boolean>(false);
-
-  const onClick = () => {
-    setOpen((prev) => !prev);
+const buildNormalizedTree = (flatEntries: FileEntry[]): EntryMap => {
+  const entryMap: EntryMap = {
+    [ROOT_ID]: {
+      id: ROOT_ID,
+      path: "",
+      name: "Root",
+      type: "folder",
+      size: 0,
+      modifiedAt: new Date(0).toISOString(),
+      children: new Set(),
+    },
   };
 
-  const node = entries[id];
+  flatEntries.forEach((entry) => {
+    const segments = entry.path.split("/");
+    // every folder this entry is inside, from the root down:
+    // "src/components/Button.tsx" -> ["", "src", "src/components"]
+    const ancestorPaths = segments.map((_, i) =>
+      segments.slice(0, i).join("/"),
+    );
 
-  if (node.children.size === 0) {
-    return <li>{node.type === "folder" ? <h3>{node.path}</h3> : node.path}</li>;
+    // create any missing folders, parents before children. An explicit
+    // (empty) folder entry also creates itself.
+    const folderPaths =
+      entry.type === "folder" ? [...ancestorPaths, entry.path] : ancestorPaths;
+
+    folderPaths.forEach((path, i) => {
+      const id = folderId(path);
+      if (entryMap[id]) return;
+
+      entryMap[id] = {
+        id,
+        path,
+        name: segments[i - 1],
+        type: "folder",
+        size: 0,
+        // the creating entry is always inside this folder (or is it), so its
+        // date is a valid starting point for "latest modified"
+        modifiedAt: entry.modifiedAt,
+        children: new Set(),
+      };
+      // i > 0 here: the root always exists, so its parent was handled already
+      entryMap[folderId(folderPaths[i - 1])].children.add(id);
+    });
+
+    if (entry.type === "file") {
+      entryMap[entry.id] = {
+        ...entry,
+        name: segments[segments.length - 1],
+        children: new Set(),
+      };
+      entryMap[folderId(ancestorPaths[ancestorPaths.length - 1])].children.add(
+        entry.id,
+      );
+    }
+
+    // roll size and latest modified up into every ancestor, root included
+    ancestorPaths.forEach((path) => {
+      const folder = entryMap[folderId(path)];
+      folder.size += entry.size;
+
+      const folderTimestamp = new Date(folder.modifiedAt).getTime();
+      const entryTimestamp = new Date(entry.modifiedAt).getTime();
+      if (entryTimestamp > folderTimestamp) {
+        folder.modifiedAt = entry.modifiedAt;
+      }
+    });
+  });
+
+  return entryMap;
+};
+
+const Entry = ({
+  node,
+  onOpen,
+}: {
+  node: TreeNode;
+  onOpen: (id: TreeNode["id"]) => void;
+}) => {
+  const size = `${node.size / 1000} KB`;
+
+  if (node.type === "file") {
+    return (
+      <li>
+        {node.name} ({size})
+      </li>
+    );
   }
-
-  const sortedChildren = getSortedChildren(id, entries);
 
   return (
     <li>
-      <h3>
-        {node.path} <button onClick={onClick}>{open ? "▲" : "▼"}</button>
-      </h3>
-      {open && (
-        <ul>
-          {sortedChildren.map((id) => {
-            return <Entry key={id} id={id} entries={entries} />;
-          })}
-        </ul>
-      )}
+      <button onClick={() => onOpen(node.id)}>{node.name}/</button> ({size})
     </li>
   );
 };
 
 export const Part1BuildTree = () => {
-  const [entries, setEntries] = useState<EntryMap>({});
-  const [rootId, setRootId] = useState<TreeNode["id"]>();
-
-  const buildNormalizedTree = (entries: FileEntry[]) => {
-    const entryMap: EntryMap = {};
-    const seenFolders: Record<TreeNode["path"], TreeNode["id"]> = {};
-    const rootChildren: Set<TreeNode["id"]> = new Set();
-
-    entries.forEach((entry) => {
-      const path = entry.path;
-      let folders = path.includes("/") ? path.split("/") : [path];
-
-      // add files to the entry map
-      if (entry.type === "file") {
-        const fileName = folders[folders.length - 1];
-        const fileNode: TreeNode = {
-          ...entry,
-          path: fileName,
-          children: new Set(),
-        };
-        entryMap[entry.id] = fileNode;
-        folders = folders.slice(0, -1);
-      }
-
-      // add folders to the entry map
-      for (let f = 0; f < folders.length; f++) {
-        const folderName = `${folders[f]}/`;
-        // key by full path ("src/components"), not name: two folders can share a name
-        const folderPath = folders.slice(0, f + 1).join("/");
-
-        if (seenFolders[folderPath] !== undefined) continue;
-
-        // we have to add a folder to the children of parent folders if f is > 0
-        const folderId = `e${nextId++}`;
-        const folderNode: TreeNode = {
-          id: folderId,
-          path: folderName,
-          type: "folder",
-          size: 0,
-          modifiedAt: entry.modifiedAt,
-          children: new Set(),
-        };
-        entryMap[folderId] = folderNode;
-        seenFolders[folderPath] = folderId;
-
-        if (f === 0) {
-          rootChildren.add(folderId);
-        } else {
-          // we are guaranteed to have already added the parent folder to the entry map
-          const parentFolderPath = folders.slice(0, f).join("/");
-          const parentFolderId = seenFolders[parentFolderPath];
-          entryMap[parentFolderId].children.add(folderId);
-          entryMap[parentFolderId].size++;
-        }
-      }
-
-      if (entry.type === "file") {
-        if (folders.length === 0) {
-          rootChildren.add(entry.id);
-        } else {
-          const parentFolderPath = folders.join("/");
-          const parentFolderId = seenFolders[parentFolderPath];
-          entryMap[parentFolderId].children.add(entry.id);
-          entryMap[parentFolderId].size++;
-        }
-      }
-    });
-
-    // create a root node
-    const rootId = `e${nextId++}`;
-    const rootNode: TreeNode = {
-      id: rootId,
-      path: "/",
-      type: "folder",
-      size: rootChildren.size,
-      modifiedAt: new Date(Date.now()).toISOString(),
-      children: rootChildren,
-    };
-    entryMap[rootId] = rootNode;
-    setEntries(entryMap);
-    setRootId(rootId);
-  };
+  const [entries, setEntries] = useState<EntryMap>();
+  // folder ids from the root down to the folder being shown (the last one)
+  const [folderPath, setFolderPath] = useState<TreeNode["id"][]>([ROOT_ID]);
 
   useEffect(() => {
     fetchEntries().then((res) => {
-      buildNormalizedTree(res);
+      setEntries(buildNormalizedTree(res));
     });
   }, []);
 
-  if (!rootId) {
+  if (!entries) {
     return null;
   }
 
-  const sortedChildren = getSortedChildren(rootId, entries);
+  const currentFolderId = folderPath[folderPath.length - 1];
+  const sortedChildren = getSortedChildren(currentFolderId, entries);
+
+  const openFolder = (id: TreeNode["id"]) => {
+    setFolderPath((prev) => [...prev, id]);
+  };
 
   return (
     <div>
       <h2>File Browser with Grouping: Part 1</h2>
+      <nav aria-label="Breadcrumbs">
+        {folderPath.map((id, index) => (
+          <button
+            key={id}
+            style={{ padding: 0, color: "blue", marginRight: "5px" }}
+            onClick={() => setFolderPath((prev) => prev.slice(0, index + 1))}
+          >
+            {entries[id].name} /
+          </button>
+        ))}
+      </nav>
       <ol>
-        {sortedChildren.map((id) => {
-          return <Entry key={id} id={id} entries={entries} />;
-        })}
+        {sortedChildren.map((id) => (
+          <Entry key={id} node={entries[id]} onOpen={openFolder} />
+        ))}
       </ol>
+      {sortedChildren.length === 0 && <p>This folder is empty.</p>}
     </div>
   );
 };
