@@ -100,7 +100,7 @@ Complex problems split into 30–45 minute parts. Each part is its own component
 
 | Status | Part                         | File                    | Key Skills                                                       |
 | ------ | ---------------------------- | ----------------------- | ---------------------------------------------------------------- |
-|        | 1. Flat paths → tree         | `Part1BuildTree.tsx`    | implied folders, normalized tree, post-order aggregates, natural sort |
+| ✅     | 1. Flat paths → tree         | `Part1BuildTree.tsx`    | implied folders, normalized tree, post-order aggregates, natural sort |
 |        | 2. Group by                  | `Part2GroupBy.tsx`      | generic grouping (key fn + order), calendar-day buckets, useMemo |
 |        | 3. Keyboard navigation       | `Part3KeyboardNav.tsx`  | flattened visible rows, roving tabIndex, type-ahead, focus recovery |
 |        | 4. Live updates              | `Part4LiveUpdates.tsx`  | incremental tree updates, ancestor aggregates, batching bursts   |
@@ -113,6 +113,36 @@ Complex problems split into 30–45 minute parts. Each part is its own component
 |        | 2. Formula parser + evaluator | `Part2FormulaParser.tsx`   | tokenizer, recursive-descent parser, AST evaluation      |
 |        | 3. Dependency graph + cycles  | `Part3DependencyGraph.tsx` | bidirectional edges, topological recalc, cycle detection |
 |        | 4. Batched autosave           | `Part4Autosave.tsx`        | batching, one save in flight, versioning, retry          |
+
+---
+
+## Frontend System Design (whiteboard)
+
+Interview-style prompts in `design/`, for the Superhuman FE system design round. Each has clarifying questions, assumptions, what to produce (component diagram, state shape, API endpoints + request bodies), the deep dives an interviewer will push on, and a self-grading rubric. Talk through one out loud on a whiteboard tool, then grade yourself.
+
+| Status | Prompt                                                    | File                                         | Time   |
+| ------ | --------------------------------------------------------- | -------------------------------------------- | ------ |
+|        | How to run the interview (read first)                     | `design/00-how-to-run-a-fe-design-interview.md` | —   |
+|        | Instagram feed, posts, comments, likes (+ live new posts) | `design/01-instagram-feed.md`                | 60 min |
+|        | Keyboard-first, offline email client (Superhuman)         | `design/02-email-client-superhuman.md`       | 60 min |
+|        | Real-time chat (+ history and no lost messages)           | `design/03-chat-messaging.md`                | 60 min |
+|        | Reusable typeahead component (+ performance)              | `design/04-typeahead-search.md`              | 45 min |
+|        | Collaborative doc with anchored comments                  | `design/05-collaborative-doc-comments.md`    | 60 min |
+|        | Extend an existing system: snooze, send later, reminders  | `design/06-extend-send-later-snooze.md`      | 45 min |
+|        | Reference: OOP, SOLID and design patterns for frontend    | `design/oop-solid-patterns.md`               | —      |
+
+## Patterns (OOP / SOLID, test-graded)
+
+Plain-TypeScript exercises in `src/patterns/`, graded with `npm run test:patterns`. See `src/patterns/README.md`.
+
+| Status | Exercise                 | Path                                | Key Skills                                              |
+| ------ | ------------------------ | ----------------------------------- | ------------------------------------------------------- |
+|        | Typed Event Bus          | `src/patterns/01-event-bus/`        | Observer, snapshot semantics, once, AbortSignal         |
+|        | Inbox Commands + Undo    | `src/patterns/02-command-undo/`     | Command, Composite, undo/redo stacks, immutability      |
+|        | Split Inbox Rules        | `src/patterns/03-split-inbox-rules/`| Strategy, Composite, Open/Closed, rule describe()       |
+|        | Gmail + Outlook Adapters | `src/patterns/04-mail-adapters/`    | Adapter, Factory, DIP, Liskov, allSettled               |
+|        | Offline Outbox           | `src/patterns/05-offline-outbox/`   | ordered delivery, backoff, dead letters, coalescing     |
+|        | Refactor a God Component | `src/patterns/06-refactor-compose/` | SRP, custom hooks, DI, 3 planted bugs                   |
 
 ---
 
