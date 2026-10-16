@@ -24,28 +24,160 @@
  *    BEST status that letter has had so far (green beats yellow beats gray).
  * 6. Win when a row is all green; lose after 6 wrong guesses and reveal
  *    the answer. A Play Again button starts a new game.
- *
- * Done when: the LEVER / EERIE example scores correctly, and the on-screen
- * keyboard never downgrades a green key to yellow.
- *
- * Stretch:
- * - Flip animation revealing tiles one at a time.
- * - Hard mode: revealed hints must be used in later guesses.
- * - Stats (games played, win %, streak) in localStorage.
- *
- * Time target: 45 minutes.
  */
 
+import { useEffect, useState } from "react";
 import styles from "./Wordle.module.css";
 import { WORDS, ANSWERS } from "./words";
 
+type GuessScore = "green" | "yellow" | "gray";
+type GameStatus = "won" | "lost";
+
+const selectRandomAnswer = () => {
+  const randomIndex = Math.floor(Math.random() * ANSWERS.length);
+  return ANSWERS[randomIndex];
+};
+
 export const Wordle = () => {
-  // TODO: implement
-  void [WORDS, ANSWERS];
+  const [answer, setAnswer] = useState<string>("LEVER");
+  const [submittedGuesses, setSubmittedGuesses] = useState<string[]>([]);
+  const [currentGuess, setCurrentGuess] = useState<string[]>(
+    new Array(5).fill(""),
+  );
+  const [gameStatus, setGameStatus] = useState<"won" | "lost">();
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        onSubmit();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [currentGuess]);
+
+  const onSubmit = () => {
+    if (currentGuess.includes("")) {
+      return;
+    }
+
+    if (currentGuess.join("") === answer) {
+      setGameStatus("won");
+    }
+
+    if (submittedGuesses.length === 5 && currentGuess.join("") !== answer) {
+      setGameStatus("lost");
+    }
+
+    setSubmittedGuesses((prev) => [...prev, currentGuess.join("")]);
+    setCurrentGuess(new Array(5).fill(""));
+  };
+
+  const onInputChange = (index: number, value: string) => {
+    setCurrentGuess((prev) => {
+      const newGuess = [...prev];
+      newGuess[index] = value;
+      return newGuess;
+    });
+  };
+
+  const scoreGuess = (guess: string) => {
+    const result: GuessScore[] = new Array(5).fill(undefined);
+
+    const answerCharMap: Record<string, number> = {};
+    for (const char of [...answer]) {
+      if (answerCharMap[char] === undefined) {
+        answerCharMap[char] = 1;
+      } else {
+        answerCharMap[char]++;
+      }
+    }
+
+    for (let i = 0; i < 5; i++) {
+      if (answer[i] === guess[i] && answerCharMap[guess[i]] > 0) {
+        result[i] = "green";
+        answerCharMap[guess[i]]--;
+      }
+    }
+
+    for (let i = 0; i < 5; i++) {
+      if (result[i] === "green") {
+        continue;
+      }
+
+      if (answer[i] !== guess[i] && answerCharMap[guess[i]] > 0) {
+        result[i] = "yellow";
+        answerCharMap[guess[i]]--;
+      } else {
+        result[i] = "gray";
+      }
+    }
+
+    return result;
+  };
+
+  const onPlayAgain = () => {
+    setAnswer(selectRandomAnswer);
+    setSubmittedGuesses([]);
+    setCurrentGuess(new Array(5).fill(""));
+    setGameStatus(undefined);
+  };
 
   return (
-    <div>
-      <h2>Wordle</h2>
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      <div style={{ display: "flex", gap: "10px" }}>
+        <h2>Wordle</h2>
+        {gameStatus !== undefined && (
+          <button onClick={onPlayAgain}>Play again</button>
+        )}
+      </div>
+
+      <div>
+        {Array.from({ length: 6 }, (_, r) => {
+          const isActiveRow = r === submittedGuesses.length;
+          const rowScore =
+            r < submittedGuesses.length
+              ? scoreGuess(submittedGuesses[r])
+              : undefined;
+
+          return (
+            <div className={styles.row} key={r}>
+              {Array.from({ length: 5 }, (_, c) => {
+                const value = isActiveRow
+                  ? currentGuess[c]
+                  : r < submittedGuesses.length
+                    ? submittedGuesses[r][c]
+                    : "";
+
+                return (
+                  <textarea
+                    key={`${r}x${c}`}
+                    className={`${styles.cell} ${rowScore ? styles[rowScore[c]] : ""}`}
+                    value={value}
+                    disabled={!isActiveRow || gameStatus !== undefined}
+                    maxLength={1}
+                    onChange={(e) => {
+                      const value = e.currentTarget.value.toUpperCase();
+                      onInputChange(c, value);
+                    }}
+                  />
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

@@ -1,12 +1,10 @@
 import styles from "./App.module.css";
-import { Part1BuildTree } from "./file-grouping/Part1BuildTree";
-// import { Battleship } from "./battleship/Battleship";
+import { Wordle } from "./wordle/Wordle";
 
 function App() {
   return (
     <div className={styles.app}>
-      <Part1BuildTree />
-      {/* <Battleship /> */}
+      <Wordle />
     </div>
   );
 }
