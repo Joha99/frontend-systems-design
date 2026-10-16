@@ -20,3 +20,22 @@
 .green {
   border: 2px solid #73eb7d;
 }
+
+@keyframes shake {
+  0% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(10deg);
+  }
+  75% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(0);
+  }
+}
+
+.invalidRow {
+  animation: shake 200ms ease-out alternate 2;
+}

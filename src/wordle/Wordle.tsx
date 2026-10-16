@@ -31,7 +31,7 @@ import styles from "./Wordle.module.css";
 import { WORDS, ANSWERS } from "./words";
 
 type GuessScore = "green" | "yellow" | "gray";
-type GameStatus = "won" | "lost";
+type GameStatus = "won" | "lost" | "invalid";
 
 const selectRandomAnswer = () => {
   const randomIndex = Math.floor(Math.random() * ANSWERS.length);
@@ -44,11 +44,12 @@ export const Wordle = () => {
   const [currentGuess, setCurrentGuess] = useState<string[]>(
     new Array(5).fill(""),
   );
-  const [gameStatus, setGameStatus] = useState<"won" | "lost">();
+  const [gameStatus, setGameStatus] = useState<GameStatus>();
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Enter") {
+        console.log("enter pressed ");
         onSubmit();
       }
     };
@@ -61,23 +62,32 @@ export const Wordle = () => {
   }, [currentGuess]);
 
   const onSubmit = () => {
+    console.log("currentguess", currentGuess);
     if (currentGuess.includes("")) {
       return;
     }
 
-    if (currentGuess.join("") === answer) {
+    const currentGuessStr = currentGuess.join("");
+
+    if (!WORDS.includes(currentGuessStr)) {
+      setGameStatus("invalid");
+      return;
+    }
+
+    if (currentGuessStr === answer) {
       setGameStatus("won");
     }
 
-    if (submittedGuesses.length === 5 && currentGuess.join("") !== answer) {
+    if (submittedGuesses.length === 5 && currentGuessStr !== answer) {
       setGameStatus("lost");
     }
 
-    setSubmittedGuesses((prev) => [...prev, currentGuess.join("")]);
+    setSubmittedGuesses((prev) => [...prev, currentGuessStr]);
     setCurrentGuess(new Array(5).fill(""));
   };
 
   const onInputChange = (index: number, value: string) => {
+    console.log("oninputchange", value);
     setCurrentGuess((prev) => {
       const newGuess = [...prev];
       newGuess[index] = value;
@@ -138,34 +148,47 @@ export const Wordle = () => {
     >
       <div style={{ display: "flex", gap: "10px" }}>
         <h2>Wordle</h2>
-        {gameStatus !== undefined && (
-          <button onClick={onPlayAgain}>Play again</button>
-        )}
+        {gameStatus === "lost" && <h3>Answer was: {answer}</h3>}
+        {gameStatus === "lost" ||
+          (gameStatus === "won" && (
+            <button onClick={onPlayAgain}>Play again</button>
+          ))}
       </div>
 
       <div>
         {Array.from({ length: 6 }, (_, r) => {
-          const isActiveRow = r === submittedGuesses.length;
-          const rowScore =
-            r < submittedGuesses.length
-              ? scoreGuess(submittedGuesses[r])
-              : undefined;
+          const isActiveGuess = r === submittedGuesses.length;
+          const isInvalidGuess = isActiveGuess && gameStatus === "invalid";
+          const isSubmittedGuess = r < submittedGuesses.length;
+          const guessScore = isSubmittedGuess
+            ? scoreGuess(submittedGuesses[r])
+            : undefined;
 
           return (
-            <div className={styles.row} key={r}>
+            <div
+              key={r}
+              className={`${styles.row} ${isInvalidGuess ? styles.invalidRow : ""}`}
+              onAnimationEnd={() => {
+                setGameStatus(undefined);
+              }}
+            >
               {Array.from({ length: 5 }, (_, c) => {
-                const value = isActiveRow
+                const char = isActiveGuess
                   ? currentGuess[c]
-                  : r < submittedGuesses.length
+                  : isSubmittedGuess
                     ? submittedGuesses[r][c]
                     : "";
+                const disabled =
+                  !isActiveGuess ||
+                  gameStatus === "lost" ||
+                  gameStatus === "won";
 
                 return (
                   <textarea
                     key={`${r}x${c}`}
-                    className={`${styles.cell} ${rowScore ? styles[rowScore[c]] : ""}`}
-                    value={value}
-                    disabled={!isActiveRow || gameStatus !== undefined}
+                    className={`${styles.cell} ${guessScore ? styles[guessScore[c]] : ""}`}
+                    value={char}
+                    disabled={disabled}
                     maxLength={1}
                     onChange={(e) => {
                       const value = e.currentTarget.value.toUpperCase();
