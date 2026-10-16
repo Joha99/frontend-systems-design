@@ -26,7 +26,7 @@
  *    the answer. A Play Again button starts a new game.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./Wordle.module.css";
 import { WORDS, ANSWERS } from "./words";
 
@@ -39,17 +39,31 @@ const selectRandomAnswer = () => {
 };
 
 export const Wordle = () => {
-  const [answer, setAnswer] = useState<string>("LEVER");
-  const [submittedGuesses, setSubmittedGuesses] = useState<string[]>([]);
-  const [currentGuess, setCurrentGuess] = useState<string[]>(
-    new Array(5).fill(""),
-  );
   const [gameStatus, setGameStatus] = useState<GameStatus>();
+  const [answer, setAnswer] = useState<string>("LEVER");
+
+  const [submittedGuesses, setSubmittedGuesses] = useState<string[]>([]);
+  const submittedGuessesCountRef = useRef<number>(0);
+
+  const [currentGuess, setCurrentGuess] = useState<string>("");
+  const currentGuessRef = useRef<string>("");
+
+  console.log("answer", answer);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter") {
-        console.log("enter pressed ");
+      if (/^[a-z]$/i.test(e.key)) {
+        if (currentGuessRef.current.length === 5) {
+          return;
+        }
+
+        const uppercaseChar = e.key.toUpperCase();
+        setCurrentGuess((prev) => prev + uppercaseChar);
+        currentGuessRef.current += uppercaseChar;
+      } else if (e.key === "Backspace" && currentGuessRef.current.length > 0) {
+        setCurrentGuess((prev) => prev.slice(0, -1));
+        currentGuessRef.current = currentGuessRef.current.slice(0, -1);
+      } else if (e.key === "Enter") {
         onSubmit();
       }
     };
@@ -59,40 +73,32 @@ export const Wordle = () => {
     return () => {
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [currentGuess]);
+  }, []);
 
   const onSubmit = () => {
-    console.log("currentguess", currentGuess);
-    if (currentGuess.includes("")) {
+    const guess = currentGuessRef.current;
+
+    if (guess.length < 5) {
       return;
     }
 
-    const currentGuessStr = currentGuess.join("");
-
-    if (!WORDS.includes(currentGuessStr)) {
+    if (!WORDS.includes(guess)) {
       setGameStatus("invalid");
       return;
     }
 
-    if (currentGuessStr === answer) {
+    if (guess === answer) {
       setGameStatus("won");
     }
 
-    if (submittedGuesses.length === 5 && currentGuessStr !== answer) {
+    if (submittedGuessesCountRef.current === 5 && guess !== answer) {
       setGameStatus("lost");
     }
 
-    setSubmittedGuesses((prev) => [...prev, currentGuessStr]);
-    setCurrentGuess(new Array(5).fill(""));
-  };
-
-  const onInputChange = (index: number, value: string) => {
-    console.log("oninputchange", value);
-    setCurrentGuess((prev) => {
-      const newGuess = [...prev];
-      newGuess[index] = value;
-      return newGuess;
-    });
+    setSubmittedGuesses((prev) => [...prev, guess]);
+    submittedGuessesCountRef.current++;
+    setCurrentGuess("");
+    currentGuessRef.current = "";
   };
 
   const scoreGuess = (guess: string) => {
@@ -131,11 +137,17 @@ export const Wordle = () => {
   };
 
   const onPlayAgain = () => {
-    setAnswer(selectRandomAnswer);
-    setSubmittedGuesses([]);
-    setCurrentGuess(new Array(5).fill(""));
     setGameStatus(undefined);
+    setAnswer(selectRandomAnswer);
+
+    setSubmittedGuesses([]);
+    submittedGuessesCountRef.current = 0;
+
+    setCurrentGuess("");
+    currentGuessRef.current = "";
   };
+
+  const isGameOver = gameStatus === "lost" || gameStatus === "won";
 
   return (
     <div
@@ -149,10 +161,8 @@ export const Wordle = () => {
       <div style={{ display: "flex", gap: "10px" }}>
         <h2>Wordle</h2>
         {gameStatus === "lost" && <h3>Answer was: {answer}</h3>}
-        {gameStatus === "lost" ||
-          (gameStatus === "won" && (
-            <button onClick={onPlayAgain}>Play again</button>
-          ))}
+        {gameStatus === "invalid" && <h3>Not in the words list</h3>}
+        {isGameOver && <button onClick={onPlayAgain}>Play again</button>}
       </div>
 
       <div>
@@ -174,27 +184,18 @@ export const Wordle = () => {
             >
               {Array.from({ length: 5 }, (_, c) => {
                 const char = isActiveGuess
-                  ? currentGuess[c]
+                  ? currentGuess?.[c]
                   : isSubmittedGuess
                     ? submittedGuesses[r][c]
                     : "";
-                const disabled =
-                  !isActiveGuess ||
-                  gameStatus === "lost" ||
-                  gameStatus === "won";
 
                 return (
-                  <textarea
-                    key={`${r}x${c}`}
+                  <div
+                    key={`${r}:${c}`}
                     className={`${styles.cell} ${guessScore ? styles[guessScore[c]] : ""}`}
-                    value={char}
-                    disabled={disabled}
-                    maxLength={1}
-                    onChange={(e) => {
-                      const value = e.currentTarget.value.toUpperCase();
-                      onInputChange(c, value);
-                    }}
-                  />
+                  >
+                    {char}
+                  </div>
                 );
               })}
             </div>
