@@ -26,45 +26,171 @@
  *    the answer. A Play Again button starts a new game.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer } from "react";
 import styles from "./Wordle.module.css";
 import { WORDS, ANSWERS } from "./words";
 
+interface GameState {
+  answer: string;
+  submitted: string[];
+  guess: string;
+  isInvalidGuess: boolean;
+}
+
 type GuessScore = "green" | "yellow" | "gray";
-type GameStatus = "won" | "lost" | "invalid";
+
+type GameAction =
+  | { type: "SUBMIT" }
+  | { type: "DELETE" }
+  | { type: "EDIT"; payload: string }
+  | { type: "RESET"; payload: string }
+  | { type: "CLEAR_INVALID" };
+
+const MAX_GUESSES = 6;
+
+// The one place that decides whether the game is over (used by the reducer and the render).
+const isWon = (state: GameState) => state.submitted.at(-1) === state.answer;
+const isOver = (state: GameState) =>
+  isWon(state) || state.submitted.length === MAX_GUESSES;
 
 const selectRandomAnswer = () => {
   const randomIndex = Math.floor(Math.random() * ANSWERS.length);
   return ANSWERS[randomIndex];
 };
 
+const scoreGuess = (guess: GameState["guess"], answer: GameState["answer"]) => {
+  const result: GuessScore[] = new Array(5).fill(undefined);
+
+  // create a map of characters that appear in answer to their character count
+  const answerCharMap: Record<string, number> = {};
+  for (const char of [...answer]) {
+    if (answerCharMap[char] === undefined) {
+      answerCharMap[char] = 1;
+    } else {
+      answerCharMap[char]++;
+    }
+  }
+
+  // match "green"s first
+  for (let i = 0; i < 5; i++) {
+    if (answer[i] === guess[i] && answerCharMap[guess[i]] > 0) {
+      result[i] = "green";
+      answerCharMap[guess[i]]--;
+    }
+  }
+
+  // then match "yellow"s and "gray"s
+  for (let i = 0; i < 5; i++) {
+    if (result[i] === "green") {
+      continue;
+    }
+
+    if (answer[i] !== guess[i] && answerCharMap[guess[i]] > 0) {
+      result[i] = "yellow";
+      answerCharMap[guess[i]]--;
+    } else {
+      result[i] = "gray";
+    }
+  }
+
+  return result;
+};
+
+const reducer = (state: GameState, action: GameAction): GameState => {
+  if (action.type === "RESET") {
+    return {
+      answer: action.payload,
+      submitted: [],
+      guess: "",
+      isInvalidGuess: false,
+    };
+  }
+
+  if (action.type === "CLEAR_INVALID") {
+    return { ...state, isInvalidGuess: false };
+  }
+
+  // ignore all input once the game is over
+  if (isOver(state)) {
+    return state;
+  }
+
+  if (action.type === "DELETE") {
+    if (state.guess.length === 0) return state;
+
+    const newGuess = state.guess.slice(0, -1);
+
+    return {
+      ...state,
+      guess: newGuess,
+      isInvalidGuess: false,
+    };
+  }
+
+  if (action.type === "SUBMIT") {
+    const currentGuess = state.guess;
+
+    // conditions for when user cannot submit:
+    // 1. guess isn't 5 characters
+    // 2. WORDS list doesn't include current 5 character guess
+    if (currentGuess.length < 5) {
+      return state;
+    }
+
+    if (!WORDS.includes(currentGuess)) {
+      return { ...state, isInvalidGuess: true };
+    }
+
+    const newSubmitted = [...state.submitted, state.guess];
+
+    return {
+      ...state,
+      submitted: newSubmitted,
+      guess: "",
+      isInvalidGuess: false,
+    };
+  }
+
+  if (action.type === "EDIT") {
+    if (state.guess.length === 5) return state;
+
+    const newChar = action.payload.toUpperCase();
+    const newGuess = state.guess + newChar;
+
+    return {
+      ...state,
+      guess: newGuess,
+      isInvalidGuess: false,
+    };
+  }
+
+  return state;
+};
+
 export const Wordle = () => {
-  const [gameStatus, setGameStatus] = useState<GameStatus>();
-  const [answer, setAnswer] = useState<string>("LEVER");
+  // the third argument runs once, so a random answer is only picked on mount
+  const [gameState, dispatch] = useReducer(reducer, null, () => ({
+    answer: selectRandomAnswer(),
+    submitted: [],
+    guess: "",
+    isInvalidGuess: false,
+  }));
 
-  const [submittedGuesses, setSubmittedGuesses] = useState<string[]>([]);
-  const submittedGuessesCountRef = useRef<number>(0);
 
-  const [currentGuess, setCurrentGuess] = useState<string>("");
-  const currentGuessRef = useRef<string>("");
-
-  console.log("answer", answer);
+  const isGameWon = isWon(gameState);
+  const isGameOver = isOver(gameState);
+  const isGameLost = isGameOver && !isGameWon;
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (/^[a-z]$/i.test(e.key)) {
-        if (currentGuessRef.current.length === 5) {
-          return;
-        }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
 
-        const uppercaseChar = e.key.toUpperCase();
-        setCurrentGuess((prev) => prev + uppercaseChar);
-        currentGuessRef.current += uppercaseChar;
-      } else if (e.key === "Backspace" && currentGuessRef.current.length > 0) {
-        setCurrentGuess((prev) => prev.slice(0, -1));
-        currentGuessRef.current = currentGuessRef.current.slice(0, -1);
-      } else if (e.key === "Enter") {
-        onSubmit();
+      if (e.key === "Enter") {
+        dispatch({ type: "SUBMIT" });
+      } else if (e.key === "Backspace") {
+        dispatch({ type: "DELETE" });
+      } else if (/^[a-z]$/i.test(e.key)) {
+        dispatch({ type: "EDIT", payload: e.key });
       }
     };
 
@@ -75,79 +201,9 @@ export const Wordle = () => {
     };
   }, []);
 
-  const onSubmit = () => {
-    const guess = currentGuessRef.current;
-
-    if (guess.length < 5) {
-      return;
-    }
-
-    if (!WORDS.includes(guess)) {
-      setGameStatus("invalid");
-      return;
-    }
-
-    if (guess === answer) {
-      setGameStatus("won");
-    }
-
-    if (submittedGuessesCountRef.current === 5 && guess !== answer) {
-      setGameStatus("lost");
-    }
-
-    setSubmittedGuesses((prev) => [...prev, guess]);
-    submittedGuessesCountRef.current++;
-    setCurrentGuess("");
-    currentGuessRef.current = "";
-  };
-
-  const scoreGuess = (guess: string) => {
-    const result: GuessScore[] = new Array(5).fill(undefined);
-
-    const answerCharMap: Record<string, number> = {};
-    for (const char of [...answer]) {
-      if (answerCharMap[char] === undefined) {
-        answerCharMap[char] = 1;
-      } else {
-        answerCharMap[char]++;
-      }
-    }
-
-    for (let i = 0; i < 5; i++) {
-      if (answer[i] === guess[i] && answerCharMap[guess[i]] > 0) {
-        result[i] = "green";
-        answerCharMap[guess[i]]--;
-      }
-    }
-
-    for (let i = 0; i < 5; i++) {
-      if (result[i] === "green") {
-        continue;
-      }
-
-      if (answer[i] !== guess[i] && answerCharMap[guess[i]] > 0) {
-        result[i] = "yellow";
-        answerCharMap[guess[i]]--;
-      } else {
-        result[i] = "gray";
-      }
-    }
-
-    return result;
-  };
-
   const onPlayAgain = () => {
-    setGameStatus(undefined);
-    setAnswer(selectRandomAnswer);
-
-    setSubmittedGuesses([]);
-    submittedGuessesCountRef.current = 0;
-
-    setCurrentGuess("");
-    currentGuessRef.current = "";
+    dispatch({ type: "RESET", payload: selectRandomAnswer() });
   };
-
-  const isGameOver = gameStatus === "lost" || gameStatus === "won";
 
   return (
     <div
@@ -158,41 +214,41 @@ export const Wordle = () => {
         alignItems: "center",
       }}
     >
-      <div style={{ display: "flex", gap: "10px" }}>
+      <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
         <h2>Wordle</h2>
-        {gameStatus === "lost" && <h3>Answer was: {answer}</h3>}
-        {gameStatus === "invalid" && <h3>Not in the words list</h3>}
+        {isGameLost && <h3>Answer was: {gameState.answer}</h3>}
+        {isGameWon && <h3>You won!</h3>}
+        {gameState.isInvalidGuess && <p>Not in word list</p>}
         {isGameOver && <button onClick={onPlayAgain}>Play again</button>}
       </div>
 
       <div>
-        {Array.from({ length: 6 }, (_, r) => {
-          const isActiveGuess = r === submittedGuesses.length;
-          const isInvalidGuess = isActiveGuess && gameStatus === "invalid";
-          const isSubmittedGuess = r < submittedGuesses.length;
-          const guessScore = isSubmittedGuess
-            ? scoreGuess(submittedGuesses[r])
+        {Array.from({ length: MAX_GUESSES }, (_, r) => {
+          const isActiveGuess = r === gameState.submitted.length;
+          const isInvalidGuess = gameState.isInvalidGuess && isActiveGuess;
+          const isSubmittedGuess = r < gameState.submitted.length;
+          const submittedGuessScore = isSubmittedGuess
+            ? scoreGuess(gameState.submitted[r], gameState.answer)
             : undefined;
 
           return (
             <div
               key={r}
               className={`${styles.row} ${isInvalidGuess ? styles.invalidRow : ""}`}
-              onAnimationEnd={() => {
-                setGameStatus(undefined);
-              }}
+              // clear the flag when the shake ends, so the next invalid Enter shakes again
+              onAnimationEnd={() => dispatch({ type: "CLEAR_INVALID" })}
             >
               {Array.from({ length: 5 }, (_, c) => {
                 const char = isActiveGuess
-                  ? currentGuess?.[c]
+                  ? gameState.guess[c]
                   : isSubmittedGuess
-                    ? submittedGuesses[r][c]
+                    ? gameState.submitted[r][c]
                     : "";
 
                 return (
                   <div
                     key={`${r}:${c}`}
-                    className={`${styles.cell} ${guessScore ? styles[guessScore[c]] : ""}`}
+                    className={`${styles.cell} ${submittedGuessScore ? styles[submittedGuessScore[c]] : ""}`}
                   >
                     {char}
                   </div>
