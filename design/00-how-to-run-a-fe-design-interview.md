@@ -6,14 +6,14 @@ The round is about **frontend architecture**: components, state, data flow, and 
 
 ## The 60-minute shape
 
-| Time | Step | What you put on the whiteboard |
-| --- | --- | --- |
-| 0–5 | **Requirements** | Functional list (what users do), non-functional list (perf, offline, a11y, devices, scale). Mark what's in and out of scope. |
-| 5–15 | **Architecture** | Box diagram: views/components, a client store, a data/sync layer, the server API. Arrows labeled with what flows. |
-| 15–25 | **Data model** | Client state shape: server entities (normalized), UI state, where each piece lives. |
-| 25–35 | **API (interface)** | Endpoints, methods, request/response bodies, pagination, errors, real-time channel. |
-| 35–55 | **Deep dives** | 2–3 of: performance, offline/sync, optimistic updates, real-time, caching, a11y, error handling, extensibility. Let the interviewer pick, or propose the riskiest ones. |
-| 55–60 | **Wrap-up** | What you'd do next, what you traded off, how you'd measure success. |
+| Time  | Step                | What you put on the whiteboard                                                                                                                                          |
+| ----- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0–5   | **Requirements**    | Functional list (what users do), non-functional list (perf, offline, a11y, devices, scale). Mark what's in and out of scope.                                            |
+| 5–15  | **Architecture**    | Box diagram: views/components, a client store, a data/sync layer, the server API. Arrows labeled with what flows.                                                       |
+| 15–25 | **Data model**      | Client state shape: server entities (normalized), UI state, where each piece lives.                                                                                     |
+| 25–35 | **API (interface)** | Endpoints, methods, request/response bodies, pagination, errors, real-time channel.                                                                                     |
+| 35–55 | **Deep dives**      | 2–3 of: performance, offline/sync, optimistic updates, real-time, caching, a11y, error handling, extensibility. Let the interviewer pick, or propose the riskiest ones. |
+| 55–60 | **Wrap-up**         | What you'd do next, what you traded off, how you'd measure success.                                                                                                     |
 
 At the start, **ask whether they want a diagram, code, or both** for the practical part.
 
@@ -65,19 +65,19 @@ Name each box's **single responsibility**. That one sentence is what "separation
 
 ## Deep-dive menu (have 2 sentences ready on each)
 
-| Topic | Things to say |
-| --- | --- |
-| Rendering | CSR vs SSR vs SSG vs streaming; hydration cost; code splitting per route |
-| Long lists | Virtualization (window of ~20 rows), stable keys, measured vs fixed row heights |
-| Images | `srcset`/responsive sizes, lazy loading, blur placeholders, CDN, aspect-ratio boxes to avoid layout shift |
-| Caching | HTTP cache headers, in-memory cache with TTL, stale-while-revalidate, request dedupe, cache invalidation on mutation |
-| Optimistic updates | Apply locally, send, roll back the *specific* change on failure; temp ids → server ids |
-| Offline | IndexedDB as the local source of truth, outbox queue of mutations, replay on reconnect, conflict resolution (last-write-wins vs merge) |
-| Real-time | Reconnect with backoff + jitter, resubscribe, catch up missed events via a cursor/sequence number, dedupe |
-| Perf metrics | LCP, INP, CLS; bundle size budgets; measuring in the field (RUM) |
-| Accessibility | Semantic elements, focus management, roving tabindex, `aria-live` for async updates, keyboard shortcuts that don't fight screen readers |
-| Security | XSS (never `dangerouslySetInnerHTML` user content without sanitizing), CSRF, tokens in httpOnly cookies |
-| Extensibility | Plugin/registry patterns, feature flags, strategy objects instead of `switch` sprawl (see `oop-solid-patterns.md`) |
+| Topic              | Things to say                                                                                                                           |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Rendering          | CSR vs SSR vs SSG vs streaming; hydration cost; code splitting per route                                                                |
+| Long lists         | Virtualization (window of ~20 rows), stable keys, measured vs fixed row heights                                                         |
+| Images             | `srcset`/responsive sizes, lazy loading, blur placeholders, CDN, aspect-ratio boxes to avoid layout shift                               |
+| Caching            | HTTP cache headers, in-memory cache with TTL, stale-while-revalidate, request dedupe, cache invalidation on mutation                    |
+| Optimistic updates | Apply locally, send, roll back the _specific_ change on failure; temp ids → server ids                                                  |
+| Offline            | IndexedDB as the local source of truth, outbox queue of mutations, replay on reconnect, conflict resolution (last-write-wins vs merge)  |
+| Real-time          | Reconnect with backoff + jitter, resubscribe, catch up missed events via a cursor/sequence number, dedupe                               |
+| Perf metrics       | LCP, INP, CLS; bundle size budgets; measuring in the field (RUM)                                                                        |
+| Accessibility      | Semantic elements, focus management, roving tabindex, `aria-live` for async updates, keyboard shortcuts that don't fight screen readers |
+| Security           | XSS (never `dangerouslySetInnerHTML` user content without sanitizing), CSRF, tokens in httpOnly cookies                                 |
+| Extensibility      | Plugin/registry patterns, feature flags, strategy objects instead of `switch` sprawl (see `oop-solid-patterns.md`)                      |
 
 ## Signals interviewers grade
 

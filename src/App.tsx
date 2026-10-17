@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { Wordle } from "./wordle/Wordle";
+import { Part1ListAndCursor } from "./inbox-triage/Part1ListAndCursor";
 
 function App() {
   return (
     <div className={styles.app}>
-      <Wordle />
+      <Part1ListAndCursor />
     </div>
   );
 }

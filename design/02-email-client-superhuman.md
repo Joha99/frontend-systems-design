@@ -19,25 +19,25 @@
 - How big are mailboxes? (Assume 100k threads; the client can't hold them all.)
 - Desktop app (Electron) or browser? (Decides storage limits and background sync.)
 - "Instant": what's the target? (Assume every keyboard action reflects in < 50 ms; never block on the network.)
-- Search: across all mail (server) or just what's loaded (client)?
+  -b Search: across all mail (server) or just what's loaded (client)?
 - Multiple tabs / devices at once?
 
 ## Assumptions to use if the interviewer says "you decide"
 
-| | |
-| --- | --- |
-| Mailbox | 100k threads; client keeps the most recent ~5k threads + bodies for the last 30 days locally |
-| Platform | Desktop web / Electron; IndexedDB available (hundreds of MB) |
-| Backend | Our API syncs with Gmail/Outlook and exposes a uniform thread/message model |
-| Real-time | Server pushes changes over a WebSocket with a monotonically increasing `seq` |
-| Latency goal | UI action < 50 ms; next-thread open < 100 ms (prefetched) |
+|              |                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| Mailbox      | 100k threads; client keeps the most recent ~5k threads + bodies for the last 30 days locally |
+| Platform     | Desktop web / Electron; IndexedDB available (hundreds of MB)                                 |
+| Backend      | Our API syncs with Gmail/Outlook and exposes a uniform thread/message model                  |
+| Real-time    | Server pushes changes over a WebSocket with a monotonically increasing `seq`                 |
+| Latency goal | UI action < 50 ms; next-thread open < 100 ms (prefetched)                                    |
 
 ## What to produce
 
 1. **Requirements**, with keyboard-first and "never wait on the network" stated as non-functional requirements.
 2. **Architecture**, with these boxes at minimum:
    - **Views**: `ThreadList`, `ReadingPane`, `Composer`, `CommandPalette`, `UndoToast`.
-   - **Keyboard layer**: a shortcut registry (`e` archive, `j/k` move, `r` reply, `cmd+k` palette) that maps keys → *commands*. It is context-aware (the composer swallows letters).
+   - **Keyboard layer**: a shortcut registry (`e` archive, `j/k` move, `r` reply, `cmd+k` palette) that maps keys → _commands_. It is context-aware (the composer swallows letters).
    - **Command layer**: every user action is a command object with `apply()` (local, instant) and `send()` (server), and an `invert()` for undo.
    - **Local store**: normalized threads/messages/labels in memory, persisted to IndexedDB.
    - **Sync engine**: the outbox queue (pending mutations) + the inbound change stream.
@@ -75,8 +75,8 @@
 
 ## Part 2: offline
 
-- **Local source of truth:** the UI reads only from the local store. The network only *updates* the store. That's what makes offline "free".
-- **Outbox:** mutations persist to IndexedDB *before* being applied, so a crash doesn't lose them. Replay in order on reconnect. Coalesce (archive then unarchive the same thread → drop both).
+- **Local source of truth:** the UI reads only from the local store. The network only _updates_ the store. That's what makes offline "free".
+- **Outbox:** mutations persist to IndexedDB _before_ being applied, so a crash doesn't lose them. Replay in order on reconnect. Coalesce (archive then unarchive the same thread → drop both).
 - **Sending offline:** the message shows in "Outbox" with a pending style. It sends on reconnect with its idempotency key, so a retry after a timeout can't double-send.
 - **Conflicts:** you archived offline; meanwhile on your phone you labeled it. `baseVersion` lets the server detect it. Strategy: per-field merge for labels (set operations commute), last-write-wins for read state. Say what you'd show the user, if anything.
 - **Catch-up:** on reconnect, open the change stream with `since=<last seq>`; if the server says the gap is too old, re-fetch the views instead.
@@ -92,6 +92,7 @@
 ## Self-grading rubric
 
 **Strong signals**
+
 - Every action goes through one command layer (apply locally → queue → sync), which makes undo, offline, and shortcuts fall out naturally.
 - The UI reads from the local store only; the network writes into it.
 - Concrete outbox: persistence, ordering, coalescing, idempotency, retries with backoff.
@@ -100,6 +101,7 @@
 - Undo-send explained correctly as a delayed send.
 
 **Weak signals**
+
 - Components call `fetch` directly and wait for responses.
 - "Offline: use a service worker" with no data/sync design.
 - Undo implemented as "call the server's undo endpoint".

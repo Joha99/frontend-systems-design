@@ -131,6 +131,15 @@ Interview-style prompts in `design/`, for the Superhuman FE system design round.
 |        | Extend an existing system: snooze, send later, reminders  | `design/06-extend-send-later-snooze.md`      | 45 min |
 |        | Reference: OOP, SOLID and design patterns for frontend    | `design/oop-solid-patterns.md`               | —      |
 
+## Scroll Drills (small, ~30 min each)
+
+Quick refreshers for the two scrolling patterns that come up in feed and inbox questions. Mock API in `src/scroll-drills/mockApi.ts`.
+
+| Status | Drill | Path | Key Skills |
+| ------ | ----- | ---- | ---------- |
+|        | Infinite scroll with a cursor | `src/scroll-drills/InfiniteScroll.tsx` | IntersectionObserver sentinel, `nextCursor`, one request at a time, end of feed, retry, dedupe by id |
+|        | Virtual list (10,000 rows) | `src/scroll-drills/VirtualList.tsx` | scrollTop → visible range, spacer height, absolute positioning, overscan |
+
 ## Patterns (OOP / SOLID, test-graded)
 
 Plain-TypeScript exercises in `src/patterns/`, graded with `npm run test:patterns`. See `src/patterns/README.md`.

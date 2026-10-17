@@ -1,0 +1,45 @@
+.splitContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.scrollable {
+  height: 600px;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  inline-size: 800px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.openThreadPanel {
+  height: 600px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.thread {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  align-items: center;
+  min-block-size: 40px;
+  border-bottom: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.cursorRow {
+  border: 2px solid blue;
+}
+
+.read {
+  background-color: #edecec;
+}
