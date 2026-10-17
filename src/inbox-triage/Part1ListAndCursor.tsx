@@ -156,8 +156,10 @@ export const Part1ListAndCursor = () => {
         }
       })
       .catch((err) => {
-        console.error(err);
-        fetchStatusRef.current = "failure";
+        if (!ignore) {
+          console.error(err);
+          fetchStatusRef.current = "failure";
+        }
       });
 
     return () => {
