@@ -29,7 +29,7 @@
 
 .thread {
   display: grid;
-  grid-template-columns: 1fr 3fr 1fr;
+  grid-template-columns: 30px 1fr 3fr 1fr;
   align-items: center;
   min-block-size: 40px;
   border-bottom: 1px solid #ccc;
@@ -42,4 +42,12 @@
 
 .read {
   background-color: #edecec;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 6px;
+  padding-block: 4px;
 }
