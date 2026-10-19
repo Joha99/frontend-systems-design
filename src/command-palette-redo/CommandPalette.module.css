@@ -1,0 +1,67 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.316);
+}
+
+.palette {
+  background-color: white;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 70%;
+  height: 70%;
+  overflow: hidden;
+}
+
+.header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #ccc;
+}
+
+.body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.input {
+  border: 1px solid #ababab;
+  border-radius: 20px;
+  padding: 4px 6px;
+}
+
+.ul {
+  list-style-type: none;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  overflow: scroll;
+  margin: 0;
+  padding: 0;
+
+  & > li {
+    padding: 4px 6px;
+  }
+
+  & > li:not(:last-child) {
+    border-bottom: 1px solid #ccc;
+  }
+}
+
+.outside-btn {
+  background-color: lightgreen;
+  border-radius: 20px;
+  padding: 8px 12px;
+}
+
+.label {
+  color: #2c2c2c;
+  font-size: 14px;
+}
