@@ -129,6 +129,7 @@ Interview-style prompts in `design/`, for the Superhuman FE system design round.
 |        | Reusable typeahead component (+ performance)              | `design/04-typeahead-search.md`              | 45 min |
 |        | Collaborative doc with anchored comments                  | `design/05-collaborative-doc-comments.md`    | 60 min |
 |        | Extend an existing system: snooze, send later, reminders  | `design/06-extend-send-later-snooze.md`      | 45 min |
+|        | Collaborative design canvas (Figma-style)                 | `design/07-figma-canvas.md`                  | 60 min |
 |        | Reference: OOP, SOLID and design patterns for frontend    | `design/oop-solid-patterns.md`               | —      |
 
 ## Scroll Drills (small, ~30 min each)
