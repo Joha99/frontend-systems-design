@@ -41,8 +41,8 @@
   list-style-type: none;
   width: 100%;
   border: 1px solid #ccc;
-  border-radius: 15px;
-  overflow: scroll;
+  border-radius: 5px;
+  /* overflow: scroll; */
   margin: 0;
   padding: 0;
 
@@ -63,5 +63,17 @@
 
 .label {
   color: #2c2c2c;
-  font-size: 14px;
+  font-size: 12px;
+}
+
+.count {
+  color: #2c2c2c;
+  font-size: 12px;
+  padding-block: 6px;
+  padding-inline: 4px;
+  border-bottom: 1px solid #ccc;
+}
+
+.focused {
+  outline: 2px solid blue;
 }

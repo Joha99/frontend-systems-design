@@ -35,3 +35,15 @@ Read this before every design rep. Fix these first.
    - this is needed to show the correct loading and error states to the user
 2. when designing API endpoints, create separate endpoints if sending more than one at the same time could potentially overwrite the most up to date state with a outdated state
 3.
+
+## Chat / WhatsApp (Tue Oct 20, Hello Interview + follow-ups)
+
+**Strong:** measurable requirements, client-generated id used for rendering + idempotency + dedupe, retries with the same key and backoff + jitter, a real WebSocket trade-off, debounced like toggles, "new messages ↓" pill.
+
+1. **No real-time protocol in the API.** Listed REST endpoints only; no WebSocket events (`message.created`, `message.updated`, `typing`, `resume since=seq`) and no heartbeat.
+   - _Next time:_ when you pick WebSocket, write its events next to the REST endpoints.
+2. **Reconnect mixed up three things:** detecting the drop (close/offline/heartbeat), reconnecting (backoff + jitter, never give up), and catching up (`since=seq`, all event types, gap detection, "too far behind" → refetch). Unsent messages must be resent from the outbox.
+3. **Data model put per-user and pagination state on shared entities** (`lastReadId`, `unreadMessagesCount`, `nextCursor`, `messageIds` on Chat), had `replies` lists on messages, and no `chatId`/`seq` on Message.
+   - _Next time:_ entity = what the server stores for everyone; per-user state and loaded-list state live in separate client tables.
+4. **REST shape:** message ids in request bodies (PATCH/DELETE `/chats/:id/messages`), DELETE with a body, "delete chat" pointing at a message path, read state mixed into "like".
+   - _Next time:_ act on one item with `/messages/:id`; nest only to list or create.

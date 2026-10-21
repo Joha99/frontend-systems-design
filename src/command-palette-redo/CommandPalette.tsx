@@ -21,7 +21,14 @@
  *
  */
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import styles from "./CommandPalette.module.css";
 
 type Command = {
@@ -42,51 +49,75 @@ const COMMANDS: Command[] = [
 ];
 
 export function CommandPalette() {
+  const [active, setActive] = useState<number>(0);
   const [open, setOpen] = useState<boolean>(false);
-  const [selected, setSelected] = useState<string>();
-  const [searchValue, setSearchValue] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [selected, setSelected] = useState<Command>();
+
+  const prevActiveEl = useRef<Element>(null);
+
+  const filteredResults = COMMANDS.filter((command) => {
+    return command.name.toLowerCase().includes(searchInput.toLowerCase());
+  });
+
+  const hasNoResults = searchInput !== "" && filteredResults.length === 0;
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      console.log("e.key", e.key);
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault(); // this typically focuses browser's own search bar
+        e.preventDefault();
         if (open) {
-          resetPalette();
+          resetStates();
         } else {
+          prevActiveEl.current = document.activeElement;
           setOpen(true);
         }
-      } else if (e.key === "Escape") {
-        resetPalette();
+      } else if (e.key === "Escape" && open) {
+        resetStates();
       }
     };
-
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [open]);
 
-  const resetPalette = () => {
-    setSearchValue("");
+  const resetStates = () => {
     setOpen(false);
+    setActive(0);
+    setSearchInput("");
+
+    if (prevActiveEl.current) {
+      (prevActiveEl.current as HTMLElement).focus();
+    }
   };
 
-  const onSelectCommand = (command: Command) => {
-    setSelected(command.name);
-    resetPalette();
+  const onInputKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (hasNoResults) {
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((prev) => (prev + 1) % filteredResults.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive(
+        (prev) => (prev - 1 + filteredResults.length) % filteredResults.length,
+      );
+    } else if (e.key === "Enter") {
+      setSelected(filteredResults[active]);
+      resetStates();
+    }
   };
 
-  const filteredList = COMMANDS.filter((command) => {
-    return command.name.toLowerCase().includes(searchValue.toLowerCase());
-  });
-
-  const hasNoResults = searchValue !== "" && filteredList.length === 0;
+  const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setActive(0);
+    setSearchInput(e.currentTarget.value);
+  };
 
   return (
     <div>
       <h2>Command palette</h2>
-
-      {selected && <p>Last command: {selected}</p>}
-
+      {selected && <p>Last command: {selected.name}</p>}
       <button className={styles["outside-btn"]}>
         Has focus before palette opens
       </button>
@@ -94,9 +125,8 @@ export function CommandPalette() {
       {open && (
         <div
           onClick={(e) => {
-            // if clicked in the overlay and not inside the palette
             if (e.target === e.currentTarget) {
-              resetPalette();
+              resetStates();
             }
           }}
           className={styles.overlay}
@@ -117,28 +147,41 @@ export function CommandPalette() {
               </label>
               <input
                 id="search-input"
+                role="combobox"
+                aria-expanded={!hasNoResults}
+                aria-controls="list"
+                aria-activedescendant={
+                  filteredResults.length > 0
+                    ? filteredResults[active].id
+                    : undefined
+                }
                 type="text"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.currentTarget.value)}
+                value={searchInput}
                 className={styles.input}
                 autoFocus={true}
+                onChange={onInputChange}
+                onKeyDown={onInputKeyDown}
               />
 
               {hasNoResults ? (
                 <p>No commands found.</p>
               ) : (
-                <ul className={styles.ul}>
-                  {filteredList.map((command) => {
+                <ul className={styles.ul} role="listbox" id="list">
+                  {filteredResults.map((command, i) => {
+                    const isFocused = active === i;
+
                     return (
                       <li
+                        id={command.id}
+                        role="option"
+                        aria-selected={isFocused}
                         key={command.id}
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            onSelectCommand(command);
-                          }
+                        className={`${isFocused ? styles.focused : ""}`}
+                        onMouseEnter={() => setActive(i)}
+                        onClick={() => {
+                          setSelected(filteredResults[i]);
+                          resetStates();
                         }}
-                        onClick={() => onSelectCommand(command)}
                       >
                         {command.name}{" "}
                         {command.shortcut && `(${command.shortcut})`}
