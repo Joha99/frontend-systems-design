@@ -47,3 +47,13 @@ Read this before every design rep. Fix these first.
    - _Next time:_ entity = what the server stores for everyone; per-user state and loaded-list state live in separate client tables.
 4. **REST shape:** message ids in request bodies (PATCH/DELETE `/chats/:id/messages`), DELETE with a body, "delete chat" pointing at a message path, read state mixed into "like".
    - _Next time:_ act on one item with `/messages/:id`; nest only to list or create.
+
+## design/07 Figma (Wed Oct 21)
+
+**Strong:** world vs screen coordinates, measurable 60fps/200ms targets, presence as ephemeral (throttled cursors, selection as ids, heartbeat, rooms), canvas vs DOM with real reasons, ops applied locally → ack (not echo), render-time virtualization, parentId + ordered children.
+
+1. **Entity still nested + one shape for every type.** `children: Node[]` on Node while the store is normalized; text fields nullable on every node; `image` type missing; no `name` for the layers panel.
+   - _Next time:_ entity = flat with `parentId` + order; per-type fields via a union on `type`.
+2. **Real-time protocol only in prose again.** Events (join/snapshot, op, ack, presence, resume, ping) belong in the API section with shapes, plus a client op id for acks and safe resends.
+3. **Undo history too thin:** only an inverse patch (redo needs the forward one), create/delete must store the whole node + parent + index, and one user action can touch many nodes (one stack entry = a group).
+4. **Conflict rule not stated.** Say it: server orders ops, last write wins per property, keep your pending value until acked.

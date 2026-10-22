@@ -96,6 +96,15 @@ Complex problems split into 30–45 minute parts. Each part is its own component
 |        | 3. Keyboard grid + moving events | `Part3KeyboardGrid.tsx`   | roving tabindex over a 2D grid, keyboard move/resize |
 |        | 4. Create events + server sync   | `Part4CreateAndSync.tsx`  | optimistic CRUD, temp ids, debounced saves           |
 
+### Mini Figma (`src/mini-figma/`)
+
+| Status | Part                              | File                        | Key Skills                                                  |
+| ------ | --------------------------------- | --------------------------- | ----------------------------------------------------------- |
+|        | 1. Draw rectangles                | `Part1DrawShapes.tsx`       | SVG, pointer drag, normalized shapes + order, tool state    |
+|        | 2. Select, move + layers panel    | `Part2SelectMoveLayers.tsx` | hit testing (top wins), drag offset, window listeners, a11y |
+|        | 3. Properties panel + layer order | `Part3PropertiesPanel.tsx`  | two-way sync, draft input state, validation, z-order ops    |
+|        | 4. Undo / redo                    | `Part4UndoRedo.tsx`         | operation layer, inverse ops, one step per drag/edit        |
+
 ### File Browser with Grouping (`src/file-grouping/`)
 
 | Status | Part                         | File                    | Key Skills                                                       |
@@ -130,6 +139,7 @@ Interview-style prompts in `design/`, for the Superhuman FE system design round.
 |        | Collaborative doc with anchored comments                  | `design/05-collaborative-doc-comments.md`    | 60 min |
 |        | Extend an existing system: snooze, send later, reminders  | `design/06-extend-send-later-snooze.md`      | 45 min |
 |        | Collaborative design canvas (Figma-style)                 | `design/07-figma-canvas.md`                  | 60 min |
+|        | AI phone agent booking appointments (Assort-style)        | `design/08-assort-ai-scheduling-agent.md`    | 60 min |
 |        | Reference: OOP, SOLID and design patterns for frontend    | `design/oop-solid-patterns.md`               | —      |
 
 ## Scroll Drills (small, ~30 min each)
