@@ -28,7 +28,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./Figma.module.css";
 
-let nextId = 0;
+let nextId = 1;
 
 type Tool = "select" | "rectangle";
 
@@ -60,16 +60,10 @@ export const Part1DrawShapes = () => {
     const onMouseMove = (e: MouseEvent) => {
       if (!canvasRef.current) return;
 
-      const canvasRect = canvasRef.current.getBoundingClientRect();
-      const isInBounds = isWithinCanvas(e.clientX, e.clientY);
-
-      if (!isInBounds) {
-        setCursor(undefined);
-        return;
-      }
-
-      const xInCanvas = e.clientX - canvasRect.left;
-      const yInCanvas = e.clientY - canvasRect.top;
+      const { xInCanvas, yInCanvas } = clampCoordinateToCanvas(
+        e.clientX,
+        e.clientY,
+      );
 
       const isCreatingNewRect = interaction && interaction.shapeId === null;
       const isDragging = interaction && interaction.shapeId !== null;
@@ -85,37 +79,16 @@ export const Part1DrawShapes = () => {
           offsetX: xInCanvas - interaction.startX,
           offsetY: yInCanvas - interaction.startY,
         });
-
-        // console.log(
-        //   "startX",
-        //   Math.min(xInCanvas, interaction.startX),
-        //   "startY",
-        //   Math.min(yInCanvas, interaction.startY),
-        //   "offsetX",
-        //   Math.abs(xInCanvas - interaction.startX),
-        //   "offsetY",
-        //   Math.abs(yInCanvas - interaction.startY),
-        // );
-        // setInteraction({
-        //   shapeId: null,
-        //   startX: Math.min(xInCanvas, interaction.startX),
-        //   startY: Math.min(yInCanvas, interaction.startY),
-        //   offsetX: Math.abs(xInCanvas - interaction.startX),
-        //   offsetY: Math.abs(yInCanvas - interaction.startY),
-        // });
       }
     };
 
     const onMouseDown = (e: MouseEvent) => {
       if (!canvasRef.current) return;
 
-      const canvasRect = canvasRef.current.getBoundingClientRect();
-      const isInBounds = isWithinCanvas(e.clientX, e.clientY);
-
-      if (!isInBounds) return;
-
-      const xInCanvas = e.clientX - canvasRect.left;
-      const yInCanvas = e.clientY - canvasRect.top;
+      const { xInCanvas, yInCanvas } = clampCoordinateToCanvas(
+        e.clientX,
+        e.clientY,
+      );
 
       if (activeTool === "rectangle") {
         setInteraction({
@@ -144,35 +117,29 @@ export const Part1DrawShapes = () => {
     const onMouseUp = (e: MouseEvent) => {
       if (!canvasRef.current) return;
 
-      const isInBounds = isWithinCanvas(e.clientX, e.clientY);
+      if (interaction && interaction.shapeId === null) {
+        const newShapes = { ...shapes };
+        newShapes[nextId] = {
+          id: nextId,
+          x: Math.min(
+            interaction.startX + interaction.offsetX,
+            interaction.startX,
+          ),
+          y: Math.min(
+            interaction.startY + interaction.offsetY,
+            interaction.startY,
+          ),
+          width: Math.abs(interaction.offsetX),
+          height: Math.abs(interaction.offsetY),
+        };
 
-      if (!isInBounds) return;
-
-      if (interaction && !interaction.shapeId) {
-        setShapes((prev) => ({
-          ...prev,
-          [nextId]: {
-            id: nextId,
-            x: Math.min(
-              interaction.startX + interaction.offsetX,
-              interaction.startX,
-            ),
-            y: Math.min(
-              interaction.startY + interaction.offsetY,
-              interaction.startY,
-            ),
-            width: Math.abs(interaction.offsetX),
-            height: Math.abs(interaction.offsetY),
-          },
-        }));
+        setShapes(newShapes);
         setInteraction(undefined);
         nextId++;
         return;
       }
-      // check if any existing shapes are intersecting with the cursor
-      // if so, start drag
 
-      if (activeTool === "select" && interaction && interaction.shapeId) {
+      if (interaction && interaction.shapeId !== null) {
         const newShapes = { ...shapes };
         const draggedShape = shapes[interaction.shapeId];
 
@@ -198,16 +165,34 @@ export const Part1DrawShapes = () => {
     };
   }, [activeTool, interaction, shapes]);
 
+  const clampCoordinateToCanvas = (clientX: number, clientY: number) => {
+    const canvasRect = canvasRef.current!.getBoundingClientRect();
+
+    const xInCanvas = Math.min(
+      canvasRect.width,
+      Math.max(0, clientX - canvasRect.left),
+    );
+    const yInCanvas = Math.min(
+      canvasRect.height,
+      Math.max(0, clientY - canvasRect.top),
+    );
+
+    return {
+      xInCanvas,
+      yInCanvas,
+    };
+  };
+
   const isWithinCanvas = (x: number, y: number) => {
     if (!canvasRef.current) return false;
 
     const canvasRect = canvasRef.current.getBoundingClientRect();
 
     return (
-      x >= canvasRect!.left &&
-      x <= canvasRect!.right &&
-      y >= canvasRect!.top &&
-      y <= canvasRect!.bottom
+      x > canvasRect!.left &&
+      x < canvasRect!.right &&
+      y > canvasRect!.top &&
+      y < canvasRect!.bottom
     );
   };
 
