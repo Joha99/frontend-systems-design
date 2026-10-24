@@ -57,3 +57,14 @@ Read this before every design rep. Fix these first.
 2. **Real-time protocol only in prose again.** Events (join/snapshot, op, ack, presence, resume, ping) belong in the API section with shapes, plus a client op id for acks and safe resends.
 3. **Undo history too thin:** only an inverse patch (redo needs the forward one), create/delete must store the whole node + parent + index, and one user action can touch many nodes (one stack entry = a group).
 4. **Conflict rule not stated.** Say it: server orders ops, last write wins per property, keep your pending value until acked.
+
+## design/05 collaborative doc (Fri Oct 23)
+
+**Strong:** CRDT vs OT reasoning, SSE vs WebSocket, two-way sync on rejoin, DocumentMember, relative-position anchors, comment deep dive (drift, deleted text → quotedText, overlaps, sidebar layout + virtualization).
+
+1. **Copied Figma's version-based pieces into a CRDT design** (`version`, `lastAppliedVersion`, ops with offsets, `too_far_behind`, per-property undo).
+   - _Next time:_ CRDT = state vector + one opaque `update`; the library owns sync, pending text changes and undo.
+2. **Two copies of the document** (blocks in the store + text in the CRDT).
+   - _Next time:_ "would it print?" → inside the CRDT; everything else (comments, presence, roles, UI) → store.
+3. **Prompt's Part 2 (comment anchors) wasn't a deep dive at first.** Always deep-dive what the prompt names explicitly.
+4. **Requirements without design** (formatting, media, undo) and no V1 cut / empty components.

@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { CommandPalette } from "./command-palette-redo/CommandPalette";
+import { Part1DrawShapes } from "./mini-figma/Part1DrawShapes";
 
 function App() {
   return (
     <div className={styles.app}>
-      <CommandPalette />
+      <Part1DrawShapes />
     </div>
   );
 }

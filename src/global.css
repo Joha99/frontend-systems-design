@@ -35,7 +35,8 @@ p {
 button {
   background-color: transparent;
   cursor: pointer;
-  border: none;
+  border: 1px solid #ccc;
+  border-radius: 10px;
 
   &:disabled {
     cursor: not-allowed;
