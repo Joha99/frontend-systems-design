@@ -56,12 +56,6 @@ export const Part1DrawShapes = () => {
 
   const canvasRef = useRef<SVGSVGElement>(null);
 
-  // Show shapes from the state (no mouse yet)
-  // Find the mouse position inside the canvas
-  // Mouse down: start a draft
-  // Mouse move: grow the draft (the dashed preview)
-  // Mouse up: turn the draft into a real shape
-
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!canvasRef.current) return;
@@ -77,9 +71,8 @@ export const Part1DrawShapes = () => {
       const xInCanvas = e.clientX - canvasRect.left;
       const yInCanvas = e.clientY - canvasRect.top;
 
-      const isCreatingNewRect =
-        interaction && interaction.shapeId === undefined;
-      const isDragging = interaction && interaction.shapeId !== undefined;
+      const isCreatingNewRect = interaction && interaction.shapeId === null;
+      const isDragging = interaction && interaction.shapeId !== null;
 
       setCursor({
         x: xInCanvas,
@@ -92,6 +85,24 @@ export const Part1DrawShapes = () => {
           offsetX: xInCanvas - interaction.startX,
           offsetY: yInCanvas - interaction.startY,
         });
+
+        // console.log(
+        //   "startX",
+        //   Math.min(xInCanvas, interaction.startX),
+        //   "startY",
+        //   Math.min(yInCanvas, interaction.startY),
+        //   "offsetX",
+        //   Math.abs(xInCanvas - interaction.startX),
+        //   "offsetY",
+        //   Math.abs(yInCanvas - interaction.startY),
+        // );
+        // setInteraction({
+        //   shapeId: null,
+        //   startX: Math.min(xInCanvas, interaction.startX),
+        //   startY: Math.min(yInCanvas, interaction.startY),
+        //   offsetX: Math.abs(xInCanvas - interaction.startX),
+        //   offsetY: Math.abs(yInCanvas - interaction.startY),
+        // });
       }
     };
 
@@ -137,15 +148,21 @@ export const Part1DrawShapes = () => {
 
       if (!isInBounds) return;
 
-      if (activeTool === "rectangle" && interaction) {
+      if (interaction && !interaction.shapeId) {
         setShapes((prev) => ({
           ...prev,
           [nextId]: {
             id: nextId,
-            x: interaction.startX,
-            y: interaction.startY,
-            width: interaction.offsetX,
-            height: interaction.offsetY,
+            x: Math.min(
+              interaction.startX + interaction.offsetX,
+              interaction.startX,
+            ),
+            y: Math.min(
+              interaction.startY + interaction.offsetY,
+              interaction.startY,
+            ),
+            width: Math.abs(interaction.offsetX),
+            height: Math.abs(interaction.offsetY),
           },
         }));
         setInteraction(undefined);
@@ -261,10 +278,18 @@ export const Part1DrawShapes = () => {
         {/* New rectangle being created */}
         {isCreatingNewRect && (
           <rect
-            x={interaction.startX}
-            y={interaction.startY}
-            width={interaction.offsetX}
-            height={interaction.offsetY}
+            x={
+              interaction.offsetX < 0
+                ? interaction.startX + interaction.offsetX
+                : interaction.startX
+            }
+            y={
+              interaction.offsetY < 0
+                ? interaction.startY + interaction.offsetY
+                : interaction.startY
+            }
+            width={Math.abs(interaction.offsetX)}
+            height={Math.abs(interaction.offsetY)}
             fill="none"
             stroke="grey"
             strokeWidth={1}
