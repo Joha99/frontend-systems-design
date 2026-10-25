@@ -68,3 +68,14 @@ Read this before every design rep. Fix these first.
    - _Next time:_ "would it print?" → inside the CRDT; everything else (comments, presence, roles, UI) → store.
 3. **Prompt's Part 2 (comment anchors) wasn't a deep dive at first.** Always deep-dive what the prompt names explicitly.
 4. **Requirements without design** (formatting, media, undo) and no V1 cut / empty components.
+
+## Slack-style chat mock, live with Claude (Sat Oct 24)
+
+**Strong:** one socket per user; per-channel seq for order + catch-up (edits/deletes get one, read state doesn't); client id + opId + outbox; unread derived from lastReadSeq on memberships + cross-tab `read`; reconnect = summaries for all channels, replay the open one, mark the rest stale; virtualization (estimate → measure → correct scroll, sliding window).
+
+**Say these WITHOUT being asked next time:**
+1. Ask about **scale and usage** (members, channels per user, message rate, devices/tabs), not just features.
+2. Draw **data flow** first: components → store → sync layer (socket + HTTP + outbox) → server. Components never touch the network; reads = selectors, writes = actions.
+3. Send flow up front: optimistic insert with client id + status, opId for acks/retries, outbox, offline = wait (not failed).
+4. **Drafts ≠ outbox** (drafts: own table, debounced to IndexedDB; Send moves it to the outbox). **opId ≠ messageId** (request vs thing).
+5. Summary: "decisions I'm proud of" = design decisions, not what I learned.

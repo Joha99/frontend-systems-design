@@ -117,6 +117,7 @@ export const Part1DrawShapes = () => {
     const onMouseUp = (e: MouseEvent) => {
       if (!canvasRef.current) return;
 
+      // New shape is added
       if (interaction && interaction.shapeId === null) {
         const newShapes = { ...shapes };
         newShapes[nextId] = {
@@ -135,10 +136,12 @@ export const Part1DrawShapes = () => {
 
         setShapes(newShapes);
         setInteraction(undefined);
+        setActiveTool("select");
         nextId++;
         return;
       }
 
+      // Shape was moved
       if (interaction && interaction.shapeId !== null) {
         const newShapes = { ...shapes };
         const draggedShape = shapes[interaction.shapeId];
@@ -283,7 +286,7 @@ export const Part1DrawShapes = () => {
         )}
 
         {/* Dragged rectable */}
-        {isDraggingRect && interaction.shapeId && (
+        {isDraggingRect && interaction.shapeId !== null && (
           <rect
             x={shapes[interaction.shapeId].x + interaction.offsetX}
             y={shapes[interaction.shapeId].y + interaction.offsetY}
