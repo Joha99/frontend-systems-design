@@ -97,41 +97,6 @@ export const Part2SelectMoveLayers = () => {
       }
     };
 
-    const onMouseDown = (e: MouseEvent) => {
-      if (!canvasRef.current) return;
-
-      const { xInCanvas, yInCanvas } = clampCoordinateToCanvas(
-        e.clientX,
-        e.clientY,
-      );
-
-      if (activeTool === "rectangle") {
-        setInteraction({
-          shapeId: null,
-          startX: xInCanvas,
-          startY: yInCanvas,
-          offsetX: 0,
-          offsetY: 0,
-        });
-        return;
-      }
-
-      const intersectingShape = getIntersectingShape(xInCanvas, yInCanvas);
-
-      if (intersectingShape !== null) {
-        setInteraction({
-          shapeId: intersectingShape.id,
-          startX: xInCanvas,
-          startY: yInCanvas,
-          offsetX: 0,
-          offsetY: 0,
-        });
-        setSelectedId(intersectingShape.id);
-      } else {
-        setSelectedId(undefined);
-      }
-    };
-
     const onMouseUp = (e: MouseEvent) => {
       if (!canvasRef.current) return;
 
@@ -184,23 +149,73 @@ export const Part2SelectMoveLayers = () => {
     };
 
     window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mouseup", onMouseUp);
 
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
     };
   }, [activeTool, interaction, shapes]);
 
   useEffect(() => {
-    const onKeyDown = () => {
-      // remove selected on escape or backspace
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (selectedId === undefined) return;
+
+      if (e.key === "Backspace" || e.key === "Delete") {
+        setShapes((prev) => {
+          const { [selectedId]: _, ...rest } = prev;
+          return rest;
+        });
+        setOrderIds((prev) => {
+          const newOrderIds = prev.filter((id) => id !== selectedId);
+          return newOrderIds;
+        });
+        setSelectedId(undefined);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        setSelectedId(undefined);
+      }
     };
+
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  });
+  }, [selectedId]);
+
+  // Drags can only start on the canvas, so mousedown lives on the svg.
+  const onCanvasMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!canvasRef.current) return;
+
+    const { xInCanvas, yInCanvas } = clampCoordinateToCanvas(
+      e.clientX,
+      e.clientY,
+    );
+
+    if (activeTool === "rectangle") {
+      setInteraction({
+        shapeId: null,
+        startX: xInCanvas,
+        startY: yInCanvas,
+        offsetX: 0,
+        offsetY: 0,
+      });
+      return;
+    }
+
+    const intersectingShape = getIntersectingShape(xInCanvas, yInCanvas);
+
+    if (intersectingShape !== null) {
+      setInteraction({
+        shapeId: intersectingShape.id,
+        startX: xInCanvas,
+        startY: yInCanvas,
+        offsetX: 0,
+        offsetY: 0,
+      });
+      setSelectedId(intersectingShape.id);
+    } else {
+      setSelectedId(undefined);
+    }
+  };
 
   const clampCoordinateToCanvas = (clientX: number, clientY: number) => {
     const canvasRect = canvasRef.current!.getBoundingClientRect();
@@ -322,59 +337,8 @@ export const Part2SelectMoveLayers = () => {
           xmlns="http://www.w3.org/2000/svg"
           className={styles.canvas}
           ref={canvasRef}
-          // onClick={(e) => {
-          //   const isInsideCanvas = isWithinCanvas(e.clientX, e.clientY);
-          //   if (isInsideCanvas && canvasRef.current) {
-          //     const coordinatesInCanvas = clampCoordinateToCanvas(
-          //       e.clientX,
-          //       e.clientY,
-          //     );
-          //     const intersectingShape = getIntersectingShape(
-          //       coordinatesInCanvas.xInCanvas,
-          //       coordinatesInCanvas.yInCanvas,
-          //     );
-          //     if (intersectingShape === null) {
-          //       setSelectedId(undefined);
-          //     }
-          //   }
-          // }}
+          onMouseDown={onCanvasMouseDown}
         >
-          {/* New rectangle being created */}
-          {isCreatingNewRect && (
-            <rect
-              x={
-                interaction.offsetX < 0
-                  ? interaction.startX + interaction.offsetX
-                  : interaction.startX
-              }
-              y={
-                interaction.offsetY < 0
-                  ? interaction.startY + interaction.offsetY
-                  : interaction.startY
-              }
-              width={Math.abs(interaction.offsetX)}
-              height={Math.abs(interaction.offsetY)}
-              fill="none"
-              stroke="grey"
-              strokeWidth={1}
-              strokeDasharray={2}
-            />
-          )}
-
-          {/* Dragged rectable */}
-          {isDraggingRect && interaction.shapeId !== null && (
-            <rect
-              x={shapes[interaction.shapeId].x + interaction.offsetX}
-              y={shapes[interaction.shapeId].y + interaction.offsetY}
-              width={shapes[interaction.shapeId].width}
-              height={shapes[interaction.shapeId].height}
-              fill={getRgbaFromChannel(shapes[interaction.shapeId].color, 0.15)}
-              stroke="blue"
-              strokeWidth={1}
-              strokeDasharray={2}
-            />
-          )}
-
           {/* Already created rectangles */}
           {orderIds.toReversed().map((id) => {
             const shape = shapes[id];
@@ -397,6 +361,42 @@ export const Part2SelectMoveLayers = () => {
               );
             }
           })}
+
+          {/* Dragged rectable */}
+          {isDraggingRect && interaction.shapeId !== null && (
+            <rect
+              x={shapes[interaction.shapeId].x + interaction.offsetX}
+              y={shapes[interaction.shapeId].y + interaction.offsetY}
+              width={shapes[interaction.shapeId].width}
+              height={shapes[interaction.shapeId].height}
+              fill={getRgbaFromChannel(shapes[interaction.shapeId].color, 0.15)}
+              stroke="blue"
+              strokeWidth={1}
+              strokeDasharray={2}
+            />
+          )}
+
+          {/* New rectangle being created */}
+          {isCreatingNewRect && (
+            <rect
+              x={
+                interaction.offsetX < 0
+                  ? interaction.startX + interaction.offsetX
+                  : interaction.startX
+              }
+              y={
+                interaction.offsetY < 0
+                  ? interaction.startY + interaction.offsetY
+                  : interaction.startY
+              }
+              width={Math.abs(interaction.offsetX)}
+              height={Math.abs(interaction.offsetY)}
+              fill="none"
+              stroke="grey"
+              strokeWidth={1}
+              strokeDasharray={2}
+            />
+          )}
         </svg>
       </div>
     </div>
