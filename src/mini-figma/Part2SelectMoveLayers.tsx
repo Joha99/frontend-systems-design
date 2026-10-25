@@ -29,8 +29,6 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./Figma.module.css";
 
-let nextId = 1;
-
 type Tool = "select" | "rectangle";
 
 type Shape = {
@@ -39,6 +37,8 @@ type Shape = {
   y: number;
   width: number;
   height: number;
+  color: { r: number; g: number; b: number };
+  name: string;
 };
 
 type Interaction = {
@@ -49,13 +49,27 @@ type Interaction = {
   offsetY: number;
 };
 
+const getRandomRgbChannels = () => {
+  const r = Math.floor(Math.random() * 256);
+  const g = Math.floor(Math.random() * 256);
+  const b = Math.floor(Math.random() * 256);
+  return { r, g, b };
+};
+
+const getRgbaFromChannel = (color: Shape["color"], a: number = 0.15) => {
+  return `rgba(${color.r}, ${color.g}, ${color.b}, ${a})`;
+};
+
 export const Part2SelectMoveLayers = () => {
+  const [orderIds, setOrderIds] = useState<Shape["id"][]>([]);
   const [cursor, setCursor] = useState<{ x: number; y: number }>();
-  const [activeTool, setActiveTool] = useState<Tool>("rectangle");
+  const [activeTool, setActiveTool] = useState<Tool>("select");
   const [shapes, setShapes] = useState<Record<Shape["id"], Shape>>({});
   const [interaction, setInteraction] = useState<Interaction>();
+  const [selectedId, setSelectedId] = useState<Shape[id]>();
 
   const canvasRef = useRef<SVGSVGElement>(null);
+  const nextId = useRef<number>(1);
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
@@ -118,10 +132,15 @@ export const Part2SelectMoveLayers = () => {
     const onMouseUp = (e: MouseEvent) => {
       if (!canvasRef.current) return;
 
+      // New shape is added
       if (interaction && interaction.shapeId === null) {
         const newShapes = { ...shapes };
-        newShapes[nextId] = {
-          id: nextId,
+
+        const shapeId = nextId.current;
+        const randomColor = getRandomRgbChannels();
+
+        newShapes[shapeId] = {
+          id: shapeId,
           x: Math.min(
             interaction.startX + interaction.offsetX,
             interaction.startX,
@@ -132,14 +151,19 @@ export const Part2SelectMoveLayers = () => {
           ),
           width: Math.abs(interaction.offsetX),
           height: Math.abs(interaction.offsetY),
+          color: randomColor,
+          name: `Shape ${shapeId}`,
         };
 
+        setOrderIds((prev) => [shapeId, ...prev]);
         setShapes(newShapes);
         setInteraction(undefined);
-        nextId++;
+        setActiveTool("select");
+        nextId.current++;
         return;
       }
 
+      // Shape was moved
       if (interaction && interaction.shapeId !== null) {
         const newShapes = { ...shapes };
         const draggedShape = shapes[interaction.shapeId];
@@ -165,6 +189,14 @@ export const Part2SelectMoveLayers = () => {
       window.removeEventListener("mouseup", onMouseUp);
     };
   }, [activeTool, interaction, shapes]);
+
+  useEffect(() => {
+    const onKeyDown = () => {
+      // remove selected on escape or backspace
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  });
 
   const clampCoordinateToCanvas = (clientX: number, clientY: number) => {
     const canvasRect = canvasRef.current!.getBoundingClientRect();
@@ -233,8 +265,15 @@ export const Part2SelectMoveLayers = () => {
   const isDraggingRect = interaction && interaction.shapeId !== null;
 
   return (
-    <div>
-      <h2>Mini Figma: Part 2</h2>
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+      }}
+    >
+      <h1>Mini Figma: Part 2</h1>
       <div className={styles.toolbar}>
         <button
           className={`${activeTool === "select" ? styles.activeTool : ""}`}
@@ -250,71 +289,117 @@ export const Part2SelectMoveLayers = () => {
         </button>
       </div>
 
-      {/* Canvas */}
-      <svg
-        width="800px"
-        height="500px"
-        xmlns="http://www.w3.org/2000/svg"
-        className={styles.canvas}
-        ref={canvasRef}
-      >
-        {/* Moving cursor inside canvas */}
-        {cursor && <circle cx={cursor.x} cy={cursor.y} fill="grey" r="5" />}
+      <div className={styles.grid}>
+        <div className={styles.panel}>
+          <h2>Layers</h2>
+          <ul className={styles.list}>
+            {orderIds.map((id) => {
+              const shape = shapes[id];
+              return (
+                <li
+                  key={id}
+                  className={styles.listitem}
+                  style={{
+                    backgroundColor: getRgbaFromChannel(shape.color, 0.15),
+                    border: `1px solid ${getRgbaFromChannel(shape.color, 1)}`,
+                  }}
+                >
+                  <button onClick={() => setSelectedId(shape.id)}>
+                    {shape.name}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
-        {/* New rectangle being created */}
-        {isCreatingNewRect && (
-          <rect
-            x={
-              interaction.offsetX < 0
-                ? interaction.startX + interaction.offsetX
-                : interaction.startX
+        {/* Canvas */}
+        <svg
+          width="800px"
+          height="500px"
+          xmlns="http://www.w3.org/2000/svg"
+          className={styles.canvas}
+          ref={canvasRef}
+          onClick={(e) => {
+            const isInsideCanvas = isWithinCanvas(e.clientX, e.clientY);
+            if (isInsideCanvas && canvasRef.current) {
+              const coordinatesInCanvas = clampCoordinateToCanvas(
+                e.clientX,
+                e.clientY,
+              );
+              const intersectingShape = getIntersectingShape(
+                coordinatesInCanvas.xInCanvas,
+                coordinatesInCanvas.yInCanvas,
+              );
+              if (intersectingShape !== null) {
+                setSelectedId(intersectingShape.id);
+              } else {
+                setSelectedId(undefined);
+              }
+            } else {
+              setSelectedId(undefined);
             }
-            y={
-              interaction.offsetY < 0
-                ? interaction.startY + interaction.offsetY
-                : interaction.startY
+          }}
+        >
+          {/* New rectangle being created */}
+          {isCreatingNewRect && (
+            <rect
+              x={
+                interaction.offsetX < 0
+                  ? interaction.startX + interaction.offsetX
+                  : interaction.startX
+              }
+              y={
+                interaction.offsetY < 0
+                  ? interaction.startY + interaction.offsetY
+                  : interaction.startY
+              }
+              width={Math.abs(interaction.offsetX)}
+              height={Math.abs(interaction.offsetY)}
+              fill="none"
+              stroke="grey"
+              strokeWidth={1}
+              strokeDasharray={2}
+            />
+          )}
+
+          {/* Dragged rectable */}
+          {isDraggingRect && interaction.shapeId !== null && (
+            <rect
+              x={shapes[interaction.shapeId].x + interaction.offsetX}
+              y={shapes[interaction.shapeId].y + interaction.offsetY}
+              width={shapes[interaction.shapeId].width}
+              height={shapes[interaction.shapeId].height}
+              fill={getRgbaFromChannel(shapes[interaction.shapeId].color, 0.15)}
+              stroke="blue"
+              strokeWidth={1}
+              strokeDasharray={2}
+            />
+          )}
+
+          {/* Already created rectangles */}
+          {Object.values(shapes).map((shape) => {
+            if (!isDraggingRect || interaction.shapeId !== shape.id) {
+              const isSelected = selectedId === shape.id;
+
+              return (
+                <rect
+                  key={shape.id}
+                  x={shape.x}
+                  y={shape.y}
+                  width={shape.width}
+                  height={shape.height}
+                  fill={getRgbaFromChannel(shape.color, 0.15)}
+                  stroke={
+                    isSelected ? "blue" : getRgbaFromChannel(shape.color, 1)
+                  }
+                  strokeWidth={1}
+                />
+              );
             }
-            width={Math.abs(interaction.offsetX)}
-            height={Math.abs(interaction.offsetY)}
-            fill="none"
-            stroke="grey"
-            strokeWidth={1}
-            strokeDasharray={2}
-          />
-        )}
-
-        {/* Dragged rectable */}
-        {isDraggingRect && interaction.shapeId !== null && (
-          <rect
-            x={shapes[interaction.shapeId].x + interaction.offsetX}
-            y={shapes[interaction.shapeId].y + interaction.offsetY}
-            width={shapes[interaction.shapeId].width}
-            height={shapes[interaction.shapeId].height}
-            fill="none"
-            stroke="blue"
-            strokeWidth={1}
-            strokeDasharray={2}
-          />
-        )}
-
-        {/* Already created rectangles */}
-        {Object.values(shapes).map((shape) => {
-          if (!isDraggingRect || interaction.shapeId !== shape.id) {
-            return (
-              <rect
-                key={shape.id}
-                x={shape.x}
-                y={shape.y}
-                width={shape.width}
-                height={shape.height}
-                fill="none"
-                stroke="grey"
-                strokeWidth={1}
-              />
-            );
-          }
-        })}
-      </svg>
+          })}
+        </svg>
+      </div>
     </div>
   );
 };

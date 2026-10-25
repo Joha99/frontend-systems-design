@@ -50,7 +50,7 @@ type Interaction = {
 
 export const Part1DrawShapes = () => {
   const [cursor, setCursor] = useState<{ x: number; y: number }>();
-  const [activeTool, setActiveTool] = useState<Tool>("rectangle");
+  const [activeTool, setActiveTool] = useState<Tool>("select");
   const [shapes, setShapes] = useState<Record<Shape["id"], Shape>>({});
   const [interaction, setInteraction] = useState<Interaction>();
 
