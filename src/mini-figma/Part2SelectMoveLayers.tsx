@@ -106,30 +106,34 @@ export const Part2SelectMoveLayers = () => {
 
         const shapeId = nextId.current;
         const randomColor = getRandomRgbChannels();
+        const width = Math.abs(interaction.offsetX);
+        const height = Math.abs(interaction.offsetY);
 
-        newShapes[shapeId] = {
-          id: shapeId,
-          x: Math.min(
-            interaction.startX + interaction.offsetX,
-            interaction.startX,
-          ),
-          y: Math.min(
-            interaction.startY + interaction.offsetY,
-            interaction.startY,
-          ),
-          width: Math.abs(interaction.offsetX),
-          height: Math.abs(interaction.offsetY),
-          color: randomColor,
-          name: `Shape ${shapeId}`,
-        };
+        if (width > 0 && height > 0) {
+          newShapes[shapeId] = {
+            id: shapeId,
+            x: Math.min(
+              interaction.startX + interaction.offsetX,
+              interaction.startX,
+            ),
+            y: Math.min(
+              interaction.startY + interaction.offsetY,
+              interaction.startY,
+            ),
+            width,
+            height,
+            color: randomColor,
+            name: `Shape ${shapeId}`,
+          };
 
-        setSelectedId(shapeId);
-        setOrderIds((prev) => [shapeId, ...prev]);
-        setShapes(newShapes);
-        setInteraction(undefined);
-        setActiveTool("select");
-        nextId.current++;
-        return;
+          setSelectedId(shapeId);
+          setOrderIds((prev) => [shapeId, ...prev]);
+          setShapes(newShapes);
+          setInteraction(undefined);
+          setActiveTool("select");
+          nextId.current++;
+          return;
+        }
       }
 
       // Shape was moved
@@ -312,13 +316,15 @@ export const Part2SelectMoveLayers = () => {
           <ul className={styles.list}>
             {orderIds.map((id) => {
               const shape = shapes[id];
+              const isSelected = selectedId === id;
+
               return (
                 <li
                   key={id}
                   className={styles.listitem}
                   style={{
                     backgroundColor: getRgbaFromChannel(shape.color, 0.15),
-                    border: `1px solid ${getRgbaFromChannel(shape.color, 1)}`,
+                    border: `1px solid ${isSelected ? "blue" : getRgbaFromChannel(shape.color, 1)}`,
                   }}
                 >
                   <button onClick={() => setSelectedId(shape.id)}>
