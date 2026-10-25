@@ -66,7 +66,7 @@ export const Part2SelectMoveLayers = () => {
   const [activeTool, setActiveTool] = useState<Tool>("select");
   const [shapes, setShapes] = useState<Record<Shape["id"], Shape>>({});
   const [interaction, setInteraction] = useState<Interaction>();
-  const [selectedId, setSelectedId] = useState<Shape[id]>();
+  const [selectedId, setSelectedId] = useState<Shape["id"]>();
 
   const canvasRef = useRef<SVGSVGElement>(null);
   const nextId = useRef<number>(1);
@@ -126,6 +126,9 @@ export const Part2SelectMoveLayers = () => {
           offsetX: 0,
           offsetY: 0,
         });
+        setSelectedId(intersectingShape.id);
+      } else {
+        setSelectedId(undefined);
       }
     };
 
@@ -155,6 +158,7 @@ export const Part2SelectMoveLayers = () => {
           name: `Shape ${shapeId}`,
         };
 
+        setSelectedId(shapeId);
         setOrderIds((prev) => [shapeId, ...prev]);
         setShapes(newShapes);
         setInteraction(undefined);
@@ -235,10 +239,8 @@ export const Part2SelectMoveLayers = () => {
   ): Shape | null => {
     if (!canvasRef.current) return null;
 
-    const ids = Object.keys(shapes);
-
-    for (let i = ids.length; i >= 0; i--) {
-      const id = Number(ids[i]);
+    for (let i = 0; i < orderIds.length; i++) {
+      const id = orderIds[i];
       const shape = shapes[id];
 
       if (!shape) continue;
@@ -320,26 +322,22 @@ export const Part2SelectMoveLayers = () => {
           xmlns="http://www.w3.org/2000/svg"
           className={styles.canvas}
           ref={canvasRef}
-          onClick={(e) => {
-            const isInsideCanvas = isWithinCanvas(e.clientX, e.clientY);
-            if (isInsideCanvas && canvasRef.current) {
-              const coordinatesInCanvas = clampCoordinateToCanvas(
-                e.clientX,
-                e.clientY,
-              );
-              const intersectingShape = getIntersectingShape(
-                coordinatesInCanvas.xInCanvas,
-                coordinatesInCanvas.yInCanvas,
-              );
-              if (intersectingShape !== null) {
-                setSelectedId(intersectingShape.id);
-              } else {
-                setSelectedId(undefined);
-              }
-            } else {
-              setSelectedId(undefined);
-            }
-          }}
+          // onClick={(e) => {
+          //   const isInsideCanvas = isWithinCanvas(e.clientX, e.clientY);
+          //   if (isInsideCanvas && canvasRef.current) {
+          //     const coordinatesInCanvas = clampCoordinateToCanvas(
+          //       e.clientX,
+          //       e.clientY,
+          //     );
+          //     const intersectingShape = getIntersectingShape(
+          //       coordinatesInCanvas.xInCanvas,
+          //       coordinatesInCanvas.yInCanvas,
+          //     );
+          //     if (intersectingShape === null) {
+          //       setSelectedId(undefined);
+          //     }
+          //   }
+          // }}
         >
           {/* New rectangle being created */}
           {isCreatingNewRect && (
@@ -378,13 +376,14 @@ export const Part2SelectMoveLayers = () => {
           )}
 
           {/* Already created rectangles */}
-          {Object.values(shapes).map((shape) => {
-            if (!isDraggingRect || interaction.shapeId !== shape.id) {
-              const isSelected = selectedId === shape.id;
+          {orderIds.toReversed().map((id) => {
+            const shape = shapes[id];
+            if (!isDraggingRect || interaction.shapeId !== id) {
+              const isSelected = selectedId === id;
 
               return (
                 <rect
-                  key={shape.id}
+                  key={id}
                   x={shape.x}
                   y={shape.y}
                   width={shape.width}
