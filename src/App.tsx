@@ -1,11 +1,10 @@
 import styles from "./App.module.css";
-import { Part1DrawShapes } from "./mini-figma/Part1DrawShapes";
-import { Part2SelectMoveLayers } from "./mini-figma/Part2SelectMoveLayers";
+import { Part1LiveFleet } from "./robot-fleet/Part1LiveFleet";
 
 function App() {
   return (
     <div className={styles.app}>
-      <Part2SelectMoveLayers />
+      <Part1LiveFleet />
     </div>
   );
 }

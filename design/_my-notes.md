@@ -79,3 +79,28 @@ Read this before every design rep. Fix these first.
 3. Send flow up front: optimistic insert with client id + status, opId for acks/retries, outbox, offline = wait (not failed).
 4. **Drafts ≠ outbox** (drafts: own table, debounced to IndexedDB; Send moves it to the outbox). **opId ≠ messageId** (request vs thing).
 5. Summary: "decisions I'm proud of" = design decisions, not what I learned.
+
+## Assort front-desk dashboard mock, live with Claude (Mon–Tue Oct 26–27)
+
+**Strong:** clarifying questions (scale, assignment, offline, takeover meaning); discriminated unions for handler/speaker/booking status; `latestLine` preview on cards vs full lines only for the open call; REST action + socket news; subscribe/unsubscribe for the open call.
+
+**Struggled with (data model):**
+1. **Link direction.** Test: "can this field ever need more than one value?" One→many = parentId on the child; many↔many or extra pairing data = a table in the middle; user-chosen order = list on parent (V1) or `position` on a join row.
+2. **Server entities vs loaded lists.** Never put what this tab loaded (`lineIds`, status) on a shared entity: a server update replaces it and wipes your list. Separate map keyed by parent id, with a status.
+3. **Optimistic vs wait.** Contested actions (takeover, last seat, money) wait for the server; store a pending id in `ui`, never set the shared entity early.
+
+**Struggled with (API):**
+1. **Identity in the URL** (`/handler/:userId`): the client could impersonate anyone. Who = session cookie.
+2. **Seq scope.** One counter per *stream*: per clinic (call started/ended/handler/booking) + per call transcript (lines only). The server stamps seqs and keeps a log; `lastAppliedVersion` is the client's bookmark. Every change (incl. partial-line updates) gets a new seq; seq ≠ display position ≠ cursor.
+3. **Cursor vs seq.** Live views catch up with seq; cursors are only for paging big lists (call history).
+4. **Reconnect mixing snapshot and replay.** Pick one: missed events (same shape as live) with a snapshot fallback, or always snapshot (V1).
+5. **Status codes.** 400 = malformed request (client bug); state conflicts (slot taken, someone else won) = 409 with a machine code + current state; EHR down = 503 + retryable.
+6. **Kept forgetting** the version on first load and `lastSeq` on the transcript load. Every snapshot returns the bookmark to resume from.
+7. **Reconnect UI:** keep last data, dim + banner, disable contested actions. Never skeletons mid-shift.
+
+**Struggled with (deep dives):**
+1. **Takeover race:** "process one, then the other" isn't enough. The check + write must be atomic (compare-and-set: `UPDATE … WHERE handler_type = 'ai'`). Retry by the winner returns 200, not 409.
+2. **Audio fails after the server said yes:** connect audio first, switch the handler after (warm transfer); the server times out and hands back to the AI, since a crashed tab never sends `release`.
+3. **Gap on the transcript:** used the clinic stream by mistake. Gaps are per stream: hold the event, resume that call's stream after the last seq.
+4. **Debounce for a live stream:** never fires while someone talks nonstop. Batch per animation frame + memoized rows.
+5. **Memory:** size it out loud before cleaning up (200 calls × 100 lines ≈ 20k objects: fine). Clean up subscriptions; never the open call.
