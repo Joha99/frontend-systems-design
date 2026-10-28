@@ -42,19 +42,22 @@ import {
   useReducer,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
+  type Dispatch,
+  type SetStateAction,
 } from "react";
 import {
   fetchSnapshot,
   connect,
   type Robot,
-  type FleetEvent,
   type ServerMessage,
 } from "./fleetServer";
 import styles from "./Fleet.module.css";
+import { timeStore } from "./timeStore";
 
 const BATCH_UPDATE_INTERVAL_MS = 1000; // 1s
-const STALE_UPDATE_PERIOD_MS = 10 * 1000; // 10s
+const STALE_UPDATE_PERIOD_S = 10; // 10s
 
 const STATUS_COLOR_MAP: Record<Robot["status"], string> = {
   idle: "#d6d6d6",
@@ -128,6 +131,7 @@ const reducer = (state: State, action: Action) => {
         if (event.type !== "too_far_behind" && event.seq <= lastAppliedSeq) {
           continue;
         }
+
         switch (event.type) {
           case "robot_added": {
             newRobots[event.robot.id] = event.robot;
@@ -168,10 +172,8 @@ const reducer = (state: State, action: Action) => {
   }
 };
 
-const getSecondDiff = (timestamp: number) => {
-  const now = Date.now();
-  const differenceInSeconds = Math.floor((now - timestamp) / 1000);
-  return differenceInSeconds;
+const getSecondDiff = (timestamp: number, now: number) => {
+  return Math.max(Math.floor((now - timestamp) / 1000), 0);
 };
 
 const StatusDot = ({ status }: { status: Robot["status"] }) => {
@@ -180,6 +182,44 @@ const StatusDot = ({ status }: { status: Robot["status"] }) => {
       className={styles.dot}
       style={{ "--status-color": STATUS_COLOR_MAP[status] } as CSSProperties}
     />
+  );
+};
+
+const LastSeenCell = ({ lastSeenAt }: { lastSeenAt: Robot["lastSeenAt"] }) => {
+  const time = useSyncExternalStore(timeStore.subscribe, timeStore.getSnapshot);
+  const secondDiff = getSecondDiff(lastSeenAt, time);
+
+  return <div>{secondDiff}s ago</div>;
+};
+
+const TableRow = ({ robot }: { robot: Robot }) => {
+  const { id, name, status, battery, lastSeenAt, x, y } = robot;
+
+  const isStale = useSyncExternalStore(timeStore.subscribe, () =>
+    timeStore.getIsStale(lastSeenAt),
+  );
+
+  const hasLowBattery = battery < 20;
+  const formattedCoordinates = [x.toFixed(3), y.toFixed(3)];
+
+  return (
+    <div
+      key={id}
+      className={`${styles["table-row"]} ${isStale ? styles["stale-row"] : ""}`}
+    >
+      <div>{name}</div>
+      <div>
+        <StatusDot status={status} />
+        {status}
+      </div>
+      <div className={`${hasLowBattery ? styles["low-battery"] : ""}`}>
+        {battery}
+      </div>
+      <div>
+        ({formattedCoordinates[0]},{formattedCoordinates[1]})
+      </div>
+      <LastSeenCell lastSeenAt={lastSeenAt} />
+    </div>
   );
 };
 
@@ -220,6 +260,7 @@ export const Part1LiveFleet = () => {
     setInitialLoadStatus("loading");
     fetchSnapshot()
       .then(({ robots, seq }) => {
+        // To make sure I don't add robots twice when useEffect is on strict mode
         if (!cancelled) {
           dispatch({ type: "ADD_ROBOTS", payload: { robots, seq } });
           setInitialLoadStatus("loaded");
@@ -245,6 +286,7 @@ export const Part1LiveFleet = () => {
   useEffect(() => {
     if (!state.connectionStatus) return;
 
+    // When disconnected randomly, manually connect again
     if (state.connectionStatus === "disconnected") {
       dispatch({
         type: "SET_CONNECTION_STATUS",
@@ -260,6 +302,7 @@ export const Part1LiveFleet = () => {
     }
 
     const intervalId = setInterval(() => {
+      // Don't update state unnecessarily when there are no events to process
       if (batchedEventsRef.current.length === 0) {
         return;
       }
@@ -317,30 +360,9 @@ export const Part1LiveFleet = () => {
           <div>Position</div>
           <div>Last Seen</div>
         </div>
-        <div>
+        <div className={styles["row-list"]}>
           {Object.values(state.robots).map((robot) => {
-            const { id, name, status, battery, x, y, lastSeenAt } = robot;
-            const secondsAgo = getSecondDiff(lastSeenAt);
-            const hasLowBattery = battery < 20;
-
-            return (
-              <div key={id} className={styles["table-row"]}>
-                <div>{name}</div>
-                <div>
-                  <StatusDot status={status} />
-                  {status}
-                </div>
-                <div
-                  className={`${hasLowBattery ? styles["low-battery"] : ""}`}
-                >
-                  {battery}
-                </div>
-                <div>
-                  ({x.toFixed(3)},{y.toFixed(3)})
-                </div>
-                <div>{secondsAgo}s ago</div>
-              </div>
-            );
+            return <TableRow key={robot.id} robot={robot} />;
           })}
         </div>
       </div>

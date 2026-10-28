@@ -14,6 +14,19 @@
   }
 }
 
+.stale-row {
+  background-color: #e7e7e7;
+  color: #8c8c8c;
+  border-radius: 5px;
+}
+
+.row-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+}
+
 .table {
   width: 100%;
   border: 1px solid #ccc;
@@ -23,7 +36,8 @@
 
 .table-header {
   border-radius: 10px;
-  background-color: #efefef;
+  background-color: #d3e5ff;
+  margin-bottom: 5px;
 }
 
 .low-battery {
