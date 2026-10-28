@@ -1,3 +1,5 @@
+const STALE_UPDATE_PERIOD_S = 10; // 10s
+
 // 1. Create a vanilla JavaScript store
 let currentTime = Date.now();
 const listeners = new Set();
@@ -27,7 +29,7 @@ export const timeStore = {
       Math.floor((currentTime - timestamp) / 1000),
       0,
     );
-    return secondDiff >= 10;
+    return secondDiff >= STALE_UPDATE_PERIOD_S;
   },
 };
 

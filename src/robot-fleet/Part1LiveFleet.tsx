@@ -38,14 +38,13 @@
 
 // Types you'll want: Robot, FleetEvent, RobotStatus, ServerMessage (import type).
 import {
+  memo,
   useEffect,
   useReducer,
   useRef,
   useState,
   useSyncExternalStore,
   type CSSProperties,
-  type Dispatch,
-  type SetStateAction,
 } from "react";
 import {
   fetchSnapshot,
@@ -57,7 +56,6 @@ import styles from "./Fleet.module.css";
 import { timeStore } from "./timeStore";
 
 const BATCH_UPDATE_INTERVAL_MS = 1000; // 1s
-const STALE_UPDATE_PERIOD_S = 10; // 10s
 
 const STATUS_COLOR_MAP: Record<Robot["status"], string> = {
   idle: "#d6d6d6",
@@ -185,6 +183,10 @@ const StatusDot = ({ status }: { status: Robot["status"] }) => {
   );
 };
 
+const StaleBadge = () => {
+  return <div className={styles["stale-badge"]}>stale</div>;
+};
+
 const LastSeenCell = ({ lastSeenAt }: { lastSeenAt: Robot["lastSeenAt"] }) => {
   const time = useSyncExternalStore(timeStore.subscribe, timeStore.getSnapshot);
   const secondDiff = getSecondDiff(lastSeenAt, time);
@@ -192,7 +194,7 @@ const LastSeenCell = ({ lastSeenAt }: { lastSeenAt: Robot["lastSeenAt"] }) => {
   return <div>{secondDiff}s ago</div>;
 };
 
-const TableRow = ({ robot }: { robot: Robot }) => {
+const TableRow = memo(({ robot }: { robot: Robot }) => {
   const { id, name, status, battery, lastSeenAt, x, y } = robot;
 
   const isStale = useSyncExternalStore(timeStore.subscribe, () =>
@@ -208,9 +210,10 @@ const TableRow = ({ robot }: { robot: Robot }) => {
       className={`${styles["table-row"]} ${isStale ? styles["stale-row"] : ""}`}
     >
       <div>{name}</div>
-      <div>
+      <div className={styles["status-cell"]}>
         <StatusDot status={status} />
         {status}
+        {isStale && <StaleBadge />}
       </div>
       <div className={`${hasLowBattery ? styles["low-battery"] : ""}`}>
         {battery}
@@ -221,7 +224,7 @@ const TableRow = ({ robot }: { robot: Robot }) => {
       <LastSeenCell lastSeenAt={lastSeenAt} />
     </div>
   );
-};
+});
 
 export const Part1LiveFleet = () => {
   const [initialLoadStatus, setInitialLoadStatus] = useState<

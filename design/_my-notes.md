@@ -104,3 +104,16 @@ Read this before every design rep. Fix these first.
 3. **Gap on the transcript:** used the clinic stream by mistake. Gaps are per stream: hold the event, resume that call's stream after the last seq.
 4. **Debounce for a live stream:** never fires while someone talks nonstop. Batch per animation frame + memoized rows.
 5. **Memory:** size it out loud before cleaning up (200 calls × 100 lines ≈ 20k objects: fine). Clean up subscriptions; never the open call.
+
+## Robot Fleet Part 1, coding (Tue–Wed Oct 27–28)
+
+**Strong:** events into a ref, one dispatch per tick; connecting in the snapshot's `.then` with its seq (no seq in effect deps); reconnect in an effect, so unmount can't trigger it; a shared clock store + `useSyncExternalStore`; memo rows.
+
+**Struggled with:**
+1. **Async effect cleanup.** Cleanup ran before the fetch finished, so `close` didn't exist yet → StrictMode opened 2 sockets. Fix: a `cancelled` flag, checked **first** in `.then`/`.catch` (guard every state write, not just `connect`).
+2. **Two copies of the same state** (`robotsRef` mirroring `state.robots`). The reducer is the one place that turns "old state + events" into new state; dispatch the events, not a precomputed map.
+3. **Seq in effect deps** → reconnect every tick. Read the latest seq from a ref; deps = what should actually restart the effect.
+4. **Reconnect replays buffered events.** Skip events with `seq <=` the **running** last-applied seq (not the value from before the batch).
+5. **Accidental re-renders.** "Last seen" only ticked because empty batches re-rendered everything. Skip empty ticks; drive time on purpose with one shared clock.
+6. **Derived state copied up via an effect** (`setIsStale` from the cell). `useSyncExternalStore` with a boolean `getSnapshot` (`() => isStale(lastSeenAt)`) re-renders the row only when it flips.
+7. **Stale badge replaced the status.** Show both: "stale + error" ≠ "stale + idle".

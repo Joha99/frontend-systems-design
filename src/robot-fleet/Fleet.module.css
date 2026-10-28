@@ -6,11 +6,12 @@
   align-items: stretch;
   padding: 6px 4px;
   block-size: 36px;
+  gap: 3px;
 
   & > * {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: start;
   }
 }
 
@@ -41,7 +42,9 @@
 }
 
 .low-battery {
-  background-color: #dd4949;
+  border-radius: 5px;
+  padding: 2px 4px;
+  background-color: #dc5858;
   color: #ffffff;
 }
 
@@ -50,7 +53,6 @@
   height: 10px;
   background-color: var(--status-color);
   border-radius: 50%;
-  margin-right: 6px;
 }
 
 .status-list {
@@ -80,4 +82,17 @@
 
 .seq-label {
   padding-inline: 10px;
+}
+
+.stale-badge {
+  border-radius: 5px;
+  padding: 2px 4px;
+  background-color: #d0d0d0;
+  color: #8c8c8c;
+}
+
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
