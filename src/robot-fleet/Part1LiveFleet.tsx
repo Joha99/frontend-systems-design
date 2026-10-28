@@ -37,14 +37,24 @@
  */
 
 // Types you'll want: Robot, FleetEvent, RobotStatus, ServerMessage (import type).
-import { useEffect, useReducer, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   fetchSnapshot,
   connect,
   type Robot,
   type FleetEvent,
+  type ServerMessage,
 } from "./fleetServer";
 import styles from "./Fleet.module.css";
+
+const BATCH_UPDATE_INTERVAL_MS = 1000; // 1s
+const STALE_UPDATE_PERIOD_MS = 10 * 1000; // 10s
 
 const STATUS_COLOR_MAP: Record<Robot["status"], string> = {
   idle: "#d6d6d6",
@@ -62,30 +72,95 @@ const STATUSES: Array<Robot["status"]> = [
   "offline",
 ];
 
-interface State {
-  robots: Record<Robot["id"], Robot>;
-  lastAppliedSeq: FleetEvent["seq"] | null;
-}
+type RobotMap = Record<Robot["id"], Robot>;
 
-type Action = {
-  type: "ADD_ROBOTS";
-  payload: { robots: Robot[]; seq: number };
+type State = {
+  robots: RobotMap;
+  connectionStatus: "disconnected" | "connected" | null;
+  lastAppliedSeq: number;
 };
+
+type Action =
+  | {
+      type: "ADD_ROBOTS";
+      payload: { robots: Robot[]; seq: number };
+    }
+  | {
+      type: "SET_CONNECTION_STATUS";
+      payload: { connectionStatus: State["connectionStatus"] };
+    }
+  | {
+      type: "BATCH_UPDATE_ROBOTS";
+      payload: {
+        events: ServerMessage[];
+      };
+    };
 
 const reducer = (state: State, action: Action) => {
   switch (action.type) {
+    case "SET_CONNECTION_STATUS": {
+      return {
+        ...state,
+        connectionStatus: action.payload.connectionStatus,
+      };
+    }
     case "ADD_ROBOTS": {
       const { robots, seq } = action.payload;
-      const normalizedRobots: Record<Robot["id"], Robot> = {};
+      const normalizedRobots: RobotMap = {};
 
       for (const robot of robots) {
         normalizedRobots[robot.id] = robot;
       }
 
-      return {
-        robots: normalizedRobots,
+      const newState: State = {
         lastAppliedSeq: seq,
+        connectionStatus: "connected",
+        robots: normalizedRobots,
       };
+
+      return newState;
+    }
+    case "BATCH_UPDATE_ROBOTS": {
+      const newRobots = { ...state.robots };
+      let lastAppliedSeq = state.lastAppliedSeq;
+
+      for (const event of action.payload.events) {
+        if (event.type !== "too_far_behind" && event.seq <= lastAppliedSeq) {
+          continue;
+        }
+        switch (event.type) {
+          case "robot_added": {
+            newRobots[event.robot.id] = event.robot;
+            lastAppliedSeq = event.seq;
+            break;
+          }
+          case "robot_removed": {
+            delete newRobots[event.robotId];
+            lastAppliedSeq = event.seq;
+            break;
+          }
+          case "robot_updated": {
+            newRobots[event.robotId] = {
+              ...newRobots[event.robotId],
+              ...event.set,
+            };
+            lastAppliedSeq = event.seq;
+            break;
+          }
+          case "too_far_behind": {
+            // todo: have to fetchsnapshot again
+            return state;
+          }
+        }
+      }
+
+      const newState: State = {
+        ...state,
+        lastAppliedSeq,
+        robots: newRobots,
+      };
+
+      return newState;
     }
     default: {
       return state;
@@ -114,21 +189,98 @@ export const Part1LiveFleet = () => {
   >();
   const [state, dispatch] = useReducer(reducer, {
     robots: {},
-    lastAppliedSeq: null,
+    connectionStatus: null,
+    lastAppliedSeq: 0,
   });
 
+  const lastAppliedSeqRef = useRef<number>(0);
+  const closeRef = useRef<() => void>(null);
+  const batchedEventsRef = useRef<ServerMessage[]>([]);
+
+  const onMessage = (message: ServerMessage) => {
+    batchedEventsRef.current.push(message);
+  };
+
+  const onOpen = () => {
+    dispatch({
+      type: "SET_CONNECTION_STATUS",
+      payload: { connectionStatus: "connected" },
+    });
+  };
+
+  const onClose = () => {
+    dispatch({
+      type: "SET_CONNECTION_STATUS",
+      payload: { connectionStatus: "disconnected" },
+    });
+  };
+
   useEffect(() => {
+    let cancelled = false;
     setInitialLoadStatus("loading");
     fetchSnapshot()
       .then(({ robots, seq }) => {
-        dispatch({ type: "ADD_ROBOTS", payload: { robots, seq } });
-        setInitialLoadStatus("loaded");
+        if (!cancelled) {
+          dispatch({ type: "ADD_ROBOTS", payload: { robots, seq } });
+          setInitialLoadStatus("loaded");
+          closeRef.current = connect({
+            afterSeq: seq,
+            onMessage,
+            onOpen,
+            onClose,
+          }).close;
+        }
       })
       .catch((err) => {
-        console.error(err);
         setInitialLoadStatus("error");
+        console.error(err);
       });
+
+    return () => {
+      closeRef.current?.();
+      cancelled = true;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!state.connectionStatus) return;
+
+    if (state.connectionStatus === "disconnected") {
+      dispatch({
+        type: "SET_CONNECTION_STATUS",
+        payload: { connectionStatus: "connected" },
+      });
+      closeRef.current = connect({
+        afterSeq: lastAppliedSeqRef.current,
+        onMessage,
+        onOpen,
+        onClose,
+      }).close;
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      if (batchedEventsRef.current.length === 0) {
+        return;
+      }
+
+      dispatch({
+        type: "BATCH_UPDATE_ROBOTS",
+        payload: { events: batchedEventsRef.current },
+      });
+
+      batchedEventsRef.current = [];
+    }, BATCH_UPDATE_INTERVAL_MS);
+
+    return () => {
+      clearInterval(intervalId);
+      closeRef.current?.();
+    };
+  }, [state.connectionStatus]);
+
+  useEffect(() => {
+    lastAppliedSeqRef.current = state.lastAppliedSeq;
+  }, [state.lastAppliedSeq]);
 
   if (initialLoadStatus === "loading") {
     return <div>Getting robot statuses...</div>;
@@ -152,8 +304,9 @@ export const Part1LiveFleet = () => {
             );
           })}
         </div>
-        <div className={styles["seq-label"]}>
-          Sequence #: {state.lastAppliedSeq}
+        <div className={styles["status-list"]}>
+          <div>Seq: {state.lastAppliedSeq}</div>
+          <div>Connection: {state.connectionStatus}</div>
         </div>
       </div>
       <div className={styles.table}>
