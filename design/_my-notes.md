@@ -117,3 +117,21 @@ Read this before every design rep. Fix these first.
 5. **Accidental re-renders.** "Last seen" only ticked because empty batches re-rendered everything. Skip empty ticks; drive time on purpose with one shared clock.
 6. **Derived state copied up via an effect** (`setIsStale` from the cell). `useSyncExternalStore` with a boolean `getSnapshot` (`() => isStale(lastSeenAt)`) re-renders the row only when it flips.
 7. **Stale badge replaced the status.** Show both: "stale + error" ≠ "stale + idle".
+
+## Dashboard failure modes + patient search box (Wed Oct 28)
+
+**Failure modes, what to remember:**
+1. **Offline:** never cover the screen. Keep last data, dim live parts, banner "Reconnecting… last updated 2:14", disable contested actions. On reconnect stay on the page, catch up, explain what changed ("The AI took over at 2:14").
+2. **Detecting a drop:** each side detects from silence on its *receiving* end (server: no pongs; client: no pings/messages for ~2 intervals). Sends during an outage just sit in the buffer. The close tells you *that* it broke; the event log tells you *what* changed.
+3. **Takeover race:** compare-and-set on the field that matters (`handler is still AI`), not a whole-object version (false conflicts). Loser gets 409 + current handler in the body; winner's retry gets 200.
+4. **EHR rejects an edit:** the booking entity stays at the server's value ("still at 2:00 PM"); edit status lives in UI/form state. Re-enable Save on change, refetch availability. 409 (rejected) ≠ 503 (unreachable).
+5. **Gaps:** hold, catch up, then sort + skip `seq <=` the *running* last-applied (handles duplicates without reasoning about timing). Snapshot comes with its seq. Keep events that arrive during the fetch. Don't show UI for sub-second gaps. Gaps are per stream.
+6. **8-hour tab:** besides memory: session expiry (silent renew vs idle logout), deploys (stale bundle → "refresh" prompt), laptop sleep, background-tab throttling. Notice via heartbeat beacons, sampled heap, long tasks, soak tests.
+
+**Patient search box:**
+1. Requirements = *what*, not *how* ("use debouncing" is a solution). Name "results always match the current input" and privacy (no PHI in URLs → POST body).
+2. Results are **ranked**: ordered ids + entities by id, never just a map. `{ ids, total }` per query.
+3. **One copy:** results live in the query cache; the component reads `cache[debouncedQuery]`. Don't also keep them in component state.
+4. Don't copy leftovers (seq, connectionStatus) from the last design: justify every piece of shared state for *this* feature.
+5. **URL owns what should survive refresh/back/links** (the open patient id); don't mirror it in the store. Exception: sensitive text (search query) stays out of the URL on purpose.
+6. `dob` = date-only string, never a `Date` (timezone shifts the day). Cache key normalized + org id; PHI cache in memory only, cleared on logout.
