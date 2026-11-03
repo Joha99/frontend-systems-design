@@ -13,6 +13,10 @@
     "Open Sans",
     "Helvetica Neue",
     sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
 }
 
 .grid {
@@ -69,4 +73,59 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.filterbar {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.filter {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #000;
+  border-radius: 8px;
+  padding: 4px;
+  gap: 3px;
+
+  & > label {
+    font-size: 12px;
+    color: #4d4d4d;
+    text-transform: lowercase;
+  }
+
+  & > input {
+    height: 100%;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+  }
+}
+
+.select {
+  &,
+  &::picker(select) {
+    appearance: base-select;
+  }
+
+  &::picker-icon {
+    display: none;
+  }
+
+  & > button {
+    display: flex;
+    flex-direction: column;
+    width: 100px;
+
+    & > small {
+      color: #4d4d4d;
+      text-transform: lowercase;
+    }
+
+    & > div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
 }

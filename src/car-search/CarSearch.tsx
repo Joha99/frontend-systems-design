@@ -25,26 +25,24 @@
  *    the last page. No duplicate cars, no double request on a double click.
  * 8. If loading more fails, keep the cars already shown and show an inline
  *    retry next to the button (not the full-page error).
- *
- * Accessibility: the filters have labels; the results area announces
- * "Loading…" / "24 cars" to screen readers.
- *
- * Done when: you can filter to Teslas under $150, load every page, and
- * nothing breaks when a request fails.
- *
- * Discussion (say out loud at the end):
- * - Where does each piece of state live? What's derived?
- * - How did you handle out-of-order responses, and what are the other ways?
- * - Should the filters be in the URL? What about the loaded pages?
- * - What would you add with more time (caching, debouncing, tests)?
  */
 
-import { useEffect, useRef, useState } from "react";
-import { searchCars, getMakes, type Car, type SearchResponse } from "./carApi";
+import { createElement, useEffect, useRef, useState } from "react";
+import {
+  searchCars,
+  getMakes,
+  type Car,
+  type SearchResponse,
+  type SearchParams,
+} from "./carApi";
 import styles from "./CarSearch.module.css";
 
 type FetchStatus = "loading" | "success" | "error";
 type CarMap = Map<Car["id"], Car>;
+type Filters = {
+  make?: string;
+  maxPricePerDay?: Car["pricePerDay"];
+};
 
 const CarCard = ({ car }: { car: Car }) => {
   const { make, model, year, pricePerDay, rating, trips, city } = car;
@@ -76,38 +74,74 @@ const CarCard = ({ car }: { car: Car }) => {
 export const CarSearch = () => {
   const [fetchStatus, setFetchStatus] = useState<FetchStatus>();
   const [cars, setCars] = useState<CarMap>(new Map());
-
+  const [makes, setMakes] = useState<string[]>([]);
+  const [filters, setFilters] = useState<Filters>({});
   const cursor = useRef<SearchResponse["nextCursor"]>(null);
 
   const carList = Array.from(cars.values());
 
   useEffect(() => {
     setFetchStatus("loading");
-    fetchCars();
-  }, []);
 
-  const fetchCars = () => {
-    searchCars()
-      .then((searchResponse) => {
+    const carsPromise = searchCars();
+    const makesPromise = getMakes();
+
+    Promise.all([carsPromise, makesPromise])
+      .then(([carsRes, makesRes]) => {
         const newCarMap: CarMap = new Map();
-        for (const car of searchResponse.cars) {
+        for (const car of carsRes.cars) {
           newCarMap.set(car.id, car);
         }
 
         setCars(newCarMap);
         setFetchStatus("success");
-        cursor.current = searchResponse.nextCursor;
+        setMakes(makesRes);
+        cursor.current = carsRes.nextCursor;
       })
       .catch((err) => {
         console.error(err);
         setFetchStatus("error");
+      });
+  }, []);
+
+  useEffect(() => {
+    if (filters.make === undefined && filters.maxPricePerDay === undefined) {
+      return;
+    }
+
+    const searchParams: SearchParams = {
+      make: filters.make,
+      maxPrice: filters.maxPricePerDay,
+    };
+
+    const timeoutId = setTimeout(() => {
+      fetchCars(searchParams);
+    }, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [filters]);
+
+  const fetchCars = (searchParams: SearchParams) => {
+    searchCars(searchParams)
+      .then((searchResponse) => {
+        const newCarMap: CarMap = new Map();
+        for (const car of searchResponse.cars) {
+          newCarMap.set(car.id, car);
+        }
+        setCars(newCarMap);
+        cursor.current = searchResponse.nextCursor;
+      })
+      .catch((err) => {
+        console.error(err);
       });
   };
 
   if (fetchStatus === "error") {
     return (
       <div>
-        Couldn't load cars. <button onClick={fetchCars}>Retry</button>
+        Couldn't load cars. <button onClick={() => fetchCars({})}>Retry</button>
       </div>
     );
   }
@@ -116,17 +150,68 @@ export const CarSearch = () => {
     return <div>Fetching cars...</div>;
   }
 
+  console.log("filters", filters);
+
   return (
     <div className={styles.app}>
       <h2>Car Search</h2>
-      {carList.length === 0 ? (
-        <p>There are no available cars.</p>
-      ) : (
-        <div className={styles.grid}>
-          {carList.map((car) => {
-            return <CarCard key={car.id} car={car} />;
-          })}
-        </div>
+      {carList.length === 0 && <p>There are no available cars.</p>}
+      {carList.length > 0 && (
+        <>
+          {/* Filters bar */}
+          <div className={styles.filterbar}>
+            <div>
+              <select
+                id="make"
+                name="make"
+                value={filters.make ?? ""}
+                onChange={(e) => {
+                  const newMake = e.target.value;
+                  setFilters({ ...filters, make: newMake });
+                }}
+                className={styles.select}
+              >
+                <button>
+                  <small>Make</small>
+                  <div>
+                    {createElement("selectedcontent")}
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                      <path fill="currentColor" d="m7 10l5 5l5-5z" />
+                    </svg>
+                  </div>
+                </button>
+                <option value="">Any</option>
+                {makes.map((make) => {
+                  return (
+                    <option key={make} value={make}>
+                      {make}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className={styles.filter}>
+              <label>Max price per day</label>
+              <input
+                type="number"
+                value={filters.maxPricePerDay ?? ""}
+                onChange={(e) => {
+                  const newMaxPricePerDay = Number.parseInt(
+                    e.currentTarget.value,
+                  );
+                  setFilters({ ...filters, maxPricePerDay: newMaxPricePerDay });
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Cars grid */}
+          <div className={styles.grid}>
+            {carList.map((car) => {
+              return <CarCard key={car.id} car={car} />;
+            })}
+          </div>
+        </>
       )}
     </div>
   );
