@@ -2,6 +2,18 @@
 
 Read this before every design rep. Fix these first.
 
+## Repeat mistakes across every problem (read this first)
+
+| # | Mistake | Showed up in |
+|---|---|---|
+| 1 | **Per-user or "what this tab loaded" state on a shared entity** | Email, Chat, Assort dashboard, Ticketmaster (`assignedUserId`) |
+| 2 | **Two copies of the same truth**, or storing what the client can compute | Email, Snooze, Collab doc, Robot Fleet, search box, Ticketmaster |
+| 3 | **Real-time only in prose:** no event shapes, no `seq` on the snapshot, reconnect not split into detect → reconnect → catch up | Email, Snooze, Chat, Figma, Assort, Ticketmaster |
+| 4 | **Races solved with "check, then write"** instead of one atomic compare-and-set | Assort takeover, Ticketmaster pay |
+| 5 | **Missing the central server record + its full status lifecycle** (start → live → every way it ends) | Ticketmaster `Hold` / `paying`, Email draft status, Snooze |
+
+Ask on every problem: what does the server promise, and until when? Who owns this data (URL / store / server)? What if two requests arrive at once? What if the page reloads mid-way?
+
 ## design/02 email client (Sun Oct 18, first draft)
 
 **Rubric check:** strong on requirements breadth, a normalized store, `stale` lists, IndexedDB-first startup, idempotent send. Missed: a single command/action layer, undo, reconnect + catch-up, and a central keyboard registry.
@@ -74,6 +86,7 @@ Read this before every design rep. Fix these first.
 **Strong:** one socket per user; per-channel seq for order + catch-up (edits/deletes get one, read state doesn't); client id + opId + outbox; unread derived from lastReadSeq on memberships + cross-tab `read`; reconnect = summaries for all channels, replay the open one, mark the rest stale; virtualization (estimate → measure → correct scroll, sliding window).
 
 **Say these WITHOUT being asked next time:**
+
 1. Ask about **scale and usage** (members, channels per user, message rate, devices/tabs), not just features.
 2. Draw **data flow** first: components → store → sync layer (socket + HTTP + outbox) → server. Components never touch the network; reads = selectors, writes = actions.
 3. Send flow up front: optimistic insert with client id + status, opId for acks/retries, outbox, offline = wait (not failed).
@@ -85,13 +98,15 @@ Read this before every design rep. Fix these first.
 **Strong:** clarifying questions (scale, assignment, offline, takeover meaning); discriminated unions for handler/speaker/booking status; `latestLine` preview on cards vs full lines only for the open call; REST action + socket news; subscribe/unsubscribe for the open call.
 
 **Struggled with (data model):**
+
 1. **Link direction.** Test: "can this field ever need more than one value?" One→many = parentId on the child; many↔many or extra pairing data = a table in the middle; user-chosen order = list on parent (V1) or `position` on a join row.
 2. **Server entities vs loaded lists.** Never put what this tab loaded (`lineIds`, status) on a shared entity: a server update replaces it and wipes your list. Separate map keyed by parent id, with a status.
 3. **Optimistic vs wait.** Contested actions (takeover, last seat, money) wait for the server; store a pending id in `ui`, never set the shared entity early.
 
 **Struggled with (API):**
+
 1. **Identity in the URL** (`/handler/:userId`): the client could impersonate anyone. Who = session cookie.
-2. **Seq scope.** One counter per *stream*: per clinic (call started/ended/handler/booking) + per call transcript (lines only). The server stamps seqs and keeps a log; `lastAppliedVersion` is the client's bookmark. Every change (incl. partial-line updates) gets a new seq; seq ≠ display position ≠ cursor.
+2. **Seq scope.** One counter per _stream_: per clinic (call started/ended/handler/booking) + per call transcript (lines only). The server stamps seqs and keeps a log; `lastAppliedVersion` is the client's bookmark. Every change (incl. partial-line updates) gets a new seq; seq ≠ display position ≠ cursor.
 3. **Cursor vs seq.** Live views catch up with seq; cursors are only for paging big lists (call history).
 4. **Reconnect mixing snapshot and replay.** Pick one: missed events (same shape as live) with a snapshot fallback, or always snapshot (V1).
 5. **Status codes.** 400 = malformed request (client bug); state conflicts (slot taken, someone else won) = 409 with a machine code + current state; EHR down = 503 + retryable.
@@ -99,6 +114,7 @@ Read this before every design rep. Fix these first.
 7. **Reconnect UI:** keep last data, dim + banner, disable contested actions. Never skeletons mid-shift.
 
 **Struggled with (deep dives):**
+
 1. **Takeover race:** "process one, then the other" isn't enough. The check + write must be atomic (compare-and-set: `UPDATE … WHERE handler_type = 'ai'`). Retry by the winner returns 200, not 409.
 2. **Audio fails after the server said yes:** connect audio first, switch the handler after (warm transfer); the server times out and hands back to the AI, since a crashed tab never sends `release`.
 3. **Gap on the transcript:** used the clinic stream by mistake. Gaps are per stream: hold the event, resume that call's stream after the last seq.
@@ -110,6 +126,7 @@ Read this before every design rep. Fix these first.
 **Strong:** events into a ref, one dispatch per tick; connecting in the snapshot's `.then` with its seq (no seq in effect deps); reconnect in an effect, so unmount can't trigger it; a shared clock store + `useSyncExternalStore`; memo rows.
 
 **Struggled with:**
+
 1. **Async effect cleanup.** Cleanup ran before the fetch finished, so `close` didn't exist yet → StrictMode opened 2 sockets. Fix: a `cancelled` flag, checked **first** in `.then`/`.catch` (guard every state write, not just `connect`).
 2. **Two copies of the same state** (`robotsRef` mirroring `state.robots`). The reducer is the one place that turns "old state + events" into new state; dispatch the events, not a precomputed map.
 3. **Seq in effect deps** → reconnect every tick. Read the latest seq from a ref; deps = what should actually restart the effect.
@@ -121,17 +138,68 @@ Read this before every design rep. Fix these first.
 ## Dashboard failure modes + patient search box (Wed Oct 28)
 
 **Failure modes, what to remember:**
+
 1. **Offline:** never cover the screen. Keep last data, dim live parts, banner "Reconnecting… last updated 2:14", disable contested actions. On reconnect stay on the page, catch up, explain what changed ("The AI took over at 2:14").
-2. **Detecting a drop:** each side detects from silence on its *receiving* end (server: no pongs; client: no pings/messages for ~2 intervals). Sends during an outage just sit in the buffer. The close tells you *that* it broke; the event log tells you *what* changed.
+2. **Detecting a drop:** each side detects from silence on its _receiving_ end (server: no pongs; client: no pings/messages for ~2 intervals). Sends during an outage just sit in the buffer. The close tells you _that_ it broke; the event log tells you _what_ changed.
 3. **Takeover race:** compare-and-set on the field that matters (`handler is still AI`), not a whole-object version (false conflicts). Loser gets 409 + current handler in the body; winner's retry gets 200.
 4. **EHR rejects an edit:** the booking entity stays at the server's value ("still at 2:00 PM"); edit status lives in UI/form state. Re-enable Save on change, refetch availability. 409 (rejected) ≠ 503 (unreachable).
-5. **Gaps:** hold, catch up, then sort + skip `seq <=` the *running* last-applied (handles duplicates without reasoning about timing). Snapshot comes with its seq. Keep events that arrive during the fetch. Don't show UI for sub-second gaps. Gaps are per stream.
+5. **Gaps:** hold, catch up, then sort + skip `seq <=` the _running_ last-applied (handles duplicates without reasoning about timing). Snapshot comes with its seq. Keep events that arrive during the fetch. Don't show UI for sub-second gaps. Gaps are per stream.
 6. **8-hour tab:** besides memory: session expiry (silent renew vs idle logout), deploys (stale bundle → "refresh" prompt), laptop sleep, background-tab throttling. Notice via heartbeat beacons, sampled heap, long tasks, soak tests.
 
 **Patient search box:**
-1. Requirements = *what*, not *how* ("use debouncing" is a solution). Name "results always match the current input" and privacy (no PHI in URLs → POST body).
+
+1. Requirements = _what_, not _how_ ("use debouncing" is a solution). Name "results always match the current input" and privacy (no PHI in URLs → POST body).
 2. Results are **ranked**: ordered ids + entities by id, never just a map. `{ ids, total }` per query.
 3. **One copy:** results live in the query cache; the component reads `cache[debouncedQuery]`. Don't also keep them in component state.
-4. Don't copy leftovers (seq, connectionStatus) from the last design: justify every piece of shared state for *this* feature.
+4. Don't copy leftovers (seq, connectionStatus) from the last design: justify every piece of shared state for _this_ feature.
 5. **URL owns what should survive refresh/back/links** (the open patient id); don't mirror it in the store. Exception: sensitive text (search query) stays out of the URL on purpose.
 6. `dob` = date-only string, never a `Date` (timezone shifts the day). Cache key normalized + org id; PHI cache in memory only, cleared on logout.
+
+## Reminders refactor (Thu Oct 29)
+
+Fixed: `forEach(async)` counts, failed SMS / dry run no longer marked reminded, injected clock, real `Error`, hour math via Date, opt-outs fetched once, logs returned.
+Struggles:
+
+1. First pass missed **past appointments** (`hrToStart < 0`); the demo output showed "4:00 AM" for a finished visit. Read the output line by line for things a patient would notice.
+2. Age check first written as `month < m || date < d`; the day only matters when the month is equal.
+3. Refactor quietly changed behavior: sent the raw phone instead of the stripped one, dropped the `sentLog` audit trail. Diff old vs new output before calling a step done.
+4. Not fixed (skipped): "tomorrow" wording for same-day appointments (compare dates in the clinic's time zone), inconsistent return shape on the quiet-hours path.
+
+## Ticketmaster seat map: data model + client store (Thu Oct 29)
+
+Strong: split `Seat` (static layout, cacheable) from `EventSeat` (live status + price); geometry on sections; filters in the URL; selection is client-only.
+Struggles (drill these):
+
+1. Missed the central server record (`Hold`): the thing that reserves, locks price, and survives refresh. Ask: "what does the server promise the user, and until when?"
+2. Status enums missing the main/live state (`active`) and exit paths (`released`). List every way the thing starts, lives and ends.
+3. Duration (`ttl`) vs exact time (`expiresAt`): durations break on latency, refresh, background tabs. UTC fixes time zones, not wrong clocks.
+4. Put response metadata (`serverNow`) on an entity. Ask: "is this a fact about the thing, or about the response?"
+5. Sent other users' ids to every client (`assignedUserId`). Ask: "what does _this_ client need to know about other people's stuff?"
+6. UI/screen state in the store (`eventId`, page status): the URL owns which screen + which id; the server decides if you're allowed.
+7. Ranked results stored as one item instead of an ordered list of options; confused "seats inside one group" with "groups in rank order".
+8. Two copies of the same truth (`selectedSeatIds` + `hold.seatIds`). After the server accepts, the server record is the only source.
+
+## Ticketmaster: API + double-tap Pay (Fri Oct 30 – Sat Oct 31)
+
+Strong: layout on CDN apart from live state; `Idempotency-Key` on hold + pay; server sets the amount from the hold; contested actions over REST, push for updates; SSE over WebSocket; `409 { unavailableSeatIds }`; polling the booking.
+Struggles (drill these):
+
+1. Stream described like a snapshot response. A stream = many small events (one change each, with `seq`); the snapshot gives `seq` to resume from. Keep one name (`seq` vs `version`).
+2. Queue and seat map are separate phases → separate streams, and each still needs a plain `GET` for load / reconnect / fallback.
+3. `EventSource` can't set headers → admission token goes in an `httpOnly` cookie. Only an HTTP response (`Set-Cookie`) can set a cookie, not an SSE event.
+4. SameSite direction: it **stops** the cookie being sent cross-site. Cookies sent automatically = CSRF risk on `POST`s.
+5. Dynamic price at hold time: the hold locks the server's current price. Client compares `lockedPrices` with what it showed (body stays `{ seatIds }`). Only the server "locks"; client values are "expected".
+6. Payment failure is `failed` (+ `failureReason`), not `error`; the hold stays active, retry with a new key.
+7. Idempotency key in memory dies on refresh → `localStorage` keyed by hold id. Outbox is wrong for payments (no silent replay).
+8. `AbortController` only stops the client waiting; the server keeps going. Canceling on the client never prevents a charge.
+9. Server guard "check status then charge" races. Use one atomic transition (`UPDATE … SET status='paying' WHERE status='held'`); needs a `paying` status.
+
+## Concept drill: Assort slot holds (Sun Nov 1)
+
+Strong: spotted the Hold pattern instantly with a full lifecycle; conditional release by a server scheduler; one `slot_availability` event; asked "who's looking?" before adding `callId`.
+Struggles:
+
+1. Stored `Slot.status` (even just `available | unavailable`) = a copy of holds + bookings that goes stale when time passes (2:03 expiry, no request). Store only facts (`blocked`); compute availability on read. A hold counts only while `active` **and** `expiresAt > now`.
+2. Compare-and-set given as a definition, not applied. Creating a hold is an **insert**; there's no row to compare. Lock the row both sides compete on (the `Slot`), check, insert, commit, in one transaction.
+3. Forgot `seq` on the event again (and on the schedule `GET`).
+4. Put request state on the entity: a client-made `SlotHold { status: 'requested' }`, then `Booking.status: 'requested'`, then `Booking & { status, error }`. Never merge (spread) request state into an entity: nest the entity or keep a separate map by id. The client never creates server records; a decided action (receptionist move) needs no hold, just `PATCH` + 409.

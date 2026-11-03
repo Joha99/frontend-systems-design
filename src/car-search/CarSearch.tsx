@@ -1,0 +1,133 @@
+/**
+ * Car search results (API call + render). 45 minutes, timed. Plan out loud
+ * for 3–5 minutes first.
+ *
+ * The fake server is in `carApi.ts` (read its header; don't edit it).
+ * To run: render <CarSearch /> in `src/App.tsx`, then `npm run dev`.
+ *
+ * Part 1 (~20 min): load and render
+ * 1. On mount, call `searchCars()` and render the cars as a grid of cards:
+ *    "2021 Toyota RAV4", city, price per day ("$84/day"), and rating with
+ *    trip count ("4.8 · 120 trips"). A car with no trips shows "New".
+ * 2. Loading state on first load (no layout jump when the cards arrive).
+ * 3. Error state with a Retry button.
+ * 4. Empty state.
+ *
+ * Part 2 (~15 min): filters
+ * 5. A "Make" select (options from `getMakes()`, plus "Any") and a
+ *    "Max price per day" number input. Changing either reloads page 1.
+ * 6. Responses arrive out of order: the results must always match the
+ *    filters currently shown. Typing "1", "15", "150" fast must not end up
+ *    showing results for "15".
+ *
+ * Part 3 (~10 min): load more
+ * 7. A "Load more" button appends the next page (`nextCursor`). Hide it on
+ *    the last page. No duplicate cars, no double request on a double click.
+ * 8. If loading more fails, keep the cars already shown and show an inline
+ *    retry next to the button (not the full-page error).
+ *
+ * Accessibility: the filters have labels; the results area announces
+ * "Loading…" / "24 cars" to screen readers.
+ *
+ * Done when: you can filter to Teslas under $150, load every page, and
+ * nothing breaks when a request fails.
+ *
+ * Discussion (say out loud at the end):
+ * - Where does each piece of state live? What's derived?
+ * - How did you handle out-of-order responses, and what are the other ways?
+ * - Should the filters be in the URL? What about the loaded pages?
+ * - What would you add with more time (caching, debouncing, tests)?
+ */
+
+import { useEffect, useRef, useState } from "react";
+import { searchCars, getMakes, type Car, type SearchResponse } from "./carApi";
+import styles from "./CarSearch.module.css";
+
+type FetchStatus = "loading" | "success" | "error";
+type CarMap = Map<Car["id"], Car>;
+
+const CarCard = ({ car }: { car: Car }) => {
+  const { make, model, year, pricePerDay, rating, trips, city } = car;
+
+  return (
+    <div className={styles.card}>
+      <h3 className={styles["card-header"]}>
+        {model} {make}
+      </h3>
+      <div className={styles["card-description"]}>
+        <span>{year}</span>
+        <span>{city}</span>
+        <span>{rating}★</span>
+        {trips === 0 ? (
+          <span className={styles["new-badge"]}>New</span>
+        ) : (
+          <span>{`(${trips})`}</span>
+        )}
+      </div>
+      <div className={styles["card-footer"]}>
+        <span>
+          <span className={styles.price}>${pricePerDay}</span>/day
+        </span>
+      </div>
+    </div>
+  );
+};
+
+export const CarSearch = () => {
+  const [fetchStatus, setFetchStatus] = useState<FetchStatus>();
+  const [cars, setCars] = useState<CarMap>(new Map());
+
+  const cursor = useRef<SearchResponse["nextCursor"]>(null);
+
+  const carList = Array.from(cars.values());
+
+  useEffect(() => {
+    setFetchStatus("loading");
+    fetchCars();
+  }, []);
+
+  const fetchCars = () => {
+    searchCars()
+      .then((searchResponse) => {
+        const newCarMap: CarMap = new Map();
+        for (const car of searchResponse.cars) {
+          newCarMap.set(car.id, car);
+        }
+
+        setCars(newCarMap);
+        setFetchStatus("success");
+        cursor.current = searchResponse.nextCursor;
+      })
+      .catch((err) => {
+        console.error(err);
+        setFetchStatus("error");
+      });
+  };
+
+  if (fetchStatus === "error") {
+    return (
+      <div>
+        Couldn't load cars. <button onClick={fetchCars}>Retry</button>
+      </div>
+    );
+  }
+
+  if (fetchStatus === "loading") {
+    return <div>Fetching cars...</div>;
+  }
+
+  return (
+    <div className={styles.app}>
+      <h2>Car Search</h2>
+      {carList.length === 0 ? (
+        <p>There are no available cars.</p>
+      ) : (
+        <div className={styles.grid}>
+          {carList.map((car) => {
+            return <CarCard key={car.id} car={car} />;
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
