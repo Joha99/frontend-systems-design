@@ -37,6 +37,8 @@ import {
 } from "./carApi";
 import styles from "./CarSearch.module.css";
 
+const FILTER_DEBOUNCE_MS = 300;
+
 type FetchStatus = "loading" | "success" | "error";
 type CarMap = Map<Car["id"], Car>;
 type Filters = {
@@ -72,20 +74,21 @@ const CarCard = ({ car }: { car: Car }) => {
 };
 
 export const CarSearch = () => {
-  const [fetchStatus, setFetchStatus] = useState<FetchStatus>();
+  const [initialFetchStatus, setInitialFetchStatus] = useState<FetchStatus>();
+  const [loadMoreStatus, setLoadMoreStatus] = useState<FetchStatus>();
   const [cars, setCars] = useState<CarMap>(new Map());
   const [makes, setMakes] = useState<string[]>([]);
   const [filters, setFilters] = useState<Filters>({});
+
   const cursor = useRef<SearchResponse["nextCursor"]>(null);
 
   const carList = Array.from(cars.values());
 
   useEffect(() => {
-    setFetchStatus("loading");
-
     const carsPromise = searchCars();
     const makesPromise = getMakes();
 
+    setInitialFetchStatus("loading");
     Promise.all([carsPromise, makesPromise])
       .then(([carsRes, makesRes]) => {
         const newCarMap: CarMap = new Map();
@@ -93,14 +96,14 @@ export const CarSearch = () => {
           newCarMap.set(car.id, car);
         }
 
-        setCars(newCarMap);
-        setFetchStatus("success");
         setMakes(makesRes);
+        setCars(newCarMap);
+        setInitialFetchStatus("success");
         cursor.current = carsRes.nextCursor;
       })
       .catch((err) => {
         console.error(err);
-        setFetchStatus("error");
+        setInitialFetchStatus("error");
       });
   }, []);
 
@@ -115,22 +118,34 @@ export const CarSearch = () => {
     };
 
     const timeoutId = setTimeout(() => {
-      fetchCars(searchParams);
-    }, 300);
+      searchCars(searchParams)
+        .then((searchResponse) => {
+          const newCarMap: CarMap = new Map();
+          for (const car of searchResponse.cars) {
+            newCarMap.set(car.id, car);
+          }
+          setCars(newCarMap);
+          cursor.current = searchResponse.nextCursor;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    }, FILTER_DEBOUNCE_MS);
 
     return () => {
       clearTimeout(timeoutId);
     };
   }, [filters]);
 
-  const fetchCars = (searchParams: SearchParams) => {
+  const fetchCars = (searchParams?: SearchParams) => {
     searchCars(searchParams)
       .then((searchResponse) => {
         const newCarMap: CarMap = new Map();
         for (const car of searchResponse.cars) {
           newCarMap.set(car.id, car);
         }
-        setCars(newCarMap);
+
+        setCars((prev) => new Map([...prev, ...newCarMap]));
         cursor.current = searchResponse.nextCursor;
       })
       .catch((err) => {
@@ -138,19 +153,31 @@ export const CarSearch = () => {
       });
   };
 
-  if (fetchStatus === "error") {
+  const onLoadMore = () => {
+    const searchParams: SearchParams = {
+      make: filters.make,
+      maxPrice: filters.maxPricePerDay,
+      cursor: cursor.current,
+    };
+
+    fetchCars(searchParams);
+  };
+
+  const onRetry = () => {};
+
+  if (initialFetchStatus === "error") {
     return (
       <div>
-        Couldn't load cars. <button onClick={() => fetchCars({})}>Retry</button>
+        Couldn't load cars. <button onClick={() => fetchCars()}>Retry</button>
       </div>
     );
   }
 
-  if (fetchStatus === "loading") {
+  if (initialFetchStatus === "loading") {
     return <div>Fetching cars...</div>;
   }
 
-  console.log("filters", filters);
+  console.log("nextcursor", cursor.current);
 
   return (
     <div className={styles.app}>
@@ -210,6 +237,10 @@ export const CarSearch = () => {
             {carList.map((car) => {
               return <CarCard key={car.id} car={car} />;
             })}
+          </div>
+
+          <div>
+            <button onClick={onLoadMore}>Load more</button>
           </div>
         </>
       )}
