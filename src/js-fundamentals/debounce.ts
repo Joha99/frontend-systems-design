@@ -23,5 +23,24 @@ export function debounce<Args extends unknown[]>(
   _fn: (...args: Args) => void,
   _delayMs: number,
 ): Debounced<Args> {
-  throw new Error("Not implemented");
+  let timeoutId: Parameters<typeof clearTimeout>[0];
+
+  const debouncedFn = function (this: unknown, ...args: Args) {
+    // another timeout exists
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    timeoutId = setTimeout(() => {
+      _fn.apply(this, args);
+    }, _delayMs);
+  };
+
+  debouncedFn.cancel = function () {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  };
+
+  return debouncedFn;
 }
