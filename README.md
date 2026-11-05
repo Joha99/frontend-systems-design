@@ -198,6 +198,7 @@ Interactive game problems: keyboard input, timers/game loops, immutable board up
 | ✅     | Peak Element Finder 🚗       | `src/peak-finder/`          | Easy        | linear scan vs binary search for peak, bar chart visualization, step animation    |
 | ✅     | Card Deck Simulator 🚗       | `src/card-deck/`            | Easy/Medium | deque push/pop both ends, Fisher-Yates shuffle, card dealing, hand display        |
 |        | Functional Toolkit 🚗        | `src/functional-toolkit/`   | Medium      | implement map/filter/reduce/compose/pipe from scratch, pipeline visualization     |
+|        | JS/TS Fundamentals Set 🚗    | `src/js-fundamentals/`      | Medium      | debounce, promise pool with a concurrency limit, predict-the-output questions     |
 |        | Two-Pointer Merge            | `src/two-pointer-merge/`    | Easy        | two-pointer merge sorted arrays, two-sum on sorted list, step animation           |
 |        | DP Visualizer (Coin Change)  | `src/dp-calculator/`        | Medium      | bottom-up DP, table filling animation, path reconstruction                        |
 |        | Trie Autocomplete            | `src/trie-autocomplete/`    | Medium      | trie insert/search, DFS word collection, prefix matching, performance comparison  |

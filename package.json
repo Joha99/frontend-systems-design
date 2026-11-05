@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test:patterns": "node --test \"src/patterns/*/*.test.ts\""
+    "test:patterns": "node --test \"src/patterns/*/*.test.ts\"",
+    "test:fundamentals": "node --test src/js-fundamentals/fundamentals.test.ts"
   },
   "dependencies": {
     "react": "^19.2.8",
