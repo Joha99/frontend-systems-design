@@ -74,43 +74,68 @@ const CarCard = ({ car }: { car: Car }) => {
 };
 
 export const CarSearch = () => {
-  const [initialFetchStatus, setInitialFetchStatus] = useState<FetchStatus>();
+  const [initialFetchStatus, setInitialFetchStatus] =
+    useState<FetchStatus>("loading");
+  const [filterStatus, setFilterStatus] = useState<FetchStatus>();
   const [loadMoreStatus, setLoadMoreStatus] = useState<FetchStatus>();
+
   const [cars, setCars] = useState<CarMap>(new Map());
   const [makes, setMakes] = useState<string[]>([]);
   const [filters, setFilters] = useState<Filters>({});
+  const [retryCount, setRetryCount] = useState<number>(0);
+  const [cursor, setCursor] = useState<SearchResponse["nextCursor"]>(null);
 
-  const cursor = useRef<SearchResponse["nextCursor"]>(null);
+  const hasLoaded = useRef<boolean>(false);
+  const requestId = useRef<number>(0);
 
   const carList = Array.from(cars.values());
 
   useEffect(() => {
+    if (hasLoaded.current) {
+      return;
+    }
+
+    let inFlight = true;
+    setInitialFetchStatus("loading");
+
     const carsPromise = searchCars();
     const makesPromise = getMakes();
 
-    setInitialFetchStatus("loading");
     Promise.all([carsPromise, makesPromise])
       .then(([carsRes, makesRes]) => {
-        const newCarMap: CarMap = new Map();
-        for (const car of carsRes.cars) {
-          newCarMap.set(car.id, car);
+        if (inFlight) {
+          const newCarMap: CarMap = new Map();
+          for (const car of carsRes.cars) {
+            newCarMap.set(car.id, car);
+          }
+          setMakes(makesRes);
+          setCars(newCarMap);
+          setInitialFetchStatus("success");
+          setCursor(carsRes.nextCursor);
+          hasLoaded.current = true;
         }
-
-        setMakes(makesRes);
-        setCars(newCarMap);
-        setInitialFetchStatus("success");
-        cursor.current = carsRes.nextCursor;
       })
       .catch((err) => {
-        console.error(err);
-        setInitialFetchStatus("error");
+        if (inFlight) {
+          console.error(err);
+          setInitialFetchStatus("error");
+        }
       });
-  }, []);
+
+    return () => {
+      inFlight = false;
+    };
+  }, [retryCount]);
 
   useEffect(() => {
-    if (filters.make === undefined && filters.maxPricePerDay === undefined) {
+    if (!hasLoaded.current) {
       return;
     }
+
+    requestId.current++;
+    let inFlight = true;
+    setFilterStatus("loading");
+    setLoadMoreStatus(undefined);
 
     const searchParams: SearchParams = {
       make: filters.make,
@@ -120,55 +145,69 @@ export const CarSearch = () => {
     const timeoutId = setTimeout(() => {
       searchCars(searchParams)
         .then((searchResponse) => {
-          const newCarMap: CarMap = new Map();
-          for (const car of searchResponse.cars) {
-            newCarMap.set(car.id, car);
+          if (inFlight) {
+            const newCarMap: CarMap = new Map();
+            for (const car of searchResponse.cars) {
+              newCarMap.set(car.id, car);
+            }
+            setCars(newCarMap);
+            setFilterStatus("success");
+            setCursor(searchResponse.nextCursor);
           }
-          setCars(newCarMap);
-          cursor.current = searchResponse.nextCursor;
         })
         .catch((err) => {
-          console.error(err);
+          if (inFlight) {
+            setFilterStatus("error");
+            console.error(err);
+          }
         });
     }, FILTER_DEBOUNCE_MS);
 
     return () => {
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId); // only stops a request that hasn't been sent
+      inFlight = false; // prevents updating state when filters change
     };
-  }, [filters]);
-
-  const fetchCars = (searchParams?: SearchParams) => {
-    searchCars(searchParams)
-      .then((searchResponse) => {
-        const newCarMap: CarMap = new Map();
-        for (const car of searchResponse.cars) {
-          newCarMap.set(car.id, car);
-        }
-
-        setCars((prev) => new Map([...prev, ...newCarMap]));
-        cursor.current = searchResponse.nextCursor;
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  };
+  }, [filters, retryCount]);
 
   const onLoadMore = () => {
+    const currRequestId = requestId.current;
+
+    setLoadMoreStatus("loading");
     const searchParams: SearchParams = {
       make: filters.make,
       maxPrice: filters.maxPricePerDay,
-      cursor: cursor.current,
+      cursor: cursor,
     };
 
-    fetchCars(searchParams);
+    searchCars(searchParams)
+      .then((searchResponse) => {
+        if (requestId.current === currRequestId) {
+          setLoadMoreStatus("success");
+          const newCarMap: CarMap = new Map();
+          for (const car of searchResponse.cars) {
+            newCarMap.set(car.id, car);
+          }
+
+          setCars((prev) => new Map([...prev, ...newCarMap]));
+          setCursor(searchResponse.nextCursor);
+        }
+      })
+      .catch((err) => {
+        if (requestId.current === currRequestId) {
+          setLoadMoreStatus("error");
+          console.error(err);
+        }
+      });
   };
 
-  const onRetry = () => {};
+  const onRetry = () => {
+    setRetryCount((prev) => prev + 1);
+  };
 
   if (initialFetchStatus === "error") {
     return (
       <div>
-        Couldn't load cars. <button onClick={() => fetchCars()}>Retry</button>
+        Couldn't load cars. <button onClick={onRetry}>Retry</button>
       </div>
     );
   }
@@ -177,61 +216,67 @@ export const CarSearch = () => {
     return <div>Fetching cars...</div>;
   }
 
-  console.log("nextcursor", cursor.current);
+  console.log("nextcursor", cursor);
 
   return (
     <div className={styles.app}>
       <h2>Car Search</h2>
+      {/* Filters bar */}
+      <div className={styles.filterbar}>
+        <div>
+          <select
+            id="make"
+            name="make"
+            value={filters.make ?? ""}
+            onChange={(e) => {
+              const newMake = e.target.value;
+              setFilters({ ...filters, make: newMake });
+            }}
+            className={styles.select}
+          >
+            <button>
+              <small>Make</small>
+              <div>
+                {createElement("selectedcontent")}
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="m7 10l5 5l5-5z" />
+                </svg>
+              </div>
+            </button>
+            <option value="">Any</option>
+            {makes.map((make) => {
+              return (
+                <option key={make} value={make}>
+                  {make}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+        <div className={styles.filter}>
+          <label>Max price per day</label>
+          <input
+            type="number"
+            value={filters.maxPricePerDay ?? ""}
+            onChange={(e) => {
+              const value = e.currentTarget.value;
+              const newMaxPricePerDay =
+                value === "" ? undefined : Number.parseInt(value);
+              setFilters({ ...filters, maxPricePerDay: newMaxPricePerDay });
+            }}
+          />
+        </div>
+        {filterStatus === "loading" && <p>Loading...</p>}
+        {filterStatus === "error" && (
+          <div>
+            <p>Couldn't update results.</p>{" "}
+            <button onClick={onRetry}>Retry</button>
+          </div>
+        )}
+      </div>
       {carList.length === 0 && <p>There are no available cars.</p>}
       {carList.length > 0 && (
         <>
-          {/* Filters bar */}
-          <div className={styles.filterbar}>
-            <div>
-              <select
-                id="make"
-                name="make"
-                value={filters.make ?? ""}
-                onChange={(e) => {
-                  const newMake = e.target.value;
-                  setFilters({ ...filters, make: newMake });
-                }}
-                className={styles.select}
-              >
-                <button>
-                  <small>Make</small>
-                  <div>
-                    {createElement("selectedcontent")}
-                    <svg width="24" height="24" viewBox="0 0 24 24">
-                      <path fill="currentColor" d="m7 10l5 5l5-5z" />
-                    </svg>
-                  </div>
-                </button>
-                <option value="">Any</option>
-                {makes.map((make) => {
-                  return (
-                    <option key={make} value={make}>
-                      {make}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-            <div className={styles.filter}>
-              <label>Max price per day</label>
-              <input
-                type="number"
-                value={filters.maxPricePerDay ?? ""}
-                onChange={(e) => {
-                  const newMaxPricePerDay = Number.parseInt(
-                    e.currentTarget.value,
-                  );
-                  setFilters({ ...filters, maxPricePerDay: newMaxPricePerDay });
-                }}
-              />
-            </div>
-          </div>
-
           {/* Cars grid */}
           <div className={styles.grid}>
             {carList.map((car) => {
@@ -239,9 +284,21 @@ export const CarSearch = () => {
             })}
           </div>
 
-          <div>
-            <button onClick={onLoadMore}>Load more</button>
-          </div>
+          {cursor !== null && (
+            <div>
+              <button
+                onClick={onLoadMore}
+                disabled={
+                  loadMoreStatus === "loading" ||
+                  filterStatus === "loading" ||
+                  filterStatus === "error"
+                }
+              >
+                {loadMoreStatus === "error" ? "Retry" : "Load more"}
+              </button>
+              {loadMoreStatus === "error" && <p>Couldn't load more cars.</p>}
+            </div>
+          )}
         </>
       )}
     </div>
