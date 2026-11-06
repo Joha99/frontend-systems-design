@@ -28,21 +28,10 @@
 
 import { useEffect, useState } from "react";
 import styles from "./WeekCalendar.module.css";
-import { fetchEvents } from "./mockApi";
+import { type CalendarEvent, fetchEvents } from "./mockApi";
 
-const DAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
-const getDaysOfWeek = (relativeDate: Date) => {
+const getDaysOfWeek = (relativeDate: Date = new Date()) => {
   const currentDay = relativeDate.getDay(); // 0 - 6
-
   const sundayOfWeek = new Date(relativeDate);
   sundayOfWeek.setDate(relativeDate.getDate() - currentDay);
   sundayOfWeek.setHours(0, 0, 0, 0);
@@ -59,6 +48,7 @@ const getDaysOfWeek = (relativeDate: Date) => {
 
 const isToday = (date: Date) => {
   const today = new Date();
+
   return (
     date.getDate() === today.getDate() &&
     date.getMonth() === today.getMonth() &&
@@ -66,21 +56,50 @@ const isToday = (date: Date) => {
   );
 };
 
-export const Part1OverlapLayout = () => {
-  const [startDate, setStartDate] = useState<Date>(new Date());
-
-  useEffect(() => {}, []);
-
+const getHalfHourSlots = () => {
   const totalSlots = (24 * 60) / 30;
-  const daysOfWeek = getDaysOfWeek(startDate);
 
   const slotsStartTime = new Date();
   slotsStartTime.setHours(0, 0, 0, 0);
+
   const halfHourSlots = Array.from({ length: totalSlots }, () => {
     const currTime = new Date(slotsStartTime);
     slotsStartTime.setMinutes(slotsStartTime.getMinutes() + 30);
     return currTime;
   });
+
+  return halfHourSlots;
+};
+
+export const Part1OverlapLayout = () => {
+  const [daysOfWeek, setDaysOfWeek] = useState<Date[]>(getDaysOfWeek);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+
+  useEffect(() => {
+    fetchEvents(daysOfWeek[0].toISOString(), daysOfWeek[6].toISOString()).then(
+      (events) => {
+        setEvents(events);
+      },
+    );
+  }, []);
+
+  const halfHourSlots = getHalfHourSlots();
+
+  const dailySlots: CalendarEvent[][][] = Array.from({ length: 7 }, () => {
+    return Array.from({ length: (24 * 60) / 30 }, () => []);
+  });
+
+  for (const event of events) {
+    const startDate = new Date(event.start);
+    const dayStart = new Date(event.start);
+    dayStart.setHours(0, 0, 0, 0);
+
+    const diffInMins = (startDate.getTime() - dayStart.getTime()) / (1000 * 60);
+    const slotIndex = Math.floor(diffInMins / 30);
+    dailySlots[startDate.getDay()][slotIndex].push(event);
+  }
+
+  console.log("dailySlots", dailySlots);
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
@@ -96,6 +115,7 @@ export const Part1OverlapLayout = () => {
 
             return (
               <div
+                key={dayName}
                 className={`${styles.dayName} ${dayIsToday ? styles.today : ""}`}
               >
                 <h3>{dayName}</h3>
@@ -111,18 +131,62 @@ export const Part1OverlapLayout = () => {
                 hour: "2-digit",
                 minute: "2-digit",
               });
+
               return (
-                <div className={`${styles.halfHourSlot} ${styles.slotLabel}`}>
+                <div
+                  key={displayedSlotTime}
+                  className={`${styles.halfHourSlot} ${styles.slotLabel}`}
+                >
                   {displayedSlotTime}
                 </div>
               );
             })}
           </div>
-          {daysOfWeek.map((day, i) => {
+          {dailySlots.map((slots, i) => {
             return (
               <div key={i} className={styles.column}>
-                {halfHourSlots.map((slot) => {
-                  return <div className={styles.halfHourSlot}></div>;
+                {slots.map((events) => {
+                  return (
+                    <div className={styles.halfHourSlot}>
+                      {events.map((event, i) => {
+                        const startDate = new Date(event.start);
+                        const startTime = startDate.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        });
+
+                        const endDate = new Date(event.end);
+                        const endTime = startDate.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        });
+
+                        const diffInMins =
+                          (endDate.getTime() - startDate.getTime()) /
+                          (1000 * 60);
+
+                        const slotCount = diffInMins / 30;
+
+                        return (
+                          <div
+                            style={{
+                              backgroundColor: "rgba(171, 171, 171, 0.5)",
+                              height: `${slotCount * 50}px`,
+                              fontSize: "12px",
+                              borderRadius: "5px",
+                              width: `calc(100% / ${events.length})`,
+                              padding: "4px",
+                            }}
+                          >
+                            <div>{event.title}</div>
+                            <div>
+                              ({startTime}-{endTime})
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
                 })}
               </div>
             );

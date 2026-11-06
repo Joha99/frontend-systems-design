@@ -44,8 +44,10 @@
 .halfHourSlot {
   padding: 6px 8px;
   display: flex;
-  align-items: center;
+  align-items: start;
   block-size: 50px;
+  position: relative;
+  gap: 2px;
 
   &:not(:last-child) {
     border-bottom: 1px solid #ccc;
