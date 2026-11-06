@@ -157,25 +157,19 @@ export const Part1OverlapLayout = () => {
 
                 {events.map((event, i) => {
                   const startDate = new Date(event.start);
+
                   const dayStart = new Date(event.start);
                   dayStart.setHours(0, 0, 0, 0);
-
                   const minSinceStart =
                     (startDate.getTime() - dayStart.getTime()) / (1000 * 60);
-
                   const startSlot = minSinceStart / 30;
                   const topOffset = startSlot * 50;
 
-                  const startTime = startDate.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-
                   const endDate = new Date(event.end);
-                  const endTime = endDate.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
+                  const durationMin =
+                    (endDate.getTime() - startDate.getTime()) / (1000 * 60);
+                  const slotCount = durationMin / 30;
+                  const height = slotCount * 50;
 
                   return (
                     <div
@@ -183,13 +177,12 @@ export const Part1OverlapLayout = () => {
                       style={
                         {
                           "--top-offset": `${topOffset}px`,
+                          "--height": `${height}px`,
                         } as CSSProperties
                       }
                     >
                       <h4>{event.title}</h4>
-                      <div>
-                        ({startTime}-{endTime})
-                      </div>
+                      <div>{durationMin} mins</div>
                     </div>
                   );
                 })}
