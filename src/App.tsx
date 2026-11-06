@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { CarSearch } from "./car-search/CarSearch";
+import { Part1OverlapLayout } from "./week-calendar/Part1OverlapLayout";
 
 function App() {
   return (
     <div className={styles.app}>
-      <CarSearch />
+      <Part1OverlapLayout />
     </div>
   );
 }

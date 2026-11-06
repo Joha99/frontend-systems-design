@@ -203,3 +203,7 @@ Struggles:
 2. Compare-and-set given as a definition, not applied. Creating a hold is an **insert**; there's no row to compare. Lock the row both sides compete on (the `Slot`), check, insert, commit, in one transaction.
 3. Forgot `seq` on the event again (and on the schedule `GET`).
 4. Put request state on the entity: a client-made `SlotHold { status: 'requested' }`, then `Booking.status: 'requested'`, then `Booking & { status, error }`. Never merge (spread) request state into an entity: nest the entity or keep a separate map by id. The client never creates server records; a decided action (receptionist move) needs no hold, just `PATCH` + 409.
+
+## Tesla technical round: actual question
+
+The interviewer asked me to **implement virtualization from scratch**. Practice with `src/scroll-drills/VirtualList.tsx`, then explain it out loud: scrollTop → visible range, spacer height, positioning, overscan.

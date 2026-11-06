@@ -16,9 +16,37 @@
  * To test: npm run test:fundamentals
  */
 
-export function promisePool<T>(
+export async function promisePool<T>(
   _tasks: (() => Promise<T>)[],
   _limit: number,
 ): Promise<T[]> {
-  throw new Error("Not implemented");
+  const res: T[] = new Array(_tasks.length);
+  // is updated every time a worker starts a process
+  let processingTaskIndex = 0;
+  let failed = false;
+
+  const worker = async () => {
+    // while loop ensures that when one task finishes, that task processes the next item
+    while (!failed && processingTaskIndex < _tasks.length) {
+      const currIndex = processingTaskIndex;
+
+      processingTaskIndex++;
+
+      try {
+        const resolved = await _tasks[currIndex]();
+        res[currIndex] = resolved;
+      } catch (err) {
+        failed = true;
+        throw err;
+      }
+    }
+  };
+
+  const workers = Array.from({ length: Math.min(_limit, _tasks.length) }, () =>
+    worker(),
+  );
+
+  // waits for all workers to deplete the queue
+  await Promise.all(workers);
+  return res;
 }
