@@ -207,3 +207,7 @@ Struggles:
 ## Tesla technical round: actual question
 
 The interviewer asked me to **implement virtualization from scratch**. Practice with `src/scroll-drills/VirtualList.tsx`, then explain it out loud: scrollTop → visible range, spacer height, positioning, overscan.
+
+## Interview question: task queue class (Nov 2026)
+
+Asked to write a class where the constructor takes `limit` and `enqueue(run)` takes a function returning a promise. I got stuck because there was no array of items, so the promise pool's worker loop didn't transfer. Practice with `src/js-fundamentals/taskQueue.ts`.

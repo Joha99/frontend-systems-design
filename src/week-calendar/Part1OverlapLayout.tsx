@@ -26,7 +26,7 @@
  * Time target: 45 minutes.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import styles from "./WeekCalendar.module.css";
 import { type CalendarEvent, fetchEvents } from "./mockApi";
 
@@ -85,21 +85,25 @@ export const Part1OverlapLayout = () => {
 
   const halfHourSlots = getHalfHourSlots();
 
-  const dailySlots: CalendarEvent[][][] = Array.from({ length: 7 }, () => {
-    return Array.from({ length: (24 * 60) / 30 }, () => []);
-  });
+  const eventsByDay: CalendarEvent[][] = Array.from({ length: 7 }, () => []);
+
+  // const dailySlots: CalendarEvent[][][] = Array.from({ length: 7 }, () => {
+  //   return Array.from({ length: (24 * 60) / 30 }, () => []);
+  // });
 
   for (const event of events) {
     const startDate = new Date(event.start);
-    const dayStart = new Date(event.start);
-    dayStart.setHours(0, 0, 0, 0);
+    eventsByDay[startDate.getDay()].push(event);
 
-    const diffInMins = (startDate.getTime() - dayStart.getTime()) / (1000 * 60);
-    const slotIndex = Math.floor(diffInMins / 30);
-    dailySlots[startDate.getDay()][slotIndex].push(event);
+    // const dayStart = new Date(event.start);
+    // dayStart.setHours(0, 0, 0, 0);
+
+    // const diffInMins = (startDate.getTime() - dayStart.getTime()) / (1000 * 60);
+    // const slotIndex = Math.floor(diffInMins / 30);
+    // dailySlots[startDate.getDay()][slotIndex].push(event);
   }
 
-  console.log("dailySlots", dailySlots);
+  console.log("eventsByDay", eventsByDay);
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
@@ -142,49 +146,50 @@ export const Part1OverlapLayout = () => {
               );
             })}
           </div>
-          {dailySlots.map((slots, i) => {
+          {eventsByDay.map((events, i) => {
+            console.log(i, events);
+
             return (
-              <div key={i} className={styles.column}>
-                {slots.map((events) => {
+              <div className={styles.column}>
+                {halfHourSlots.map((_, i) => {
+                  return <div key={i} className={styles.halfHourSlot}></div>;
+                })}
+
+                {events.map((event, i) => {
+                  const startDate = new Date(event.start);
+                  const dayStart = new Date(event.start);
+                  dayStart.setHours(0, 0, 0, 0);
+
+                  const minSinceStart =
+                    (startDate.getTime() - dayStart.getTime()) / (1000 * 60);
+
+                  const startSlot = minSinceStart / 30;
+                  const topOffset = startSlot * 50;
+
+                  const startTime = startDate.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+
+                  const endDate = new Date(event.end);
+                  const endTime = endDate.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+
                   return (
-                    <div className={styles.halfHourSlot}>
-                      {events.map((event, i) => {
-                        const startDate = new Date(event.start);
-                        const startTime = startDate.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        });
-
-                        const endDate = new Date(event.end);
-                        const endTime = startDate.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        });
-
-                        const diffInMins =
-                          (endDate.getTime() - startDate.getTime()) /
-                          (1000 * 60);
-
-                        const slotCount = diffInMins / 30;
-
-                        return (
-                          <div
-                            style={{
-                              backgroundColor: "rgba(171, 171, 171, 0.5)",
-                              height: `${slotCount * 50}px`,
-                              fontSize: "12px",
-                              borderRadius: "5px",
-                              width: `calc(100% / ${events.length})`,
-                              padding: "4px",
-                            }}
-                          >
-                            <div>{event.title}</div>
-                            <div>
-                              ({startTime}-{endTime})
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div
+                      className={styles.event}
+                      style={
+                        {
+                          "--top-offset": `${topOffset}px`,
+                        } as CSSProperties
+                      }
+                    >
+                      <h4>{event.title}</h4>
+                      <div>
+                        ({startTime}-{endTime})
+                      </div>
                     </div>
                   );
                 })}
