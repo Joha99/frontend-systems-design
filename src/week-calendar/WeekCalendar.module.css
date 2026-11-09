@@ -9,6 +9,17 @@
   display: grid;
   grid-template-columns: repeat(8, 200px);
   gap: 5px;
+  height: 1200px;
+  overflow-y: scroll;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: repeat(8, 200px);
+  gap: 5px;
+  overflow-y: scroll;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 8px;
 }
 
 .column {
@@ -68,4 +79,13 @@
   font-size: 12px;
   border-radius: 10px;
   padding: 5px;
+}
+
+.todayLine {
+  height: 8px;
+  position: absolute;
+  width: 100%;
+  background-color: red;
+  border-radius: 10px;
+  opacity: 50%;
 }

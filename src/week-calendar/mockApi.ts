@@ -43,6 +43,9 @@ const SEED: [string, number, string, string][] = [
   ["Demo prep", 4, "15:00", "15:30"],
   ["Customer call", 4, "15:15", "16:00"],
   ["Coffee chat", 4, "15:30", "16:00"],
+  ["Brunch", 5, "10:00", "11:30"],
+  ["Hike", 5, "11:00", "14:00"],
+  ["Movie", 5, "19:00", "21:00"],
 ];
 
 let nextId = 1;

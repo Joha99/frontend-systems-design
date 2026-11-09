@@ -26,7 +26,7 @@
  * Time target: 45 minutes.
  */
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import styles from "./WeekCalendar.module.css";
 import { type CalendarEvent, fetchEvents } from "./mockApi";
 
@@ -44,7 +44,7 @@ const getDaysOfWeek = (relativeDate: Date = new Date()) => {
 
   const weekDays: Date[] = [];
 
-  for (let d = 0; d < 7; d++) {
+  for (let d = 0; d < 8; d++) {
     const currentDay = new Date(sundayOfWeek);
     currentDay.setDate(currentDay.getDate() + d);
     weekDays.push(currentDay);
@@ -106,7 +106,6 @@ const getClusters = (eventsInDay: CalendarEvent[]) => {
     }
   }
 
-  console.log("cluster res", res);
   return res;
 };
 
@@ -147,16 +146,37 @@ const randomRgba = (alpha = 0.3) => {
   return `rgba(${channel()}, ${channel()}, ${channel()}, ${alpha})`;
 };
 
+const getTopOffset = (current: Date) => {
+  const start = new Date(current);
+  start.setHours(0, 0, 0, 0);
+
+  const minSinceStart = (current.getTime() - start.getTime()) / MS_IN_MIN;
+  const startSlot = minSinceStart / SLOT_DURATION_MIN;
+  const nowTopOffsetPx = startSlot * SLOT_HEIGHT_PX;
+
+  return nowTopOffsetPx;
+};
+
 export const Part1OverlapLayout = () => {
   const [daysOfWeek, setDaysOfWeek] = useState<Date[]>(getDaysOfWeek);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    fetchEvents(daysOfWeek[0].toISOString(), daysOfWeek[6].toISOString()).then(
+    fetchEvents(daysOfWeek[0].toISOString(), daysOfWeek[7].toISOString()).then(
       (events) => {
+        console.log(events);
         setEvents(events);
       },
     );
+
+    const minsFromStartToEightAm = 8 * 60;
+    const slotsBeforeEightAm = minsFromStartToEightAm / SLOT_DURATION_MIN;
+    const pxBeforeEightAm = slotsBeforeEightAm * SLOT_HEIGHT_PX;
+    scrollContainerRef.current?.scrollTo({
+      top: pxBeforeEightAm,
+    });
   }, []);
 
   const halfHourSlots = getHalfHourSlots();
@@ -167,14 +187,17 @@ export const Part1OverlapLayout = () => {
     eventsByDay[startDate.getDay()].push(event);
   }
 
+  const now = new Date();
+  const nowTopOffsetPx = getTopOffset(now);
+
   return (
     <div style={{ width: "100%", padding: "20px" }}>
       <h2>Week Calendar: Part 1</h2>
 
       <div className={styles.calendar}>
-        <div className={styles.weekGrid}>
+        <div className={styles.header}>
           <div />
-          {daysOfWeek.map((day) => {
+          {daysOfWeek.slice(0, 7).map((day) => {
             const date = day.getDate();
             const dayName = day.toLocaleDateString([], { weekday: "long" });
             const dayIsToday = isToday(day);
@@ -190,7 +213,7 @@ export const Part1OverlapLayout = () => {
             );
           })}
         </div>
-        <div className={styles.weekGrid}>
+        <div className={styles.weekGrid} ref={scrollContainerRef}>
           <div className={styles.column}>
             {halfHourSlots.map((slot) => {
               const displayedSlotTime = slot.toLocaleTimeString([], {
@@ -208,7 +231,8 @@ export const Part1OverlapLayout = () => {
               );
             })}
           </div>
-          {eventsByDay.map((events, i) => {
+          {eventsByDay.map((events, d) => {
+            const dayIsToday = now.getDay() === d;
             const clusters = getClusters(events);
             const clusterLanes = clusters.map((cluster) =>
               getClusterLanes(cluster),
@@ -216,33 +240,26 @@ export const Part1OverlapLayout = () => {
 
             return (
               <div className={styles.column}>
-                {halfHourSlots.map((_, i) => {
-                  return <div key={i} className={styles.halfHourSlot}></div>;
+                {halfHourSlots.map((_, s) => {
+                  return <div key={s} className={styles.halfHourSlot}></div>;
                 })}
-
                 {clusterLanes.map((clusterLane) => {
                   return clusterLane.map((lane, l) => {
                     return lane.map((laneEvent) => {
+                      const randomBg = randomRgba();
+
                       const widthPx = COLUMN_WIDTH_PX / clusterLane.length;
                       const leftOffsetPx = l * widthPx;
 
                       const startDate = new Date(laneEvent.start);
+                      const topOffsetPx = getTopOffset(startDate);
+
                       const endDate = new Date(laneEvent.end);
-
-                      const dayStart = new Date(laneEvent.start);
-                      dayStart.setHours(0, 0, 0, 0);
-
-                      const minSinceStart =
-                        (startDate.getTime() - dayStart.getTime()) / MS_IN_MIN;
-                      const startSlot = minSinceStart / SLOT_DURATION_MIN;
-                      const topOffsetPx = startSlot * SLOT_HEIGHT_PX;
+                      const bottomOffsetPx = getTopOffset(endDate);
 
                       const durationMin =
                         (endDate.getTime() - startDate.getTime()) / MS_IN_MIN;
-                      const slotCount = durationMin / SLOT_DURATION_MIN;
-                      const height = slotCount * SLOT_HEIGHT_PX;
-
-                      const randomBg = randomRgba();
+                      const height = bottomOffsetPx - topOffsetPx;
 
                       return (
                         <div
@@ -264,6 +281,14 @@ export const Part1OverlapLayout = () => {
                     });
                   });
                 })}
+                {dayIsToday && (
+                  <div
+                    className={styles.todayLine}
+                    style={{
+                      top: `${nowTopOffsetPx}px`,
+                    }}
+                  ></div>
+                )}
               </div>
             );
           })}
