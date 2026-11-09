@@ -22,6 +22,13 @@ const manualTask = <T>() => {
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 
 describe("TaskQueue", () => {
+  it("returns a unique string key for each task", () => {
+    const queue = new TaskQueue(1);
+    const keys = [1, 2, 3].map(() => queue.enqueue(async () => null).key);
+    keys.forEach((key) => assert.equal(typeof key, "string"));
+    assert.equal(new Set(keys).size, 3);
+  });
+
   it("starts a task right away when there is room", () => {
     const queue = new TaskQueue(2);
     const a = manualTask<string>();
@@ -68,41 +75,60 @@ describe("TaskQueue", () => {
 
   it("resolves each enqueue with its own task's result", async () => {
     const queue = new TaskQueue(1);
-    const first = queue.enqueue(async () => "first");
-    const second = queue.enqueue(async () => 2);
+    const first = queue.enqueue(async () => "first").promise;
+    const second = queue.enqueue(async () => 2).promise;
 
     assert.equal(await first, "first");
     assert.equal(await second, 2);
   });
 
-  it("rejects only the task that failed, and keeps going", async () => {
-    const queue = new TaskQueue(1);
-    const failing = queue.enqueue(async () => {
-      throw new Error("boom");
-    });
-    const next = queue.enqueue(async () => "still ran");
-
-    await assert.rejects(failing, /boom/);
-    assert.equal(await next, "still ran");
-  });
-
-  it("frees the slot when a task fails", async () => {
+  it("rejects the failed task and the waiting tasks, and starts no more", async () => {
     const queue = new TaskQueue(1);
     const a = manualTask<string>();
     const b = manualTask<string>();
-    const failing = queue.enqueue(a.run);
-    queue.enqueue(b.run);
+    const c = manualTask<string>();
+    const failing = queue.enqueue(a.run).promise;
+    const waitingB = queue.enqueue(b.run).promise;
+    const waitingC = queue.enqueue(c.run).promise;
 
     a.reject(new Error("boom"));
     await assert.rejects(failing, /boom/);
-    await flush();
-    assert.equal(b.hasStarted(), true);
+    await assert.rejects(waitingB, /boom/);
+    await assert.rejects(waitingC, /boom/);
+    assert.equal(b.hasStarted(), false);
+    assert.equal(c.hasStarted(), false);
+  });
+
+  it("lets tasks already running finish normally", async () => {
+    const queue = new TaskQueue(2);
+    const a = manualTask<string>();
+    const b = manualTask<string>();
+    const failing = queue.enqueue(a.run).promise;
+    const running = queue.enqueue(b.run).promise;
+
+    a.reject(new Error("boom"));
+    await assert.rejects(failing, /boom/);
+    b.resolve("finished");
+    assert.equal(await running, "finished");
+  });
+
+  it("rejects tasks enqueued after a failure without starting them", async () => {
+    const queue = new TaskQueue(1);
+    const failing = queue.enqueue(async () => {
+      throw new Error("boom");
+    }).promise;
+    await assert.rejects(failing, /boom/);
+
+    const late = manualTask<string>();
+    const latePromise = queue.enqueue(late.run).promise;
+    await assert.rejects(latePromise, /boom/);
+    assert.equal(late.hasStarted(), false);
   });
 
   it("runs tasks enqueued after the queue has gone idle", async () => {
     const queue = new TaskQueue(1);
-    assert.equal(await queue.enqueue(async () => "a"), "a");
+    assert.equal(await queue.enqueue(async () => "a").promise, "a");
     await flush();
-    assert.equal(await queue.enqueue(async () => "b"), "b");
+    assert.equal(await queue.enqueue(async () => "b").promise, "b");
   });
 });

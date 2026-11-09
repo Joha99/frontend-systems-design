@@ -1,10 +1,10 @@
 import styles from "./App.module.css";
-import { Part1OverlapLayout } from "./week-calendar/Part1OverlapLayout";
+import { Part1LiveChart } from "./telemetry-chart/Part1LiveChart";
 
 function App() {
   return (
     <div className={styles.app}>
-      <Part1OverlapLayout />
+      <Part1LiveChart />
     </div>
   );
 }

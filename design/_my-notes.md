@@ -211,3 +211,10 @@ The interviewer asked me to **implement virtualization from scratch**. Practice 
 ## Interview question: task queue class (Nov 2026)
 
 Asked to write a class where the constructor takes `limit` and `enqueue(run)` takes a function returning a promise. I got stuck because there was no array of items, so the promise pool's worker loop didn't transfer. Practice with `src/js-fundamentals/taskQueue.ts`.
+
+Retry (Nov 9): solved with hints, all 10 tests pass. Struggles:
+
+1. Put `run()` inside `new Promise(...)` for a waiting task. The function passed to `new Promise` runs immediately, so the task started anyway. Store `{ run, resolve, reject }` and call `run` later.
+2. Wrote "start the next task" twice (room branch + inner copy), so the chain stopped after one hop. One `processRun` that pulls the next task when any task finishes.
+3. `.then` returns a new promise: its callback's `return` fulfills it, `throw` rejects it.
+4. Rethrowing in `.catch` on a promise no caller holds = unhandled rejection. Cleaner: always return a `new Promise` from `enqueue`, so every task settles through `resolve` / `reject` and nothing rethrows.
