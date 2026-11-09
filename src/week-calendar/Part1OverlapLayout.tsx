@@ -32,14 +32,18 @@ import { type CalendarEvent, fetchEvents } from "./mockApi";
 
 const SLOT_DURATION_MIN = 30;
 const SLOT_HEIGHT_PX = 50;
+const COLUMN_WIDTH_PX = 200;
+const MS_IN_MIN = 1000 * 60;
 
 const getDaysOfWeek = (relativeDate: Date = new Date()) => {
   const currentDay = relativeDate.getDay(); // 0 - 6
+
   const sundayOfWeek = new Date(relativeDate);
   sundayOfWeek.setDate(relativeDate.getDate() - currentDay);
   sundayOfWeek.setHours(0, 0, 0, 0);
 
   const weekDays: Date[] = [];
+
   for (let d = 0; d < 7; d++) {
     const currentDay = new Date(sundayOfWeek);
     currentDay.setDate(currentDay.getDate() + d);
@@ -60,14 +64,14 @@ const isToday = (date: Date) => {
 };
 
 const getHalfHourSlots = () => {
-  const totalSlots = (24 * 60) / 30;
+  const totalSlots = (24 * 60) / SLOT_DURATION_MIN;
 
   const slotsStartTime = new Date();
   slotsStartTime.setHours(0, 0, 0, 0);
 
   const halfHourSlots = Array.from({ length: totalSlots }, () => {
     const currTime = new Date(slotsStartTime);
-    slotsStartTime.setMinutes(slotsStartTime.getMinutes() + 30);
+    slotsStartTime.setMinutes(slotsStartTime.getMinutes() + SLOT_DURATION_MIN);
     return currTime;
   });
 
@@ -91,14 +95,11 @@ const getClusters = (eventsInDay: CalendarEvent[]) => {
     const currEnd = new Date(currEvent.end).getTime();
 
     if (currStart < currClusterEnd) {
-      // insert to current cluster
       currCluster.push(currEvent);
-
       if (currEnd > currClusterEnd) {
         currClusterEnd = currEnd;
       }
     } else {
-      // create a new cluster
       currCluster = [currEvent];
       currClusterEnd = currEnd;
       res.push(currCluster);
@@ -107,6 +108,43 @@ const getClusters = (eventsInDay: CalendarEvent[]) => {
 
   console.log("cluster res", res);
   return res;
+};
+
+const getClusterLanes = (cluster: CalendarEvent[]) => {
+  const lanes: CalendarEvent[][] = [];
+
+  for (let i = 0; i < cluster.length; i++) {
+    const currEvent = cluster[i];
+    const currEventStart = new Date(currEvent.start).getTime();
+
+    if (lanes.length === 0) {
+      lanes.push([currEvent]);
+      continue;
+    }
+
+    let addedToExistingLane = false;
+    for (const lane of lanes) {
+      const lastInLane = lane[lane.length - 1];
+      const lastInLaneEnd = new Date(lastInLane.end).getTime();
+
+      if (lastInLaneEnd <= currEventStart) {
+        addedToExistingLane = true;
+        lane.push(currEvent);
+        break;
+      }
+    }
+
+    if (!addedToExistingLane) {
+      lanes.push([currEvent]);
+    }
+  }
+
+  return lanes;
+};
+
+const randomRgba = (alpha = 0.3) => {
+  const channel = () => Math.floor(Math.random() * 256);
+  return `rgba(${channel()}, ${channel()}, ${channel()}, ${alpha})`;
 };
 
 export const Part1OverlapLayout = () => {
@@ -128,8 +166,6 @@ export const Part1OverlapLayout = () => {
     const startDate = new Date(event.start);
     eventsByDay[startDate.getDay()].push(event);
   }
-
-  console.log("eventsByDay", eventsByDay);
 
   return (
     <div style={{ width: "100%", padding: "20px" }}>
@@ -173,41 +209,60 @@ export const Part1OverlapLayout = () => {
             })}
           </div>
           {eventsByDay.map((events, i) => {
+            const clusters = getClusters(events);
+            const clusterLanes = clusters.map((cluster) =>
+              getClusterLanes(cluster),
+            );
+
             return (
               <div className={styles.column}>
                 {halfHourSlots.map((_, i) => {
                   return <div key={i} className={styles.halfHourSlot}></div>;
                 })}
 
-                {events.map((event) => {
-                  const startDate = new Date(event.start);
-                  const dayStart = new Date(event.start);
-                  dayStart.setHours(0, 0, 0, 0);
-                  const minSinceStart =
-                    (startDate.getTime() - dayStart.getTime()) / (1000 * 60);
-                  const startSlot = minSinceStart / 30;
-                  const topOffset = startSlot * 50;
+                {clusterLanes.map((clusterLane) => {
+                  return clusterLane.map((lane, l) => {
+                    return lane.map((laneEvent) => {
+                      const widthPx = COLUMN_WIDTH_PX / clusterLane.length;
+                      const leftOffsetPx = l * widthPx;
 
-                  const endDate = new Date(event.end);
-                  const durationMin =
-                    (endDate.getTime() - startDate.getTime()) / (1000 * 60);
-                  const slotCount = durationMin / 30;
-                  const height = slotCount * 50;
+                      const startDate = new Date(laneEvent.start);
+                      const endDate = new Date(laneEvent.end);
 
-                  return (
-                    <div
-                      className={styles.event}
-                      style={
-                        {
-                          "--top-offset": `${topOffset}px`,
-                          "--height": `${height}px`,
-                        } as CSSProperties
-                      }
-                    >
-                      <h4>{event.title}</h4>
-                      <div>{durationMin} mins</div>
-                    </div>
-                  );
+                      const dayStart = new Date(laneEvent.start);
+                      dayStart.setHours(0, 0, 0, 0);
+
+                      const minSinceStart =
+                        (startDate.getTime() - dayStart.getTime()) / MS_IN_MIN;
+                      const startSlot = minSinceStart / SLOT_DURATION_MIN;
+                      const topOffsetPx = startSlot * SLOT_HEIGHT_PX;
+
+                      const durationMin =
+                        (endDate.getTime() - startDate.getTime()) / MS_IN_MIN;
+                      const slotCount = durationMin / SLOT_DURATION_MIN;
+                      const height = slotCount * SLOT_HEIGHT_PX;
+
+                      const randomBg = randomRgba();
+
+                      return (
+                        <div
+                          className={styles.event}
+                          style={
+                            {
+                              "--height": `${height}px`,
+                              "--width": `${widthPx}px`,
+                              "--top": `${topOffsetPx}px`,
+                              "--left": `${leftOffsetPx}px`,
+                              "--bg": randomBg,
+                            } as CSSProperties
+                          }
+                        >
+                          <h4>{laneEvent.title}</h4>
+                          <div>{durationMin} mins</div>
+                        </div>
+                      );
+                    });
+                  });
                 })}
               </div>
             );
