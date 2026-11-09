@@ -30,6 +30,9 @@ import { useEffect, useState, type CSSProperties } from "react";
 import styles from "./WeekCalendar.module.css";
 import { type CalendarEvent, fetchEvents } from "./mockApi";
 
+const SLOT_DURATION_MIN = 30;
+const SLOT_HEIGHT_PX = 50;
+
 const getDaysOfWeek = (relativeDate: Date = new Date()) => {
   const currentDay = relativeDate.getDay(); // 0 - 6
   const sundayOfWeek = new Date(relativeDate);
@@ -71,6 +74,41 @@ const getHalfHourSlots = () => {
   return halfHourSlots;
 };
 
+const getClusters = (eventsInDay: CalendarEvent[]) => {
+  if (eventsInDay.length === 0) return [];
+
+  const sorted = [...eventsInDay].sort(
+    (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+  );
+
+  let currClusterEnd = new Date(sorted[0].end).getTime();
+  let currCluster: CalendarEvent[] = [sorted[0]];
+  const res: CalendarEvent[][] = [currCluster];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const currEvent = sorted[i];
+    const currStart = new Date(currEvent.start).getTime();
+    const currEnd = new Date(currEvent.end).getTime();
+
+    if (currStart < currClusterEnd) {
+      // insert to current cluster
+      currCluster.push(currEvent);
+
+      if (currEnd > currClusterEnd) {
+        currClusterEnd = currEnd;
+      }
+    } else {
+      // create a new cluster
+      currCluster = [currEvent];
+      currClusterEnd = currEnd;
+      res.push(currCluster);
+    }
+  }
+
+  console.log("cluster res", res);
+  return res;
+};
+
 export const Part1OverlapLayout = () => {
   const [daysOfWeek, setDaysOfWeek] = useState<Date[]>(getDaysOfWeek);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -84,23 +122,11 @@ export const Part1OverlapLayout = () => {
   }, []);
 
   const halfHourSlots = getHalfHourSlots();
-
   const eventsByDay: CalendarEvent[][] = Array.from({ length: 7 }, () => []);
-
-  // const dailySlots: CalendarEvent[][][] = Array.from({ length: 7 }, () => {
-  //   return Array.from({ length: (24 * 60) / 30 }, () => []);
-  // });
 
   for (const event of events) {
     const startDate = new Date(event.start);
     eventsByDay[startDate.getDay()].push(event);
-
-    // const dayStart = new Date(event.start);
-    // dayStart.setHours(0, 0, 0, 0);
-
-    // const diffInMins = (startDate.getTime() - dayStart.getTime()) / (1000 * 60);
-    // const slotIndex = Math.floor(diffInMins / 30);
-    // dailySlots[startDate.getDay()][slotIndex].push(event);
   }
 
   console.log("eventsByDay", eventsByDay);
@@ -147,17 +173,14 @@ export const Part1OverlapLayout = () => {
             })}
           </div>
           {eventsByDay.map((events, i) => {
-            console.log(i, events);
-
             return (
               <div className={styles.column}>
                 {halfHourSlots.map((_, i) => {
                   return <div key={i} className={styles.halfHourSlot}></div>;
                 })}
 
-                {events.map((event, i) => {
+                {events.map((event) => {
                   const startDate = new Date(event.start);
-
                   const dayStart = new Date(event.start);
                   dayStart.setHours(0, 0, 0, 0);
                   const minSinceStart =
