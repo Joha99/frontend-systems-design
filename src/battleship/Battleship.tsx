@@ -35,6 +35,7 @@
  *   state, rather than several booleans that can contradict each other.
  */
 
+import { useState } from "react";
 import styles from "./Battleship.module.css";
 
 const BOARD_SIZE = 10;
@@ -45,14 +46,136 @@ const FLEET = [
   { name: "Submarine", size: 3 },
   { name: "Destroyer", size: 2 },
 ] as const;
+const DIRECTION_VECTORS: [number, number][] = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+] as const;
+
+type Cell =
+  | {
+      type: "fleet";
+      name: (typeof FLEET)[number]["name"];
+      sunk: boolean;
+    }
+  | { type: "water" };
+
+const isInBounds = (row: number, column: number) => {
+  return row >= 0 && row < BOARD_SIZE && column >= 0 && column < BOARD_SIZE;
+};
+
+const cellsAreFree = (
+  grid: Cell[][],
+  start: [number, number],
+  direction: [number, number],
+  count: number,
+) => {
+  for (let c = 0; c < count; c++) {
+    const row = start[0] + direction[0] * c;
+    const col = start[1] + direction[1] * c;
+
+    if (grid[row][col].type !== "water") {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const getRandomizedBoard = () => {
+  const grid: Cell[][] = Array.from({ length: BOARD_SIZE }, () => {
+    return Array.from({ length: BOARD_SIZE }, () => {
+      return { type: "water" };
+    });
+  });
+
+  for (const fleet of FLEET) {
+    let direction: [number, number] =
+      DIRECTION_VECTORS[Math.floor(Math.random() * DIRECTION_VECTORS.length)];
+    let cell = Math.floor(Math.random() * (BOARD_SIZE * BOARD_SIZE));
+    let startingLocation: [number, number] = [
+      Math.floor(cell / BOARD_SIZE),
+      cell % BOARD_SIZE,
+    ];
+    let finalLocation: [number, number] = [
+      startingLocation[0] + direction[0] * (fleet.size - 1),
+      startingLocation[1] + direction[1] * (fleet.size - 1),
+    ];
+
+    // if final location is not in bounds or the cells are not available, find a different direction + cell
+    while (
+      !isInBounds(finalLocation[0], finalLocation[1]) ||
+      !cellsAreFree(grid, startingLocation, direction, fleet.size)
+    ) {
+      direction =
+        DIRECTION_VECTORS[Math.floor(Math.random() * DIRECTION_VECTORS.length)];
+      cell = Math.floor(Math.random() * (BOARD_SIZE * BOARD_SIZE));
+      startingLocation = [Math.floor(cell / BOARD_SIZE), cell % BOARD_SIZE];
+      finalLocation = [
+        startingLocation[0] + direction[0] * (fleet.size - 1),
+        startingLocation[1] + direction[1] * (fleet.size - 1),
+      ];
+    }
+
+    for (let i = 0; i < fleet.size; i++) {
+      const row = startingLocation[0] + direction[0] * i;
+      const col = startingLocation[1] + direction[1] * i;
+
+      grid[row][col] = { type: "fleet", name: fleet.name, sunk: false };
+    }
+  }
+
+  console.log("grid", grid);
+  return grid;
+};
 
 export const Battleship = () => {
-  // TODO: implement
-  void [BOARD_SIZE, FLEET];
+  const [turn, setTurn] = useState<"computer" | "player">("player");
+  const [playerBoard, setPlayerBoard] = useState<Cell[][]>(getRandomizedBoard);
+  const [computerBoard, setComputerBoard] =
+    useState<Cell[][]>(getRandomizedBoard);
 
   return (
-    <div>
+    <div style={{ padding: "20px" }}>
       <h2>Battleship</h2>
+      {FLEET.map((fleet) => {
+        return (
+          <div>
+            {fleet.name}: {fleet.size}
+          </div>
+        );
+      })}
+
+      <div>
+        <h3>Player</h3>
+        <div className={styles.board}>
+          {playerBoard.map((row, r) => {
+            return row.map((cell, c) => {
+              return (
+                <div key={`${r}:${c}`} className={styles.cell}>
+                  {cell.type === "water" ? "" : cell.name}
+                </div>
+              );
+            });
+          })}
+        </div>
+      </div>
+
+      <div>
+        <h3>Computer</h3>
+        <div className={styles.board}>
+          {computerBoard.map((row, r) => {
+            return row.map((cell, c) => {
+              return (
+                <div key={`${r}:${c}`} className={styles.cell}>
+                  {cell.type === "water" ? "" : cell.name}
+                </div>
+              );
+            });
+          })}
+        </div>
+      </div>
     </div>
   );
 };

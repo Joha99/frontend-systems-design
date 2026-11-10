@@ -39,10 +39,6 @@
 
 import { listSignals, subscribe } from "./telemetryStream";
 
-// Remove these once you use them.
-void listSignals;
-void subscribe;
-
 export const Part1LiveChart = () => {
   return (
     <div>
