@@ -43,6 +43,9 @@ import { useEffect, useState } from "react";
 import styles from "./Battleship.module.css";
 
 const BOARD_SIZE = 10;
+
+const TOTAL_FLEET_SIZE = 5 + 4 + 3 + 3 + 2;
+
 const FLEET = [
   { name: "Carrier", size: 5 },
   { name: "Battleship", size: 4 },
@@ -50,18 +53,24 @@ const FLEET = [
   { name: "Submarine", size: 3 },
   { name: "Destroyer", size: 2 },
 ] as const;
-const TOTAL_FLEET_SIZE = 5 + 4 + 3 + 3 + 2;
-const DIRECTION_VECTORS: [number, number][] = [
+
+const DIRECTION_VECTORS: Coordinate[] = [
   [1, 0],
   [-1, 0],
   [0, 1],
   [0, -1],
 ] as const;
 
+type FleetName = (typeof FLEET)[number]["name"];
+
+type SunkFleetMap = Record<FleetName, Set<string>>;
+
+type Coordinate = [number, number];
+
 type Cell =
   | {
       type: "fleet";
-      name: (typeof FLEET)[number]["name"];
+      name: FleetName;
     }
   | { type: "water" };
 
@@ -69,27 +78,25 @@ const isInBounds = (row: number, column: number) => {
   return row >= 0 && row < BOARD_SIZE && column >= 0 && column < BOARD_SIZE;
 };
 
-const cellsAreFree = (
+const isCellsAvailable = (
   grid: Cell[][],
-  start: [number, number],
-  direction: [number, number],
+  start: Coordinate,
+  direction: Coordinate,
   count: number,
 ) => {
   for (let c = 0; c < count; c++) {
     const row = start[0] + direction[0] * c;
     const col = start[1] + direction[1] * c;
-
     if (grid[row][col].type !== "water") {
       return false;
     }
   }
-
   return true;
 };
 
-const getRandomCell = (): [number, number] => {
+const getRandomCoord = (): Coordinate => {
   const cell = Math.floor(Math.random() * (BOARD_SIZE * BOARD_SIZE));
-  const coordinates: [number, number] = [
+  const coordinates: Coordinate = [
     Math.floor(cell / BOARD_SIZE),
     cell % BOARD_SIZE,
   ];
@@ -97,13 +104,13 @@ const getRandomCell = (): [number, number] => {
   return coordinates;
 };
 
-const getRandomDirection = (): [number, number] => {
+const getRandomDirection = (): Coordinate => {
   return DIRECTION_VECTORS[
     Math.floor(Math.random() * DIRECTION_VECTORS.length)
   ];
 };
 
-const getRandomizedBoard = () => {
+const getRandomBoard = () => {
   const grid: Cell[][] = Array.from({ length: BOARD_SIZE }, () => {
     return Array.from({ length: BOARD_SIZE }, () => {
       return { type: "water" };
@@ -112,7 +119,7 @@ const getRandomizedBoard = () => {
 
   for (const fleet of FLEET) {
     let direction = getRandomDirection();
-    let startingLocation = getRandomCell();
+    let startingLocation = getRandomCoord();
     let finalLocation = [
       startingLocation[0] + direction[0] * (fleet.size - 1),
       startingLocation[1] + direction[1] * (fleet.size - 1),
@@ -120,10 +127,10 @@ const getRandomizedBoard = () => {
 
     while (
       !isInBounds(finalLocation[0], finalLocation[1]) ||
-      !cellsAreFree(grid, startingLocation, direction, fleet.size)
+      !isCellsAvailable(grid, startingLocation, direction, fleet.size)
     ) {
       direction = getRandomDirection();
-      startingLocation = getRandomCell();
+      startingLocation = getRandomCoord();
       finalLocation = [
         startingLocation[0] + direction[0] * (fleet.size - 1),
         startingLocation[1] + direction[1] * (fleet.size - 1),
@@ -140,10 +147,7 @@ const getRandomizedBoard = () => {
   return grid;
 };
 
-const getDefaultSunkFleets = (): Record<
-  (typeof FLEET)[number]["name"],
-  Set<string>
-> => {
+const getDefaultSunkFleets = (): SunkFleetMap => {
   return {
     Battleship: new Set(),
     Carrier: new Set(),
@@ -153,9 +157,7 @@ const getDefaultSunkFleets = (): Record<
   };
 };
 
-const isAllShipsSunk = (
-  sunkFleets: Record<(typeof FLEET)[number]["name"], Set<string>>,
-) => {
+const isAllFleetsSunk = (sunkFleets: SunkFleetMap) => {
   return (
     sunkFleets.Battleship.size === 4 &&
     sunkFleets.Carrier.size === 5 &&
@@ -169,76 +171,89 @@ const getCellKey = (row: number, column: number) => {
   return `${row}:${column}`;
 };
 
+const getRemainingShipCount = (sunkFleets: SunkFleetMap) => {
+  return (
+    TOTAL_FLEET_SIZE -
+    (sunkFleets.Battleship.size +
+      sunkFleets.Carrier.size +
+      sunkFleets.Cruiser.size +
+      sunkFleets.Destroyer.size +
+      sunkFleets.Submarine.size)
+  );
+};
+
 export const Battleship = () => {
   const [turn, setTurn] = useState<"computer" | "player">("player");
 
-  const [playerBoard, setPlayerBoard] = useState<Cell[][]>(getRandomizedBoard);
+  const [playerBoard, setPlayerBoard] = useState<Cell[][]>(getRandomBoard);
   const [playerSunkFleets, setPlayerSunkFleets] =
-    useState<Record<(typeof FLEET)[number]["name"], Set<string>>>(
-      getDefaultSunkFleets,
-    );
+    useState<SunkFleetMap>(getDefaultSunkFleets);
+  const [playerLastSunkFleet, setPlayerLastSunkFleet] = useState<FleetName>();
 
-  const [computerBoard, setComputerBoard] =
-    useState<Cell[][]>(getRandomizedBoard);
+  const [computerBoard, setComputerBoard] = useState<Cell[][]>(getRandomBoard);
   const [computerSunkFleets, setComputerSunkFleets] =
-    useState<Record<(typeof FLEET)[number]["name"], Set<string>>>(
-      getDefaultSunkFleets,
-    );
+    useState<SunkFleetMap>(getDefaultSunkFleets);
+  const [computerLastSunkFleet, setComputerLastSunkFleet] =
+    useState<FleetName>();
 
-  const playerWon = isAllShipsSunk(computerSunkFleets);
-  const computerWon = isAllShipsSunk(playerSunkFleets);
+  const playerWon = isAllFleetsSunk(computerSunkFleets);
+  const computerWon = isAllFleetsSunk(playerSunkFleets);
   const winner = playerWon ? "player" : computerWon ? "computer" : undefined;
 
-  const remainingPlayerShips =
-    TOTAL_FLEET_SIZE -
-    (playerSunkFleets.Battleship.size +
-      playerSunkFleets.Carrier.size +
-      playerSunkFleets.Cruiser.size +
-      playerSunkFleets.Destroyer.size +
-      playerSunkFleets.Submarine.size);
+  const remainingPlayerShips = getRemainingShipCount(playerSunkFleets);
+  const remainingComputerShips = getRemainingShipCount(computerSunkFleets);
 
+  // Player strikes computer
   const onComputerBoardCellClick = (row: number, column: number) => {
     const cell = computerBoard[row][column];
     const cellKey = getCellKey(row, column);
 
     if (cell.type === "fleet" && !computerSunkFleets[cell.name].has(cellKey)) {
-      setComputerSunkFleets((prev) => {
-        const newComputerSunkFleets = { ...prev };
-        newComputerSunkFleets[cell.name] = new Set([
-          ...newComputerSunkFleets[cell.name],
-          cellKey,
-        ]);
+      const newComputerSunkFleets = { ...computerSunkFleets };
+      newComputerSunkFleets[cell.name] = new Set([
+        ...newComputerSunkFleets[cell.name],
+        cellKey,
+      ]);
+      setComputerSunkFleets(newComputerSunkFleets);
 
-        return newComputerSunkFleets;
-      });
+      if (
+        newComputerSunkFleets[cell.name].size ===
+        FLEET.find((item) => item.name === cell.name)?.size
+      ) {
+        setComputerLastSunkFleet(cell.name);
+      }
     }
 
     setTurn("computer");
   };
 
+  // Computer strikes player
   useEffect(() => {
     if (winner !== undefined || turn === "player") {
       return;
     }
 
-    // computer's turn
     setTimeout(() => {
-      const coord = getRandomCell();
+      const coord = getRandomCoord();
       const cell = playerBoard[coord[0]][coord[1]];
       const cellKey = getCellKey(coord[0], coord[1]);
 
       console.log("computer striked:", cell, " at ", coord);
 
       if (cell.type === "fleet" && !playerSunkFleets[cell.name].has(cellKey)) {
-        setPlayerSunkFleets((prev) => {
-          const newPlayerSunkFleets = { ...prev };
-          newPlayerSunkFleets[cell.name] = new Set([
-            ...newPlayerSunkFleets[cell.name],
-            cellKey,
-          ]);
+        const newPlayerSunkFleets = { ...playerSunkFleets };
+        newPlayerSunkFleets[cell.name] = new Set([
+          ...newPlayerSunkFleets[cell.name],
+          cellKey,
+        ]);
+        setPlayerSunkFleets(newPlayerSunkFleets);
 
-          return newPlayerSunkFleets;
-        });
+        if (
+          newPlayerSunkFleets[cell.name].size ===
+          FLEET.find((item) => item.name === cell.name)?.size
+        ) {
+          setPlayerLastSunkFleet(cell.name);
+        }
       }
 
       setTurn("player");
@@ -257,9 +272,17 @@ export const Battleship = () => {
       <h2>Battleship</h2>
       <h3>{winner ? `${winner} won!` : `Turn: ${turn}`}</h3>
 
+      {computerLastSunkFleet && (
+        <p>Player sunk computer's {computerLastSunkFleet}!</p>
+      )}
+
+      {playerLastSunkFleet && (
+        <p>Computer sunk player's {playerLastSunkFleet}!</p>
+      )}
+
       <div className={styles.boards}>
         <div>
-          <h3>Player</h3>
+          <h3>Player (remaining ships: {remainingPlayerShips})</h3>
           <div className={styles.board}>
             {playerBoard.map((row, r) => {
               return row.map((cell, c) => {
@@ -282,7 +305,7 @@ export const Battleship = () => {
         </div>
 
         <div>
-          <h3>Computer</h3>
+          <h3>Computer (remaining ships: {remainingComputerShips})</h3>
           <div className={styles.board}>
             {computerBoard.map((row, r) => {
               return row.map((cell, c) => {
